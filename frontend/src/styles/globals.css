@@ -1,0 +1,39 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-0: #04060d;
+  --bg-1: #090f1f;
+  --panel: #10182e;
+  --line: rgba(181, 149, 255, 0.15);
+  --text-main: #e8ecff;
+  --text-dim: #8d96b8;
+  --accent: #b595ff;
+  --accent-2: #ffd586;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text-main);
+  background:
+    radial-gradient(circle at 15% 10%, rgba(181, 149, 255, 0.17), transparent 36%),
+    radial-gradient(circle at 90% 20%, rgba(88, 130, 255, 0.16), transparent 30%),
+    linear-gradient(155deg, var(--bg-0), var(--bg-1));
+  font-family: "Space Grotesk", sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Barlow Condensed", sans-serif;
+  letter-spacing: 0.04em;
+}

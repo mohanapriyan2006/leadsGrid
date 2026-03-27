@@ -3,8 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
 from app.core.config import settings
+from app.core.database import Base, engine
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging
+from app.models import crm, lead, message, user
 
 
 app = FastAPI(
@@ -24,6 +26,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+def create_tables() -> None:
+    Base.metadata.create_all(bind=engine)
 
 
 @app.get("/health", tags=["system"])

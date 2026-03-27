@@ -1,16 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { DndContext, type DragEndEvent, useDroppable } from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  rectSortingStrategy,
-  useSortable,
-} from "@dnd-kit/sortable";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { leadService } from "../../features/leads/services/leadService";
 import type {
+  CSVImportResult,
   ManageLead,
   ManageLeadActionType,
   ManageLeadActivity,
@@ -22,12 +18,11 @@ import type {
 import { useLeadStore } from "../../store/useLeadStore";
 
 const STAGES: { id: ManageLeadStage; label: string; icon: string }[] = [
-  { id: "NEW_LEADS", label: "New Leads", icon: "🧲" },
+  { id: "NEW", label: "New", icon: "🧲" },
   { id: "QUALIFIED", label: "Qualified", icon: "🔍" },
   { id: "CONTACTED", label: "Contacted", icon: "💬" },
-  { id: "NEGOTIATION", label: "Negotiation", icon: "🤝" },
-  { id: "WON", label: "Won", icon: "💰" },
-  { id: "LOST", label: "Lost", icon: "❌" },
+  { id: "RESPONDED", label: "Responded", icon: "🟢" },
+  { id: "CONTRACTED", label: "Contracted", icon: "🤝" },
 ];
 
 const VIEW_OPTIONS: { value: ManageLeadView; label: string }[] = [
@@ -37,44 +32,48 @@ const VIEW_OPTIONS: { value: ManageLeadView; label: string }[] = [
   { value: "ai", label: "AI View" },
 ];
 
-type StageColumnProps = {
-  stage: ManageLeadStage;
-  title: string;
-  icon: string;
-  leads: ManageLead[];
-  selectedLeadId: string | null;
-  onSelect: (leadId: string) => void;
-};
+const APP_IMPORT_FIELDS = [
+  "name",
+  "company",
+  "email",
+  "phone",
+  "stage",
+  "score",
+  "budget_estimate",
+  "urgency",
+  "source",
+  "last_activity_at",
+] as const;
 
-const stageTone = (stage: ManageLeadStage) => {
-  switch (stage) {
-    case "NEW_LEADS":
-      return "from-cyan-400/25 to-cyan-500/5";
-    case "QUALIFIED":
-      return "from-sky-400/25 to-sky-500/5";
-    case "CONTACTED":
-      return "from-indigo-400/25 to-indigo-500/5";
-    case "NEGOTIATION":
-      return "from-violet-400/25 to-violet-500/5";
-    case "WON":
-      return "from-emerald-400/25 to-emerald-500/5";
-    case "LOST":
-      return "from-rose-400/25 to-rose-500/5";
-    default:
-      return "from-slate-400/20 to-slate-500/5";
-  }
-};
-
-const urgencyTone = (urgency: ManageLead["urgency"]) => {
-  if (urgency === "high") return "bg-rose-500/20 text-rose-200 border-rose-400/40";
-  if (urgency === "medium") return "bg-amber-500/20 text-amber-200 border-amber-300/40";
-  return "bg-slate-500/20 text-slate-200 border-slate-300/30";
-};
-
-const sourceTone = (source: ManageLead["source"]) => {
-  if (source === "linkedin") return "text-sky-300";
-  if (source === "reddit") return "text-orange-300";
-  return "text-fuchsia-300";
+const guessMapping = (header: string): string => {
+  const normalized = header.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+  const aliases: Record<string, string> = {
+    name: "name",
+    lead_name: "name",
+    client_name: "name",
+    business_name: "company",
+    company: "company",
+    company_name: "company",
+    mail: "email",
+    email: "email",
+    email_address: "email",
+    phone: "phone",
+    phone_number: "phone",
+    mobile: "phone",
+    status: "stage",
+    pipeline_stage: "stage",
+    stage: "stage",
+    ai_score: "score",
+    score: "score",
+    budget: "budget_estimate",
+    budget_estimate: "budget_estimate",
+    urgency: "urgency",
+    priority: "urgency",
+    source: "source",
+    last_activity: "last_activity_at",
+    last_activity_at: "last_activity_at",
+  };
+  return aliases[normalized] ?? "";
 };
 
 const formatMoney = (amount: number) => `$${amount.toLocaleString()}`;
@@ -89,27 +88,92 @@ const fromNow = (iso: string) => {
   return `${days}d ago`;
 };
 
+type LeadCardProps = {
+  lead: ManageLead;
+  selected: boolean;
+  checked: boolean;
+  onCheck: (leadId: string, checked: boolean) => void;
+  onSelect: (leadId: string) => void;
+};
+
+const LeadCard = ({ lead, selected, checked, onCheck, onSelect }: LeadCardProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: lead.id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+
+  return (
+    <motion.article
+      ref={setNodeRef}
+      style={style}
+      layout
+      {...attributes}
+      {...listeners}
+      onClick={() => onSelect(lead.id)}
+      className={`rounded-xl border bg-gradient-to-br from-slate-900/70 via-slate-900/80 to-black/85 p-3 text-xs transition ${
+        selected ? "border-cyan-300/70" : "border-white/10"
+      } ${lead.score >= 85 ? "shadow-[0_0_0_1px_rgba(56,189,248,0.65),0_0_24px_rgba(56,189,248,0.25)]" : "shadow-[0_12px_30px_rgba(2,6,23,0.85)]"} ${
+        lead.score < 60 ? "opacity-60" : ""
+      } ${isDragging ? "opacity-60" : ""}`}
+      whileHover={{ y: -2 }}
+    >
+      <div className="mb-1.5 flex items-start justify-between gap-2">
+        <label className="inline-flex items-center gap-2 text-sm font-medium text-white" onClick={(event) => event.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={(event) => onCheck(lead.id, event.target.checked)}
+            className="h-3.5 w-3.5 rounded border-white/20 bg-black/50"
+          />
+          {lead.name}
+        </label>
+        <span className="rounded-md border border-cyan-300/40 bg-cyan-400/15 px-2 py-0.5 text-[11px] font-semibold text-cyan-200">
+          {lead.score}
+        </span>
+      </div>
+      <p className="text-[11px] text-text-dim">{lead.company}</p>
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <span className="rounded-full border border-emerald-300/35 bg-emerald-500/15 px-1.5 py-0.5 text-[10px] text-emerald-200">
+          {formatMoney(lead.budget_estimate)}
+        </span>
+        <span className="rounded-full border border-amber-300/35 bg-amber-500/15 px-1.5 py-0.5 text-[10px] text-amber-200">
+          {lead.urgency}
+        </span>
+      </div>
+      <div className="mt-2 flex items-center justify-between text-[11px] text-text-dim">
+        <span>{lead.ai_analysis.deal_probability}% close chance</span>
+        <span>{fromNow(lead.last_activity_at)}</span>
+      </div>
+    </motion.article>
+  );
+};
+
 const StageColumn = ({
   stage,
-  title,
-  icon,
   leads,
   selectedLeadId,
+  checkedIds,
+  onCheck,
   onSelect,
-}: StageColumnProps) => {
-  const { setNodeRef, isOver } = useDroppable({ id: stage });
+}: {
+  stage: { id: ManageLeadStage; label: string; icon: string };
+  leads: ManageLead[];
+  selectedLeadId: string | null;
+  checkedIds: string[];
+  onCheck: (leadId: string, checked: boolean) => void;
+  onSelect: (leadId: string) => void;
+}) => {
+  const { setNodeRef, isOver } = useDroppable({ id: stage.id });
 
   return (
     <section
       ref={setNodeRef}
-      className={`rounded-2xl border border-white/10 bg-slate-950/70 p-3 backdrop-blur-xl transition ${
-        isOver ? "border-emerald-400/70 shadow-[0_0_0_1px_rgba(16,185,129,0.45)]" : ""
+      className={`rounded-2xl border border-white/10 bg-slate-950/70 p-3 transition ${
+        isOver ? "border-cyan-300/70" : ""
       }`}
     >
-      <div className={`mb-3 rounded-xl border border-white/10 bg-gradient-to-r ${stageTone(stage)} px-3 py-2`}>
+      <div className="mb-3 rounded-xl border border-white/10 bg-gradient-to-r from-cyan-500/15 to-violet-500/10 px-3 py-2">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-white/90">
-            {icon} {title}
+            {stage.icon} {stage.label}
           </h3>
           <span className="rounded-full border border-white/10 bg-black/40 px-2 py-0.5 text-[11px] text-text-dim">
             {leads.length}
@@ -117,7 +181,7 @@ const StageColumn = ({
         </div>
       </div>
 
-      <SortableContext items={leads.map((lead) => lead.id)} strategy={rectSortingStrategy}>
+      <SortableContext items={leads.map((lead) => lead.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-2">
           {leads.length === 0 ? (
             <div className="rounded-xl border border-dashed border-white/10 bg-black/35 p-6 text-center text-xs text-text-dim">
@@ -130,7 +194,9 @@ const StageColumn = ({
               key={lead.id}
               lead={lead}
               selected={selectedLeadId === lead.id}
-              onSelect={() => onSelect(lead.id)}
+              checked={checkedIds.includes(lead.id)}
+              onCheck={onCheck}
+              onSelect={onSelect}
             />
           ))}
         </div>
@@ -139,89 +205,39 @@ const StageColumn = ({
   );
 };
 
-const LeadCard = ({
-  lead,
-  selected,
-  onSelect,
-}: {
-  lead: ManageLead;
-  selected: boolean;
-  onSelect: () => void;
-}) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: lead.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  const highIntent = lead.score >= 85;
-  const lowQuality = lead.score < 60;
-
-  return (
-    <motion.article
-      ref={setNodeRef}
-      style={style}
-      layout
-      {...attributes}
-      {...listeners}
-      onClick={onSelect}
-      className={`cursor-grab rounded-xl border bg-gradient-to-br from-slate-900/70 via-slate-900/80 to-black/85 p-3 text-xs shadow-[0_14px_30px_rgba(2,6,23,0.85)] transition active:cursor-grabbing ${
-        selected ? "border-cyan-300/70" : "border-white/10"
-      } ${highIntent ? "shadow-[0_0_0_1px_rgba(96,165,250,0.65),0_0_20px_rgba(96,165,250,0.25)]" : ""} ${
-        lowQuality ? "opacity-60" : ""
-      } ${isDragging ? "opacity-60" : ""}`}
-      whileHover={{ y: -2 }}
-    >
-      <div className="mb-1.5 flex items-start justify-between gap-2">
-        <div>
-          <p className="text-sm font-medium text-white">{lead.name}</p>
-          <p className="text-[11px] text-text-dim">{lead.company}</p>
-        </div>
-        <span className="rounded-md border border-cyan-300/40 bg-cyan-400/15 px-2 py-0.5 text-[11px] font-semibold text-cyan-200">
-          {lead.score}
-        </span>
-      </div>
-
-      <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-        <span className={`text-[11px] font-medium uppercase tracking-[0.14em] ${sourceTone(lead.source)}`}>
-          {lead.source}
-        </span>
-        <span className={`rounded-full border px-1.5 py-0.5 text-[10px] ${urgencyTone(lead.urgency)}`}>
-          {lead.urgency}
-        </span>
-        <span className="rounded-full border border-emerald-400/35 bg-emerald-400/15 px-1.5 py-0.5 text-[10px] text-emerald-200">
-          {formatMoney(lead.budget_estimate)}
-        </span>
-      </div>
-
-      <div className="flex items-center justify-between text-[11px] text-text-dim">
-        <span>{lead.ai_analysis.deal_probability}% close chance</span>
-        <span>{fromNow(lead.last_activity_at)}</span>
-      </div>
-    </motion.article>
-  );
-};
-
 export const ManageLeadsPage = () => {
   const {
     manageLeads,
     selectedManageLeadId,
+    selectedManageLeadIds,
     manageLeadView,
     setManageLeads,
     setSelectedManageLeadId,
+    setSelectedManageLeadIds,
     setManageLeadView,
   } = useLeadStore();
 
   const [search, setSearch] = useState("");
   const [onlyHot, setOnlyHot] = useState(false);
-  const [onlyCold, setOnlyCold] = useState(false);
-  const [minScore, setMinScore] = useState(0);
   const [insights, setInsights] = useState<ManageLeadInsights | null>(null);
   const [analytics, setAnalytics] = useState<ManageLeadAnalytics | null>(null);
   const [timeline, setTimeline] = useState<ManageLeadActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [showAddRow, setShowAddRow] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [csvMapping, setCsvMapping] = useState<Record<string, string>>({});
+  const [csvResult, setCsvResult] = useState<CSVImportResult | null>(null);
+  const [newLead, setNewLead] = useState({
+    name: "",
+    company: "",
+    email: "",
+    phone: "",
+    stage: "NEW" as ManageLeadStage,
+    budget_estimate: 0,
+  });
 
   const selectedLead = useMemo(
     () => manageLeads.find((lead) => lead.id === selectedManageLeadId) ?? null,
@@ -231,9 +247,7 @@ export const ManageLeadsPage = () => {
   const loadLeads = async () => {
     const list = await leadService.listManageLeads({
       query: search || undefined,
-      min_score: minScore,
       only_hot: onlyHot,
-      only_cold: onlyCold,
     });
     setManageLeads(list);
     if (!selectedManageLeadId && list.length > 0) {
@@ -262,7 +276,6 @@ export const ManageLeadsPage = () => {
         setLoading(false);
       }
     };
-
     void run();
   }, []);
 
@@ -271,104 +284,112 @@ export const ManageLeadsPage = () => {
       setTimeline([]);
       return;
     }
-
     const run = async () => {
-      try {
-        const data = await leadService.getManageLeadTimeline(selectedLead.id);
-        setTimeline(data);
-      } catch {
-        setTimeline([]);
-      }
+      const data = await leadService.getManageLeadTimeline(selectedLead.id);
+      setTimeline(data);
     };
-
     void run();
   }, [selectedLead?.id]);
 
-  const stageGroups = useMemo(() => {
-    return STAGES.map((stage) => ({
-      ...stage,
-      leads: manageLeads.filter((lead) => lead.stage === stage.id),
-    }));
-  }, [manageLeads]);
+  const grouped = useMemo(
+    () =>
+      STAGES.map((stage) => ({
+        ...stage,
+        leads: manageLeads.filter((lead) => lead.stage === stage.id),
+      })),
+    [manageLeads],
+  );
+
+  const toggleChecked = (leadId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedManageLeadIds([...selectedManageLeadIds, leadId]);
+      return;
+    }
+    setSelectedManageLeadIds(selectedManageLeadIds.filter((id) => id !== leadId));
+  };
+
+  const applyBulk = async (
+    action: "MARK_CONTACTED" | "MARK_RESPONDED" | "SOFT_DELETE" | "MOVE_STAGE",
+    targetStage?: ManageLeadStage,
+  ) => {
+    if (selectedManageLeadIds.length === 0) return;
+    await leadService.bulkManageLeadAction({
+      lead_ids: selectedManageLeadIds,
+      action,
+      target_stage: targetStage,
+    });
+    setSelectedManageLeadIds([]);
+    await Promise.all([loadLeads(), loadInsights()]);
+    if (action === "MOVE_STAGE" && targetStage === "CONTRACTED") {
+      setFeedback("Moved to CRM");
+    }
+  };
 
   const handleAction = async (actionType: ManageLeadActionType, targetStage?: ManageLeadStage) => {
     if (!selectedLead) return;
-
-    const updated = await leadService.manageLeadAction(selectedLead.id, {
+    await leadService.manageLeadAction(selectedLead.id, {
       action_type: actionType,
       target_stage: targetStage,
     });
-
-    setManageLeads(
-      manageLeads.map((lead) => (lead.id === updated.id ? updated : lead)),
-    );
-    setSelectedManageLeadId(updated.id);
-
-    const [nextInsights, nextAnalytics, nextTimeline] = await Promise.all([
-      leadService.getManageLeadInsights(),
-      leadService.getManageLeadAnalytics(),
-      leadService.getManageLeadTimeline(updated.id),
-    ]);
-    setInsights(nextInsights);
-    setAnalytics(nextAnalytics);
-    setTimeline(nextTimeline);
+    await Promise.all([loadLeads(), loadInsights()]);
+    if (actionType === "MOVE_STAGE" && targetStage === "CONTRACTED") {
+      setFeedback("Moved to CRM");
+    }
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
-
     const activeId = String(active.id);
     const overId = String(over.id);
-    const activeLead = manageLeads.find((lead) => lead.id === activeId);
-    if (!activeLead) return;
+    const source = manageLeads.find((lead) => lead.id === activeId);
+    if (!source) return;
 
-    const targetStage = STAGES.find((stage) => stage.id === overId)?.id
-      ?? manageLeads.find((lead) => lead.id === overId)?.stage;
+    const targetStage = STAGES.find((item) => item.id === overId)?.id;
+    if (!targetStage || targetStage === source.stage) return;
 
-    if (!targetStage) return;
-
-    if (targetStage === activeLead.stage) {
-      const sourceItems = manageLeads.filter((lead) => lead.stage === activeLead.stage);
-      const oldIndex = sourceItems.findIndex((lead) => lead.id === activeId);
-      const newIndex = sourceItems.findIndex((lead) => lead.id === overId);
-      if (oldIndex === -1 || newIndex === -1) return;
-
-      const reorderedSource = arrayMove(sourceItems, oldIndex, newIndex);
-      const withoutStage = manageLeads.filter((lead) => lead.stage !== activeLead.stage);
-      setManageLeads([...withoutStage, ...reorderedSource]);
-      return;
-    }
-
-    const optimistic = manageLeads.map((lead) =>
-      lead.id === activeLead.id ? { ...lead, stage: targetStage } : lead,
-    );
-    setManageLeads(optimistic);
-
-    try {
-      const updated = await leadService.updateManageLead(activeLead.id, { stage: targetStage });
-      setManageLeads(
-        optimistic.map((lead) => (lead.id === updated.id ? updated : lead)),
-      );
-      const nextInsights = await leadService.getManageLeadInsights();
-      setInsights(nextInsights);
-    } catch {
-      setManageLeads(manageLeads);
+    await leadService.updateManageLead(source.id, { stage: targetStage });
+    await Promise.all([loadLeads(), loadInsights()]);
+    if (targetStage === "CONTRACTED") {
+      setFeedback("Moved to CRM");
     }
   };
 
-  const runAutomations = async () => {
-    await leadService.runManageLeadAutomation();
+  const handleInlineField = async (
+    leadId: string,
+    patch: { email?: string; phone?: string; stage?: ManageLeadStage; notes?: string; budget_estimate?: number },
+  ) => {
+    await leadService.updateManageLead(leadId, patch);
     await Promise.all([loadLeads(), loadInsights()]);
   };
 
-  const totalPipeline = useMemo(
-    () =>
-      manageLeads
-        .filter((lead) => !["WON", "LOST"].includes(lead.stage))
-        .reduce((acc, lead) => acc + lead.budget_estimate, 0),
-    [manageLeads],
-  );
+  const createLeadRow = async () => {
+    if (!newLead.name.trim() || !newLead.company.trim()) return;
+    await leadService.createManageLead(newLead);
+    setNewLead({ name: "", company: "", email: "", phone: "", stage: "NEW", budget_estimate: 0 });
+    setShowAddRow(false);
+    await Promise.all([loadLeads(), loadInsights()]);
+  };
+
+  const handleFilePick = async (file: File) => {
+    setCsvFile(file);
+    const text = await file.text();
+    const [headerLine = ""] = text.split(/\r?\n/);
+    const headers = headerLine.split(",").map((item) => item.trim()).filter(Boolean);
+    setCsvHeaders(headers);
+    const initial: Record<string, string> = {};
+    headers.forEach((header) => {
+      initial[header] = guessMapping(header);
+    });
+    setCsvMapping(initial);
+  };
+
+  const importCsv = async () => {
+    if (!csvFile) return;
+    const result = await leadService.importManageLeadCSV(csvFile, csvMapping);
+    setCsvResult(result);
+    await Promise.all([loadLeads(), loadInsights()]);
+  };
 
   if (loading) {
     return <div className="rounded-2xl border border-white/10 bg-black/30 p-8 text-sm text-text-dim">Loading Manage Leads dashboard...</div>;
@@ -380,25 +401,21 @@ export const ManageLeadsPage = () => {
 
   return (
     <div className="space-y-4">
-      <header className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-transparent to-cyan-500/10 p-4 shadow-[0_15px_40px_rgba(2,6,23,0.8)] backdrop-blur-xl">
-        <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+      <header className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-transparent to-cyan-500/10 p-4 backdrop-blur-xl">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="bg-gradient-to-r from-white via-cyan-100 to-violet-100 bg-clip-text text-3xl font-semibold text-transparent">
-              Manage Leads
-            </h2>
-            <p className="text-sm text-text-dim">
-              AI + Visual Pipeline + Action System to guide every deal to close.
-            </p>
+            <h2 className="text-3xl font-semibold text-white">Manage Leads</h2>
+            <p className="text-sm text-text-dim">Not a CRM. A lead conversion engine.</p>
           </div>
           <div className="flex items-center gap-2">
             {VIEW_OPTIONS.map((view) => (
               <button
                 key={view.value}
                 onClick={() => setManageLeadView(view.value)}
-                className={`rounded-full px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] transition ${
+                className={`rounded-full px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] ${
                   manageLeadView === view.value
                     ? "bg-gradient-to-r from-cyan-400 to-violet-400 text-slate-950"
-                    : "border border-white/10 bg-black/30 text-text-dim hover:text-white"
+                    : "border border-white/10 bg-black/30 text-text-dim"
                 }`}
               >
                 {view.label}
@@ -408,20 +425,17 @@ export const ManageLeadsPage = () => {
         </div>
 
         <div className="grid gap-3 md:grid-cols-3">
-          <div className="rounded-xl border border-white/10 bg-black/35 p-3 text-sm">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-text-dim">🔥 Hot Leads</p>
-            <p className="mt-1 text-2xl font-semibold text-cyan-200">{insights?.hot_leads_need_reply ?? 0}</p>
-            <p className="text-xs text-text-dim">Need reply today</p>
+          <div className="rounded-xl border border-white/10 bg-black/35 p-3">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-text-dim">Hot leads</p>
+            <p className="text-2xl font-semibold text-cyan-200">{insights?.hot_leads_need_reply ?? 0}</p>
           </div>
-          <div className="rounded-xl border border-white/10 bg-black/35 p-3 text-sm">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-text-dim">⚠️ Going Cold</p>
-            <p className="mt-1 text-2xl font-semibold text-amber-200">{insights?.leads_going_cold ?? 0}</p>
-            <p className="text-xs text-text-dim">Require re-engagement</p>
+          <div className="rounded-xl border border-white/10 bg-black/35 p-3">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-text-dim">Going cold</p>
+            <p className="text-2xl font-semibold text-amber-200">{insights?.leads_going_cold ?? 0}</p>
           </div>
-          <div className="rounded-xl border border-white/10 bg-black/35 p-3 text-sm">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-text-dim">💰 Likely To Close</p>
-            <p className="mt-1 text-2xl font-semibold text-emerald-200">{insights?.leads_likely_to_close ?? 0}</p>
-            <p className="text-xs text-text-dim">High conversion probability</p>
+          <div className="rounded-xl border border-white/10 bg-black/35 p-3">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-text-dim">Likely to close</p>
+            <p className="text-2xl font-semibold text-emerald-200">{insights?.leads_likely_to_close ?? 0}</p>
           </div>
         </div>
 
@@ -429,174 +443,231 @@ export const ManageLeadsPage = () => {
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search name, company or context"
-            className="min-w-[220px] flex-1 rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-cyan-300/60"
+            placeholder="Search by name/company/email"
+            className="min-w-[220px] flex-1 rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none"
           />
+          <button onClick={() => setOnlyHot((v) => !v)} className="rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-xs text-text-dim">
+            {onlyHot ? "Hot only: on" : "Hot only"}
+          </button>
+          <button onClick={() => void loadLeads()} className="rounded-xl bg-cyan-400 px-3 py-2 text-xs font-semibold text-slate-950">
+            Apply
+          </button>
           <label className="rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-xs text-text-dim">
-            Min score: {minScore}
+            Upload CSV
             <input
-              type="range"
-              min={0}
-              max={100}
-              value={minScore}
-              onChange={(event) => setMinScore(Number(event.target.value))}
-              className="ml-2 align-middle"
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) {
+                  void handleFilePick(file);
+                }
+              }}
             />
           </label>
-          <button
-            onClick={() => setOnlyHot((value) => !value)}
-            className={`rounded-xl px-3 py-2 text-xs ${onlyHot ? "bg-cyan-500/20 text-cyan-100" : "border border-white/10 bg-black/40 text-text-dim"}`}
-          >
-            Hot only
-          </button>
-          <button
-            onClick={() => setOnlyCold((value) => !value)}
-            className={`rounded-xl px-3 py-2 text-xs ${onlyCold ? "bg-amber-500/20 text-amber-100" : "border border-white/10 bg-black/40 text-text-dim"}`}
-          >
-            Going cold
-          </button>
-          <button
-            onClick={() => void loadLeads()}
-            className="rounded-xl bg-gradient-to-r from-cyan-400 to-violet-400 px-3 py-2 text-xs font-semibold text-slate-950"
-          >
-            Apply filters
-          </button>
-          <button
-            onClick={() => void runAutomations()}
-            className="rounded-xl border border-emerald-300/30 bg-emerald-500/15 px-3 py-2 text-xs text-emerald-100"
-          >
-            Run automations
+          <button onClick={() => setShowAddRow((v) => !v)} className="rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-xs text-text-dim">
+            Add Lead
           </button>
         </div>
       </header>
 
+      {selectedManageLeadIds.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-cyan-300/35 bg-cyan-500/10 px-3 py-2 text-xs">
+          <span className="text-cyan-100">{selectedManageLeadIds.length} selected</span>
+          <button className="rounded border border-white/15 bg-black/40 px-2 py-1" onClick={() => void applyBulk("MARK_CONTACTED")}>
+            Mark Contacted
+          </button>
+          <button className="rounded border border-white/15 bg-black/40 px-2 py-1" onClick={() => void applyBulk("MARK_RESPONDED")}>
+            Mark Responded
+          </button>
+          <button className="rounded border border-white/15 bg-black/40 px-2 py-1" onClick={() => void applyBulk("MOVE_STAGE", "CONTRACTED")}>
+            Move Contracted
+          </button>
+          <button className="rounded border border-rose-300/35 bg-rose-500/15 px-2 py-1 text-rose-100" onClick={() => void applyBulk("SOFT_DELETE")}>
+            Delete to Bin
+          </button>
+        </div>
+      ) : null}
+
+      {feedback ? (
+        <div className="rounded-xl border border-emerald-300/40 bg-emerald-500/15 px-3 py-2 text-sm text-emerald-100">✅ {feedback}</div>
+      ) : null}
+
+      {csvFile && csvHeaders.length > 0 ? (
+        <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
+          <p className="text-sm text-white">CSV Field Mapping: {csvFile.name}</p>
+          <div className="mt-2 grid gap-2 md:grid-cols-2">
+            {csvHeaders.map((header) => (
+              <label key={header} className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-black/25 px-2 py-1 text-xs">
+                <span className="text-text-dim">{header}</span>
+                <select
+                  value={csvMapping[header] ?? ""}
+                  onChange={(event) => setCsvMapping((prev) => ({ ...prev, [header]: event.target.value }))}
+                  className="rounded border border-white/15 bg-black/40 px-2 py-1 text-white"
+                >
+                  <option value="">Ignore</option>
+                  {APP_IMPORT_FIELDS.map((field) => (
+                    <option key={field} value={field}>
+                      {field}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ))}
+          </div>
+          <div className="mt-2 flex gap-2">
+            <button onClick={() => void importCsv()} className="rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-semibold text-slate-950">
+              Import CSV
+            </button>
+            <button onClick={() => setCsvFile(null)} className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-text-dim">
+              Cancel
+            </button>
+          </div>
+          {csvResult ? (
+            <p className="mt-2 text-xs text-text-dim">
+              Imported {csvResult.accepted}, skipped {csvResult.skipped}, invalid {csvResult.invalid}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
       {manageLeadView === "kanban" ? (
         <div className="grid gap-4 xl:grid-cols-[2.2fr_1fr]">
           <DndContext onDragEnd={(event) => void handleDragEnd(event)}>
-            <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
-              {stageGroups.map((column) => (
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {grouped.map((column) => (
                 <StageColumn
                   key={column.id}
-                  stage={column.id}
-                  title={column.label}
-                  icon={column.icon}
+                  stage={column}
                   leads={column.leads}
                   selectedLeadId={selectedManageLeadId}
+                  checkedIds={selectedManageLeadIds}
+                  onCheck={toggleChecked}
                   onSelect={setSelectedManageLeadId}
                 />
               ))}
             </div>
           </DndContext>
 
-          <aside className="rounded-2xl border border-white/10 bg-slate-950/80 p-4 shadow-[0_18px_45px_rgba(2,6,23,0.9)] backdrop-blur-xl">
+          <aside className="rounded-2xl border border-white/10 bg-slate-950/80 p-4">
             {selectedLead ? (
               <AnimatePresence mode="wait">
-                <motion.div key={selectedLead.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
-                  <div className="mb-3">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-text-dim">Lead details</p>
-                    <h3 className="text-2xl font-semibold text-white">{selectedLead.name}</h3>
-                    <p className="text-sm text-text-dim">{selectedLead.company}</p>
-                  </div>
-
-                  <div className="space-y-2 rounded-xl border border-white/10 bg-black/30 p-3 text-xs">
-                    <p className="text-text-dim">👤 Basic Info</p>
-                    <p>Email: {selectedLead.email ?? "N/A"}</p>
-                    <p>Phone: {selectedLead.phone ?? "N/A"}</p>
-                    <p>Source: <span className="uppercase">{selectedLead.source}</span></p>
+                <motion.div key={selectedLead.id} initial={{ opacity: 0, x: 14 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }}>
+                  <h3 className="text-2xl font-semibold text-white">{selectedLead.name}</h3>
+                  <p className="text-sm text-text-dim">{selectedLead.company}</p>
+                  <div className="mt-3 space-y-1 text-xs text-text-dim">
+                    <p>📧 {selectedLead.email ?? "N/A"}</p>
+                    <p>📱 {selectedLead.phone ?? "N/A"}</p>
+                    <p>Stage: {selectedLead.stage}</p>
+                    <p>Score: {selectedLead.score}</p>
                     <p>Budget: {formatMoney(selectedLead.budget_estimate)}</p>
-                    <p>Urgency: {selectedLead.urgency}</p>
                   </div>
-
-                  <div className="mt-3 space-y-2 rounded-xl border border-cyan-400/25 bg-cyan-400/5 p-3 text-xs">
-                    <p className="text-cyan-200">🧠 AI Analysis</p>
-                    <p>Intent score: {selectedLead.ai_analysis.intent_score}</p>
-                    <p>Deal probability: {selectedLead.ai_analysis.deal_probability}%</p>
-                    <p>Time to close: {selectedLead.ai_analysis.expected_close_days} days</p>
-                    <p>Ghost detection: {selectedLead.ai_analysis.ghost_probability}%</p>
-                    <p>Best portfolio match: {selectedLead.ai_analysis.portfolio_match}</p>
-                    <p>Suggested pitch: {selectedLead.ai_analysis.suggested_pitch}</p>
-                    <p>Winning strategy: {selectedLead.ai_analysis.winning_strategy}</p>
-                    <div>
-                      <p className="mb-1 text-cyan-100">Pain points</p>
-                      <ul className="list-disc pl-4 text-text-dim">
-                        {selectedLead.ai_analysis.pain_points.map((point) => (
-                          <li key={point}>{point}</li>
-                        ))}
-                      </ul>
-                    </div>
+                  <div className="mt-3 rounded-xl border border-cyan-400/25 bg-cyan-500/5 p-3 text-xs">
+                    <p className="text-cyan-100">Pain points: {selectedLead.ai_analysis.pain_points.join(", ") || "N/A"}</p>
+                    <p className="text-cyan-100">Suggested pitch: {selectedLead.ai_analysis.suggested_pitch}</p>
+                    <p className="text-cyan-100">Deal probability: {selectedLead.ai_analysis.deal_probability}%</p>
                   </div>
-
                   <div className="mt-3 grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => void handleAction("SEND_FOLLOW_UP")}
-                      className="rounded-lg border border-white/10 bg-black/40 px-2 py-2 text-xs text-white transition hover:border-cyan-300/50"
-                    >
-                      Send follow-up
-                    </button>
-                    <button
-                      onClick={() => void handleAction("PROPOSE_PRICING")}
-                      className="rounded-lg border border-white/10 bg-black/40 px-2 py-2 text-xs text-white transition hover:border-cyan-300/50"
-                    >
-                      Propose pricing
-                    </button>
-                    <button
-                      onClick={() => void handleAction("SCHEDULE_CALL")}
-                      className="rounded-lg border border-white/10 bg-black/40 px-2 py-2 text-xs text-white transition hover:border-cyan-300/50"
-                    >
-                      Schedule call
-                    </button>
-                    <button
-                      onClick={() => void handleAction("MOVE_STAGE", "WON")}
-                      className="rounded-lg border border-emerald-300/40 bg-emerald-500/15 px-2 py-2 text-xs text-emerald-100"
-                    >
-                      Move to won
-                    </button>
+                    <button className="rounded-lg border border-white/10 px-2 py-2 text-xs" onClick={() => void handleAction("SEND_FOLLOW_UP")}>Send message</button>
+                    <button className="rounded-lg border border-white/10 px-2 py-2 text-xs" onClick={() => void handleAction("SCHEDULE_CALL")}>Schedule call</button>
+                    <button className="rounded-lg border border-white/10 px-2 py-2 text-xs" onClick={() => void handleAction("MOVE_STAGE", "RESPONDED")}>Move responded</button>
+                    <button className="rounded-lg border border-emerald-300/30 bg-emerald-500/15 px-2 py-2 text-xs text-emerald-100" onClick={() => void handleAction("MOVE_STAGE", "CONTRACTED")}>Move contracted</button>
                   </div>
-
-                  <div className="mt-3 rounded-xl border border-white/10 bg-black/30 p-3">
-                    <p className="mb-2 text-xs uppercase tracking-[0.16em] text-text-dim">Activity timeline</p>
-                    <div className="max-h-52 space-y-2 overflow-auto pr-1">
-                      {timeline.map((item) => (
-                        <div key={item.id} className="rounded-lg border border-white/10 bg-black/30 p-2 text-xs">
-                          <p className="font-medium text-white">{item.activity_type.replaceAll("_", " ")}</p>
-                          <p className="text-text-dim">{item.message}</p>
-                          <p className="mt-1 text-[10px] text-text-dim">{new Date(item.created_at).toLocaleString()}</p>
-                        </div>
-                      ))}
-                    </div>
+                  <div className="mt-3 space-y-1 rounded-xl border border-white/10 bg-black/25 p-3 text-xs">
+                    <p className="uppercase tracking-[0.16em] text-text-dim">Timeline</p>
+                    {timeline.map((item) => (
+                      <div key={item.id}>
+                        <p className="text-white">{item.activity_type.replaceAll("_", " ")}</p>
+                        <p className="text-text-dim">{item.message}</p>
+                      </div>
+                    ))}
                   </div>
                 </motion.div>
               </AnimatePresence>
             ) : (
-              <div className="rounded-xl border border-dashed border-white/10 bg-black/20 p-6 text-center text-sm text-text-dim">
-                Select a lead to see AI insights and actions.
-              </div>
+              <div className="rounded-xl border border-dashed border-white/10 bg-black/20 p-6 text-center text-sm text-text-dim">Select a lead</div>
             )}
           </aside>
         </div>
       ) : null}
 
       {manageLeadView === "table" ? (
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80 backdrop-blur-xl">
-          <div className="grid grid-cols-[1.6fr_1.3fr_100px_110px_130px_100px] border-b border-white/10 px-4 py-2 text-[10px] uppercase tracking-[0.18em] text-text-dim">
-            <span>Name / Company</span>
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80">
+          <div className="grid grid-cols-[40px_1.2fr_1.2fr_1.4fr_130px_80px_110px_130px_120px] border-b border-white/10 px-4 py-2 text-[10px] uppercase tracking-[0.16em] text-text-dim">
+            <span>[✔]</span>
+            <span>Name</span>
+            <span>Company</span>
+            <span>Contact</span>
             <span>Stage</span>
             <span>Score</span>
-            <span>Urgency</span>
             <span>Budget</span>
-            <span>Source</span>
+            <span>Last Activity</span>
+            <span>Actions</span>
           </div>
+
+          {showAddRow ? (
+            <div className="grid grid-cols-[40px_1.2fr_1.2fr_1.4fr_130px_80px_110px_130px_120px] items-center border-b border-white/10 px-4 py-2 text-xs">
+              <span />
+              <input className="rounded border border-white/10 bg-black/30 px-2 py-1" value={newLead.name} onChange={(e) => setNewLead((prev) => ({ ...prev, name: e.target.value }))} />
+              <input className="rounded border border-white/10 bg-black/30 px-2 py-1" value={newLead.company} onChange={(e) => setNewLead((prev) => ({ ...prev, company: e.target.value }))} />
+              <div className="space-y-1">
+                <input className="w-full rounded border border-white/10 bg-black/30 px-2 py-1" placeholder="email" value={newLead.email} onChange={(e) => setNewLead((prev) => ({ ...prev, email: e.target.value }))} />
+                <input className="w-full rounded border border-white/10 bg-black/30 px-2 py-1" placeholder="phone" value={newLead.phone} onChange={(e) => setNewLead((prev) => ({ ...prev, phone: e.target.value }))} />
+              </div>
+              <select className="rounded border border-white/10 bg-black/30 px-2 py-1" value={newLead.stage} onChange={(e) => setNewLead((prev) => ({ ...prev, stage: e.target.value as ManageLeadStage }))}>
+                {STAGES.map((stage) => (
+                  <option key={stage.id} value={stage.id}>{stage.label}</option>
+                ))}
+              </select>
+              <span className="text-text-dim">60</span>
+              <input type="number" className="rounded border border-white/10 bg-black/30 px-2 py-1" value={newLead.budget_estimate} onChange={(e) => setNewLead((prev) => ({ ...prev, budget_estimate: Number(e.target.value) || 0 }))} />
+              <span className="text-text-dim">now</span>
+              <div className="flex gap-1">
+                <button className="rounded border border-emerald-300/40 bg-emerald-500/15 px-2 py-1 text-[11px]" onClick={() => void createLeadRow()}>Save</button>
+                <button className="rounded border border-white/10 px-2 py-1 text-[11px]" onClick={() => setShowAddRow(false)}>Cancel</button>
+              </div>
+            </div>
+          ) : null}
+
           {manageLeads.map((lead) => (
-            <div key={lead.id} className="grid grid-cols-[1.6fr_1.3fr_100px_110px_130px_100px] items-center border-b border-white/5 px-4 py-3 text-sm">
-              <span>
-                <p className="text-white">{lead.name}</p>
-                <p className="text-xs text-text-dim">{lead.company}</p>
-              </span>
-              <span className="text-text-dim">{lead.stage}</span>
+            <div key={lead.id} className="grid grid-cols-[40px_1.2fr_1.2fr_1.4fr_130px_80px_110px_130px_120px] items-center border-b border-white/5 px-4 py-2 text-xs">
+              <input type="checkbox" checked={selectedManageLeadIds.includes(lead.id)} onChange={(e) => toggleChecked(lead.id, e.target.checked)} />
+              <button className="text-left text-white" onClick={() => setSelectedManageLeadId(lead.id)}>{lead.name}</button>
+              <span className="text-text-dim">{lead.company}</span>
+              <div className="space-y-1">
+                <input
+                  defaultValue={lead.email ?? ""}
+                  className="w-full rounded border border-white/10 bg-black/30 px-2 py-0.5"
+                  onBlur={(event) => void handleInlineField(lead.id, { email: event.target.value })}
+                />
+                <input
+                  defaultValue={lead.phone ?? ""}
+                  className="w-full rounded border border-white/10 bg-black/30 px-2 py-0.5"
+                  onBlur={(event) => void handleInlineField(lead.id, { phone: event.target.value })}
+                />
+              </div>
+              <select
+                value={lead.stage}
+                onChange={(event) => void handleInlineField(lead.id, { stage: event.target.value as ManageLeadStage })}
+                className="rounded border border-white/10 bg-black/30 px-2 py-1"
+              >
+                {STAGES.map((stage) => (
+                  <option key={stage.id} value={stage.id}>{stage.label}</option>
+                ))}
+              </select>
               <span className="text-cyan-200">{lead.score}</span>
-              <span className="text-text-dim">{lead.urgency}</span>
-              <span className="text-emerald-200">{formatMoney(lead.budget_estimate)}</span>
-              <span className="uppercase text-text-dim">{lead.source}</span>
+              <input
+                type="number"
+                defaultValue={lead.budget_estimate}
+                className="rounded border border-white/10 bg-black/30 px-2 py-1"
+                onBlur={(event) => void handleInlineField(lead.id, { budget_estimate: Number(event.target.value) || 0 })}
+              />
+              <span className="text-text-dim">{fromNow(lead.last_activity_at)}</span>
+              <div className="flex gap-1">
+                <button className="rounded border border-white/10 px-2 py-1 text-[11px]" onClick={() => setSelectedManageLeadId(lead.id)}>Details</button>
+                <button className="rounded border border-rose-300/30 bg-rose-500/15 px-2 py-1 text-[11px] text-rose-100" onClick={() => void leadService.softDeleteManageLead(lead.id).then(loadLeads)}>Delete</button>
+              </div>
             </div>
           ))}
         </div>
@@ -607,23 +678,10 @@ export const ManageLeadsPage = () => {
           <article className="rounded-2xl border border-white/10 bg-black/35 p-4">
             <p className="text-[11px] uppercase tracking-[0.18em] text-text-dim">Conversion rate</p>
             <p className="mt-1 text-4xl font-semibold text-emerald-200">{analytics?.conversion_rate ?? 0}%</p>
-            <p className="text-sm text-text-dim">Won / total lead flow</p>
           </article>
           <article className="rounded-2xl border border-white/10 bg-black/35 p-4">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-text-dim">Revenue pipeline</p>
-            <p className="mt-1 text-4xl font-semibold text-cyan-200">{formatMoney(analytics?.pipeline_value ?? totalPipeline)}</p>
-            <p className="text-sm text-text-dim">Open opportunities value</p>
-          </article>
-          <article className="rounded-2xl border border-white/10 bg-black/35 p-4 md:col-span-2">
-            <p className="mb-3 text-[11px] uppercase tracking-[0.18em] text-text-dim">Stage drop-offs</p>
-            <div className="grid gap-2 md:grid-cols-3 xl:grid-cols-6">
-              {STAGES.map((stage) => (
-                <div key={stage.id} className="rounded-xl border border-white/10 bg-black/30 p-3 text-center">
-                  <p className="text-xs text-text-dim">{stage.label}</p>
-                  <p className="mt-1 text-2xl text-white">{analytics?.stage_drop_offs?.[stage.id] ?? 0}</p>
-                </div>
-              ))}
-            </div>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-text-dim">Pipeline value</p>
+            <p className="mt-1 text-4xl font-semibold text-cyan-200">{formatMoney(analytics?.pipeline_value ?? 0)}</p>
           </article>
         </div>
       ) : null}
@@ -632,23 +690,12 @@ export const ManageLeadsPage = () => {
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {manageLeads
             .filter((lead) => lead.score >= 85)
-            .sort((a, b) => b.ai_analysis.deal_probability - a.ai_analysis.deal_probability)
             .map((lead) => (
-              <motion.article
-                key={lead.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="rounded-2xl border border-cyan-300/35 bg-gradient-to-br from-cyan-400/10 to-violet-500/5 p-4 shadow-[0_0_0_1px_rgba(125,211,252,0.3),0_0_35px_rgba(56,189,248,0.15)]"
-              >
+              <article key={lead.id} className="rounded-2xl border border-cyan-300/35 bg-gradient-to-br from-cyan-400/10 to-violet-500/5 p-4">
                 <p className="text-sm text-white">{lead.name} · {lead.company}</p>
-                <p className="mt-1 text-xs text-text-dim">Quick close mode</p>
-                <p className="mt-3 text-xs text-cyan-100">{lead.ai_analysis.next_action}</p>
-                <p className="mt-1 text-xs text-text-dim">{lead.ai_analysis.suggested_pitch}</p>
-                <div className="mt-3 flex items-center justify-between text-xs">
-                  <span className="text-cyan-200">{lead.ai_analysis.deal_probability}% close chance</span>
-                  <span className="text-emerald-200">{lead.ai_analysis.expected_close_days}d ETA</span>
-                </div>
-              </motion.article>
+                <p className="mt-2 text-xs text-cyan-100">{lead.ai_analysis.next_action}</p>
+                <p className="mt-1 text-xs text-text-dim">{lead.ai_analysis.winning_strategy}</p>
+              </article>
             ))}
         </div>
       ) : null}

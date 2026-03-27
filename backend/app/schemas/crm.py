@@ -4,7 +4,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
-CRMStatus = Literal["NEW", "CONTACTED", "REPLIED", "CLOSED"]
+CRMStatus = Literal["NEW", "CONTACTED", "REPLIED", "CONTRACTED", "CLOSED"]
 
 
 class CRMHistoryEntry(BaseModel):

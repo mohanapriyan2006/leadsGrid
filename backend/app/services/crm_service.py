@@ -30,5 +30,11 @@ class CRMService:
         )
         return crm_repository.upsert(record)
 
+    def upsert_contracted_record(self, lead_id: str, note: str | None = None) -> CRMRecord:
+        return self.update_record(
+            lead_id,
+            CRMUpdateRequest(status="CONTRACTED", note=note),
+        )
+
 
 crm_service = CRMService()

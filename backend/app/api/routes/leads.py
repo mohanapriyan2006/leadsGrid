@@ -1,10 +1,13 @@
-from fastapi import APIRouter, BackgroundTasks, Depends
+import json
+
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 
 from app.core.dependencies import get_current_user
 from app.schemas.auth import UserPublic
-from app.schemas.lead import Lead, LeadFetchRequest, LeadSource
+from app.schemas.lead import CSVImportResult, Lead, LeadFetchRequest, LeadSource
 from app.services.job_service import job_service
 from app.services.lead_service import lead_service
+from app.services.manage_lead_service import manage_lead_service
 from app.workers.lead_worker import run_lead_pipeline_job
 
 
@@ -55,3 +58,20 @@ def get_discovery_job(
     if job is None:
         return {"status": "unknown", "detail": None}
     return {"status": job.status, "detail": job.detail}
+
+
+@router.post("/import-csv", response_model=CSVImportResult)
+async def import_csv_compat(
+    file: UploadFile = File(...),
+    field_mapping: str = Form(default="{}"),
+    current_user: UserPublic = Depends(get_current_user),
+) -> CSVImportResult:
+    content = await file.read()
+    csv_text = content.decode("utf-8", errors="ignore")
+    try:
+        parsed_mapping = json.loads(field_mapping)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=400, detail="Invalid field_mapping JSON") from exc
+    if not isinstance(parsed_mapping, dict):
+        raise HTTPException(status_code=400, detail="field_mapping must be a JSON object")
+    return manage_lead_service.import_csv_text(csv_text, parsed_mapping)

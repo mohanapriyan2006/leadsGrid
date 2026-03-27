@@ -6,9 +6,10 @@ from pydantic import BaseModel, Field
 
 LeadSource = Literal["reddit", "twitter", "linkedin"]
 LeadManageSource = Literal["reddit", "linkedin", "website"]
-LeadStage = Literal["NEW_LEADS", "QUALIFIED", "CONTACTED", "NEGOTIATION", "WON", "LOST"]
+LeadStage = Literal["NEW", "QUALIFIED", "CONTACTED", "RESPONDED", "CONTRACTED"]
 LeadUrgency = Literal["low", "medium", "high"]
 LeadActionType = Literal["SEND_FOLLOW_UP", "PROPOSE_PRICING", "SCHEDULE_CALL", "MOVE_STAGE"]
+LeadBulkAction = Literal["MOVE_STAGE", "MARK_CONTACTED", "MARK_RESPONDED", "SOFT_DELETE"]
 
 
 class Lead(BaseModel):
@@ -22,7 +23,7 @@ class Lead(BaseModel):
     tags: list[str] = Field(default_factory=list)
     intent_label: str
     created_at: datetime
-    stage: LeadStage = "NEW_LEADS"
+    stage: LeadStage = "NEW"
     company: str = "Unknown Company"
     email: str | None = None
     phone: str | None = None
@@ -76,6 +77,8 @@ class ManageLead(BaseModel):
     updated_at: datetime
     notes: str | None = None
     is_going_cold: bool = False
+    is_deleted: bool = False
+    deleted_at: datetime | None = None
     ai_analysis: AIAnalysis
 
 
@@ -95,8 +98,7 @@ class ManageLeadInsights(BaseModel):
 
 class ManageLeadAnalytics(BaseModel):
     total_leads: int
-    won_count: int
-    lost_count: int
+    contracted_count: int
     conversion_rate: float
     pipeline_value: int
     stage_drop_offs: dict[str, int]
@@ -115,6 +117,59 @@ class LeadUpdateRequest(BaseModel):
     urgency: LeadUrgency | None = None
     email: str | None = None
     phone: str | None = None
+
+
+class BulkLeadActionRequest(BaseModel):
+    lead_ids: list[str] = Field(min_length=1)
+    action: LeadBulkAction
+    target_stage: LeadStage | None = None
+
+
+class CreateLeadRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    company: str = Field(min_length=1, max_length=160)
+    email: str | None = None
+    phone: str | None = None
+    stage: LeadStage = "NEW"
+    budget_estimate: int = Field(default=0, ge=0)
+    source: LeadManageSource = "website"
+    score: int = Field(default=60, ge=0, le=100)
+    urgency: LeadUrgency = "medium"
+    notes: str | None = None
+
+
+class CSVImportRow(BaseModel):
+    name: str | None = None
+    company: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    stage: LeadStage | None = None
+    score: int | None = None
+    budget_estimate: int | None = None
+    urgency: LeadUrgency | None = None
+    source: LeadManageSource | None = None
+    last_activity_at: datetime | None = None
+
+
+class CSVImportRequest(BaseModel):
+    rows: list[dict[str, str]]
+    field_mapping: dict[str, str] = Field(default_factory=dict)
+
+
+class CSVImportResult(BaseModel):
+    accepted: int
+    skipped: int
+    invalid: int
+    warnings: list[str] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
+
+
+class BinLead(BaseModel):
+    id: str
+    name: str
+    company: str
+    email: str | None = None
+    deleted_at: datetime
 
 
 class AutomationRunResult(BaseModel):

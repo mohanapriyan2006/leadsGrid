@@ -1,6 +1,9 @@
 import { apiClient, getStoredToken } from "../../../lib/api";
 import type { Lead } from "../types/lead";
 import type {
+  BinLead,
+  BulkLeadAction,
+  CSVImportResult,
   ManageLead,
   ManageLeadActionType,
   ManageLeadActivity,
@@ -84,7 +87,14 @@ export const leadService = {
 
   updateManageLead: async (
     leadId: string,
-    payload: { stage?: ManageLeadStage; notes?: string },
+    payload: {
+      stage?: ManageLeadStage;
+      notes?: string;
+      email?: string;
+      phone?: string;
+      budget_estimate?: number;
+      urgency?: ManageLeadUrgency;
+    },
   ): Promise<ManageLead> => {
     const token = getStoredToken();
     const response = await apiClient.patch<ManageLead>(`/leads/manage/${leadId}`, payload, {
@@ -129,6 +139,111 @@ export const leadService = {
           : undefined,
       },
     );
+    return response.data;
+  },
+
+  createManageLead: async (payload: {
+    name: string;
+    company: string;
+    email?: string;
+    phone?: string;
+    stage?: ManageLeadStage;
+    budget_estimate?: number;
+  }): Promise<ManageLead> => {
+    const token = getStoredToken();
+    const response = await apiClient.post<ManageLead>("/leads/manage", payload, {
+      headers: token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : undefined,
+    });
+    return response.data;
+  },
+
+  bulkManageLeadAction: async (payload: {
+    lead_ids: string[];
+    action: BulkLeadAction;
+    target_stage?: ManageLeadStage;
+  }): Promise<{ updated: number }> => {
+    const token = getStoredToken();
+    const response = await apiClient.post<{ updated: number }>("/leads/manage/bulk", payload, {
+      headers: token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : undefined,
+    });
+    return response.data;
+  },
+
+  softDeleteManageLead: async (leadId: string): Promise<void> => {
+    const token = getStoredToken();
+    await apiClient.delete(`/leads/manage/${leadId}`, {
+      headers: token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : undefined,
+    });
+  },
+
+  listManageLeadBin: async (): Promise<BinLead[]> => {
+    const token = getStoredToken();
+    const response = await apiClient.get<BinLead[]>("/leads/manage/bin", {
+      headers: token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : undefined,
+    });
+    return response.data;
+  },
+
+  restoreManageLead: async (leadId: string): Promise<void> => {
+    const token = getStoredToken();
+    await apiClient.post(
+      `/leads/manage/bin/${leadId}/restore`,
+      {},
+      {
+        headers: token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : undefined,
+      },
+    );
+  },
+
+  deleteManageLeadForever: async (leadId: string): Promise<void> => {
+    const token = getStoredToken();
+    await apiClient.delete(`/leads/manage/bin/${leadId}`, {
+      headers: token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : undefined,
+    });
+  },
+
+  importManageLeadCSV: async (
+    file: File,
+    fieldMapping: Record<string, string>,
+  ): Promise<CSVImportResult> => {
+    const token = getStoredToken();
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("field_mapping", JSON.stringify(fieldMapping));
+    const response = await apiClient.post<CSVImportResult>("/leads/import-csv", formData, {
+      headers: {
+        ...(token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {}),
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return response.data;
   },
 };

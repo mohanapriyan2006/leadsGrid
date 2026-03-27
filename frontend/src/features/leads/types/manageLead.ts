@@ -1,10 +1,9 @@
 export type ManageLeadStage =
-  | "NEW_LEADS"
+  | "NEW"
   | "QUALIFIED"
   | "CONTACTED"
-  | "NEGOTIATION"
-  | "WON"
-  | "LOST";
+  | "RESPONDED"
+  | "CONTRACTED";
 
 export type ManageLeadSource = "reddit" | "linkedin" | "website";
 export type ManageLeadUrgency = "low" | "medium" | "high";
@@ -37,6 +36,8 @@ export type ManageLead = {
   updated_at: string;
   notes: string | null;
   is_going_cold: boolean;
+  is_deleted: boolean;
+  deleted_at: string | null;
   ai_analysis: ManageLeadAnalysis;
 };
 
@@ -56,11 +57,28 @@ export type ManageLeadActivity = {
 
 export type ManageLeadAnalytics = {
   total_leads: number;
-  won_count: number;
-  lost_count: number;
+  contracted_count: number;
   conversion_rate: number;
   pipeline_value: number;
   stage_drop_offs: Record<string, number>;
+};
+
+export type BinLead = {
+  id: string;
+  name: string;
+  company: string;
+  email: string | null;
+  deleted_at: string;
+};
+
+export type BulkLeadAction = "MOVE_STAGE" | "MARK_CONTACTED" | "MARK_RESPONDED" | "SOFT_DELETE";
+
+export type CSVImportResult = {
+  accepted: number;
+  skipped: number;
+  invalid: number;
+  warnings: string[];
+  errors: string[];
 };
 
 export type ManageLeadActionType =

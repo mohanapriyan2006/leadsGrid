@@ -13,7 +13,7 @@ class LeadModel(Base):
     source: Mapped[str] = mapped_column(String(20), nullable=False)
     name: Mapped[str] = mapped_column(String(120), nullable=False, default="Unknown")
     company: Mapped[str] = mapped_column(String(160), nullable=False, default="Unknown Company")
-    stage: Mapped[str] = mapped_column(String(24), nullable=False, default="NEW_LEADS")
+    stage: Mapped[str] = mapped_column(String(24), nullable=False, default="NEW")
     email: Mapped[str | None] = mapped_column(String(160), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(40), nullable=True)
     budget_estimate: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
@@ -26,6 +26,8 @@ class LeadModel(Base):
     last_activity_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_going_cold: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 

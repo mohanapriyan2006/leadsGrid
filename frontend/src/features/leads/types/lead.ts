@@ -3,6 +3,7 @@ export type Lead = {
   source: "reddit" | "twitter" | "linkedin";
   author: string;
   title?: string;
+  email?: string | null;
   avatar?: string;
   location?: string;
   timeAgo?: string;

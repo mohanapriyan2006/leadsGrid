@@ -1,6 +1,11 @@
 from app.schemas.ai import MessageGenerationRequest, MessageGenerationResponse
+from app.schemas.message import SendEmailRequest, SendEmailResponse
+from app.services.email_service import EmailDeliveryError, email_service
 from app.services.ai_service import ai_service
 from app.services.cache_service import cache_service
+from app.repositories.manage_lead_repository import manage_lead_repository
+from app.repositories.message_repository import message_repository
+from app.utils.time import utc_now
 
 
 class MessageService:
@@ -55,6 +60,72 @@ class MessageService:
         if not issues:
             return "Strong draft: concise, contextual, and action-oriented."
         return "Needs improvement: " + ", ".join(issues) + "."
+
+    def send_and_track(self, payload: SendEmailRequest) -> SendEmailResponse:
+        lead = manage_lead_repository.get_lead(payload.lead_id)
+        if lead is None or lead.is_deleted:
+            raise ValueError("Lead not found")
+
+        now = utc_now()
+
+        try:
+            email_service.send_email(payload.to, payload.subject, payload.message)
+            message = message_repository.create(
+                lead_id=payload.lead_id,
+                email=payload.to,
+                subject=payload.subject,
+                content=payload.message,
+                status="sent",
+                provider="smtp",
+                created_at=now,
+            )
+        except EmailDeliveryError as exc:
+            message_repository.create(
+                lead_id=payload.lead_id,
+                email=payload.to,
+                subject=payload.subject,
+                content=payload.message,
+                status="failed",
+                provider="smtp",
+                created_at=now,
+                error_message=str(exc),
+            )
+            raise
+
+        previous_stage = lead.stage
+        if lead.stage != "CONTRACTED":
+            lead.stage = "CONTACTED"
+        lead.email = payload.to
+        lead.last_activity_at = now
+        lead.updated_at = now
+        lead.is_going_cold = False
+        manage_lead_repository.upsert_lead(lead)
+
+        if previous_stage != lead.stage:
+            manage_lead_repository.add_stage_event(
+                lead_id=lead.id,
+                from_stage=previous_stage,
+                to_stage=lead.stage,
+                reason="Email sent",
+                created_at=now,
+            )
+
+        manage_lead_repository.add_activity(
+            lead.id,
+            "EMAIL_SENT",
+            f"Outbound email sent: {payload.subject}",
+            now,
+        )
+
+        return SendEmailResponse(
+            status="success",
+            message_id=message.id,
+            lead_id=payload.lead_id,
+            to=payload.to,
+            subject=payload.subject,
+            provider=message.provider,
+            sent_at=message.created_at,
+        )
 
 
 message_service = MessageService()

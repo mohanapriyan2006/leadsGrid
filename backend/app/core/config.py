@@ -18,5 +18,12 @@ class Settings(BaseSettings):
     groq_api_key: str | None = None
     openrouter_api_key: str | None = None
 
+    email_from: str = "PitchPilot <no-reply@pitchpilot.local>"
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 465
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_use_ssl: bool = True
+
 
 settings = Settings()

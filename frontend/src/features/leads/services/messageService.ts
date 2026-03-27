@@ -14,10 +14,39 @@ export type MessageGenerationResult = {
   evaluation?: string | null;
 };
 
+export type SendEmailPayload = {
+  to: string;
+  subject: string;
+  message: string;
+  lead_id: string;
+};
+
+export type SendEmailResult = {
+  status: string;
+  message_id: string;
+  lead_id: string;
+  to: string;
+  subject: string;
+  provider: string;
+  sent_at: string;
+};
+
 export const messageService = {
   generateMessage: async (payload: MessageGenerationPayload): Promise<MessageGenerationResult> => {
     const token = getStoredToken();
     const response = await apiClient.post<MessageGenerationResult>("/ai/message", payload, {
+      headers: token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : undefined,
+    });
+    return response.data;
+  },
+
+  sendEmail: async (payload: SendEmailPayload): Promise<SendEmailResult> => {
+    const token = getStoredToken();
+    const response = await apiClient.post<SendEmailResult>("/messages/send", payload, {
       headers: token
         ? {
             Authorization: `Bearer ${token}`,

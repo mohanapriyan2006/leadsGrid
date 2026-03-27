@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Avatar } from "../../components/ui/Avatar";
 import { SourceIcon } from "../../components/ui/SourceIcon";
 import { MOCK_LEADS } from "../../features/leads/constants/mockLeads";
 import { useMessageGenerator } from "../../features/leads/hooks/useMessageGenerator";
+import { messageService } from "../../features/leads/services/messageService";
 import { useLeadStore } from "../../store/useLeadStore";
 import { MOCK_MESSAGES } from "../../features/messages/constants/mockMessages";
 import type { ToneType } from "../../features/common/types/ui";
@@ -14,6 +15,11 @@ export const MessagesPage = () => {
   const [selectedLeadId, setSelectedLeadId] = useState<string>(MOCK_LEADS[0].id);
   const [tone, setTone] = useState<ToneType>("professional");
   const [localDraft, setLocalDraft] = useState(MOCK_MESSAGES[0].content);
+  const [email, setEmail] = useState("");
+  const [subject, setSubject] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const { leads } = useLeadStore();
@@ -24,6 +30,23 @@ export const MessagesPage = () => {
     () => leadPool.find((lead) => lead.id === selectedLeadId) ?? leadPool[0],
     [leadPool, selectedLeadId]
   );
+
+  const generateSubject = () => {
+    if (!selectedLead) {
+      return "Regarding your project";
+    }
+    return `Regarding your ${selectedLead.title || "project"}`;
+  };
+
+  useEffect(() => {
+    if (!selectedLead) {
+      setEmail("");
+      return;
+    }
+    setEmail(selectedLead.email ?? "");
+    setSent(false);
+    setSendError(null);
+  }, [selectedLead]);
 
   const handleGenerate = async () => {
     if (!selectedLead) {
@@ -36,8 +59,35 @@ export const MessagesPage = () => {
         max_words: 130,
       });
       setLocalDraft(result.message);
+      setSubject(generateSubject());
     } catch {
       setLocalDraft(`Hi ${selectedLead.author.split(" ")[0]},\n\nI noticed your recent signal about ${selectedLead.content.toLowerCase()}\n\nPitchPilot helps teams move from stale outreach to live intent-led execution.\n\nOpen to a quick 10-minute walkthrough this week?\n\nBest,\nAlex`);
+      setSubject(generateSubject());
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!selectedLead || !email || !localDraft.trim()) {
+      return;
+    }
+
+    try {
+      setSending(true);
+      setSendError(null);
+      setSent(false);
+
+      await messageService.sendEmail({
+        to: email,
+        subject: subject.trim() || generateSubject(),
+        message: localDraft,
+        lead_id: selectedLead.id,
+      });
+
+      setSent(true);
+    } catch {
+      setSendError("Failed to send email. Please verify SMTP settings and try again.");
+    } finally {
+      setSending(false);
     }
   };
 
@@ -105,6 +155,28 @@ export const MessagesPage = () => {
             <div className="ml-auto text-xs text-text-dim">{generatedMessage ? `Confidence ${generatedMessage.confidence}%` : "Draft not generated"}</div>
           </div>
 
+          <div className="mb-3 space-y-2">
+            <label className="text-xs tracking-[0.1em] text-text-dim" htmlFor="email-to">SEND TO</label>
+            <input
+              id="email-to"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="Enter client email"
+              className="w-full rounded border border-white/10 bg-black/25 px-3 py-2 text-sm text-white"
+            />
+            <label className="text-xs tracking-[0.1em] text-text-dim" htmlFor="email-subject">SUBJECT</label>
+            <input
+              id="email-subject"
+              value={subject}
+              onChange={(event) => setSubject(event.target.value)}
+              placeholder="Subject"
+              className="w-full rounded border border-white/10 bg-black/25 px-3 py-2 text-sm text-white"
+            />
+            {!email ? (
+              <p className="text-xs text-amber-300">No email found for this lead.</p>
+            ) : null}
+          </div>
+
           <textarea
             value={localDraft}
             onChange={(event) => setLocalDraft(event.target.value)}
@@ -113,10 +185,20 @@ export const MessagesPage = () => {
 
           <div className="mt-3 flex items-center justify-between">
             <p className="text-xs text-text-dim">Optimized for {selectedLead.author.toUpperCase()}</p>
-            <button onClick={handleCopy} className="rounded border border-emerald-400/40 bg-emerald-500/10 px-4 py-1.5 text-xs font-semibold tracking-[0.08em] text-emerald-300">
-              {copied ? "COPIED" : "COPY"}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleSendEmail}
+                disabled={sending || !email || !localDraft.trim()}
+                className="rounded bg-emerald-500 px-4 py-1.5 text-xs font-semibold tracking-[0.08em] text-black disabled:opacity-60"
+              >
+                {sending ? "SENDING..." : sent ? "SENT" : "SEND EMAIL"}
+              </button>
+              <button onClick={handleCopy} className="rounded border border-emerald-400/40 bg-emerald-500/10 px-4 py-1.5 text-xs font-semibold tracking-[0.08em] text-emerald-300">
+                {copied ? "COPIED" : "COPY"}
+              </button>
+            </div>
           </div>
+          {sendError ? <p className="mt-2 text-xs text-rose-300">{sendError}</p> : null}
         </section>
       </div>
     </div>

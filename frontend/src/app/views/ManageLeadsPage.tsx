@@ -3,6 +3,7 @@ import { DndContext, type DragEndEvent, useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 import { ConfirmDialog } from "../../features/leads/components/ConfirmDialog";
 import { EditLeadModal } from "../../features/leads/components/EditLeadModal";
@@ -36,7 +37,7 @@ const NEXT_STAGE: Record<ManageLeadStage, ManageLeadStage | null> = {
   QUALIFIED: "CONTACTED",
   CONTACTED: "RESPONDED",
   RESPONDED: null,
-  CONTRACTED: null,
+  NEGOTIATION: null,
 };
 
 const APP_IMPORT_FIELDS = [
@@ -97,7 +98,7 @@ const fromNow = (iso: string) => {
 
 type BoardLeadCardProps = {
   lead: ManageLead;
-  onHoverStart: (leadId: string) => void;
+  onHoverStart: (leadId: string, event: React.MouseEvent) => void;
   onHoverEnd: (leadId: string) => void;
 };
 
@@ -112,7 +113,7 @@ const BoardLeadCard = ({ lead, onHoverStart, onHoverEnd }: BoardLeadCardProps) =
       layout
       {...attributes}
       {...listeners}
-      onMouseEnter={() => onHoverStart(lead.id)}
+      onMouseEnter={(event) => onHoverStart(lead.id, event)}
       onMouseLeave={() => onHoverEnd(lead.id)}
       className={`rounded-xl border border-white/10 bg-gradient-to-br from-slate-900/75 via-slate-950/80 to-black/90 p-3 text-xs transition ${
         isDragging ? "opacity-65" : ""
@@ -135,7 +136,7 @@ const BoardLeadCard = ({ lead, onHoverStart, onHoverEnd }: BoardLeadCardProps) =
 type StageColumnProps = {
   stage: { id: ManageLeadStage; label: string; icon: string };
   leads: ManageLead[];
-  onHoverStart: (leadId: string) => void;
+  onHoverStart: (leadId: string, event: React.MouseEvent) => void;
   onHoverEnd: (leadId: string) => void;
   onAddLead: () => void;
   uploadControl: ReactNode;
@@ -186,6 +187,7 @@ const StageColumn = ({ stage, leads, onHoverStart, onHoverEnd, onAddLead, upload
 };
 
 export const ManageLeadsPage = () => {
+  const navigate = useNavigate();
   const {
     manageLeads,
     selectedManageLeadId,
@@ -210,6 +212,7 @@ export const ManageLeadsPage = () => {
   const [csvResult, setCsvResult] = useState<CSVImportResult | null>(null);
 
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [modalPosition, setModalPosition] = useState<{ x: number; y: number } | null>(null);
   const [isModalHover, setIsModalHover] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -377,6 +380,27 @@ export const ManageLeadsPage = () => {
     setEditOpen(true);
   };
 
+  const handleHoverStart = (leadId: string, event: React.MouseEvent) => {
+    setHoveredId(leadId);
+    setSelectedManageLeadId(leadId);
+    setModalPosition({ x: event.clientX, y: event.clientY });
+  };
+
+  const handleHoverEnd = (leadId: string) => {
+    window.setTimeout(() => {
+      if (!isModalHover) {
+        setHoveredId((current) => (current === leadId ? null : current));
+      }
+    }, 40);
+  };
+
+  const moveToNEGOTIATION = async (lead: ManageLead) => {
+    await leadService.updateManageLead(lead.id, { stage: "NEGOTIATION" });
+    await Promise.all([loadLeads(debouncedSearch, onlyHot), loadInsights()]);
+    setFeedback(`Moved ${lead.name} to NEGOTIATION and sent to CRM`);
+    navigate("/crm", { state: { lead } });
+  };
+
   const uploadButton = (
     <label className="rounded-lg border border-white/10 bg-black/40 px-2 py-1 text-[11px] text-text-dim">
       Upload CSV
@@ -532,17 +556,8 @@ export const ManageLeadsPage = () => {
                 key={column.id}
                 stage={column}
                 leads={column.leads}
-                onHoverStart={(leadId) => {
-                  setHoveredId(leadId);
-                  setSelectedManageLeadId(leadId);
-                }}
-                onHoverEnd={(leadId) => {
-                  window.setTimeout(() => {
-                    if (!isModalHover) {
-                      setHoveredId((current) => (current === leadId ? null : current));
-                    }
-                  }, 40);
-                }}
+                onHoverStart={handleHoverStart}
+                onHoverEnd={handleHoverEnd}
                 onAddLead={() => setShowAddRow(true)}
                 uploadControl={uploadButton}
               />
@@ -585,6 +600,7 @@ export const ManageLeadsPage = () => {
         lead={activeLead}
         open={manageLeadView === "kanban" ? Boolean(hoveredId && activeLead) : Boolean(detailsOpen && activeLead)}
         variant={manageLeadView === "kanban" ? "hover" : "dialog"}
+        position={modalPosition}
         onClose={() => {
           setHoveredId(null);
           setDetailsOpen(false);
@@ -605,6 +621,10 @@ export const ManageLeadsPage = () => {
         onMoveNext={() => {
           if (!activeLead) return;
           void moveNext(activeLead);
+        }}
+        onMoveToContacted={() => {
+          if (!activeLead) return;
+          void moveToNEGOTIATION(activeLead);
         }}
         onDelete={() => {
           if (!activeLead) return;

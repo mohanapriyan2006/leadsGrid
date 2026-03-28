@@ -18,7 +18,7 @@ type EditLeadModalProps = {
   }) => void;
 };
 
-const STAGES: ManageLeadStage[] = ["NEW", "QUALIFIED", "CONTACTED", "RESPONDED", "CONTRACTED"];
+const STAGES: ManageLeadStage[] = ["NEW", "QUALIFIED", "CONTACTED", "RESPONDED", "NEGOTIATION"];
 
 export const EditLeadModal = ({ lead, open, onClose, onSave }: EditLeadModalProps) => {
   const [form, setForm] = useState({

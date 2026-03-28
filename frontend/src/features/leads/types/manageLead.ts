@@ -3,7 +3,7 @@ export type ManageLeadStage =
   | "QUALIFIED"
   | "CONTACTED"
   | "RESPONDED"
-  | "CONTRACTED";
+  | "NEGOTIATION";
 
 export type ManageLeadSource = "reddit" | "linkedin" | "website";
 export type ManageLeadUrgency = "low" | "medium" | "high";
@@ -57,7 +57,7 @@ export type ManageLeadActivity = {
 
 export type ManageLeadAnalytics = {
   total_leads: number;
-  contracted_count: number;
+  NEGOTIATION_count: number;
   conversion_rate: number;
   pipeline_value: number;
   stage_drop_offs: Record<string, number>;

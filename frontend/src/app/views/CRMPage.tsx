@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -8,23 +9,185 @@ import {
 import { ScoreBadge } from "../../components/ui/ScoreBadge";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { MOCK_DEALS } from "../../features/crm/constants/mockDeals";
+import { ConfirmDialog } from "../../features/leads/components/ConfirmDialog";
 import type { DealStatus } from "../../features/common/types/ui";
 
 type Deal = (typeof MOCK_DEALS)[number];
+
+type DealModalProps = {
+  deal: Deal | null;
+  open: boolean;
+  position?: { x: number; y: number } | null;
+  onClose: () => void;
+  onDelete: () => void;
+  onEdit?: () => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+};
+
+const DealModal = ({
+  deal,
+  open,
+  position,
+  onClose,
+  onDelete,
+  onEdit,
+  onMouseEnter,
+  onMouseLeave,
+}: DealModalProps) => {
+  if (!deal) return null;
+
+  const hoverStyle = position
+    ? { left: Math.min(position.x + 16, window.innerWidth - 340), top: Math.min(position.y, window.innerHeight - 300) }
+    : { right: 24, top: 96 };
+
+  return (
+    <AnimatePresence>
+      {open ? (
+        <motion.div
+          className="fixed z-[90]"
+          style={hoverStyle}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.section
+            className="w-full max-w-sm rounded-2xl border border-white/10 bg-slate-950/95 p-4 shadow-[0_20px_55px_rgba(2,6,23,0.88)]"
+            initial={{ opacity: 0, y: 10, scale: 0.985 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.985 }}
+            transition={{ duration: 0.16 }}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-xl font-semibold text-white">{deal.name}</h3>
+                <p className="text-sm text-text-dim">{deal.company}</p>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-md border border-white/15 bg-black/30 px-2 py-1 text-xs text-text-dim"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+              <span className="rounded-full border border-cyan-300/35 bg-cyan-500/15 px-2 py-1 text-cyan-100">Score {deal.score}</span>
+              <span className="rounded-full border border-white/15 bg-black/35 px-2 py-1 text-text-dim">Status {deal.status}</span>
+              <span className="rounded-full border border-emerald-300/35 bg-emerald-500/15 px-2 py-1 text-emerald-100">Value {deal.value}</span>
+            </div>
+
+            <div className="mt-3 text-xs text-text-dim">
+              <p>Last Action: {deal.lastAction}</p>
+              <p>Days in Stage: {deal.daysInStage}</p>
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {onEdit ? (
+                <button
+                  type="button"
+                  onClick={onEdit}
+                  className="rounded-lg border border-white/15 bg-black/35 px-3 py-1.5 text-xs text-white"
+                >
+                  Edit
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={onDelete}
+                className="rounded-lg border border-rose-300/35 bg-rose-500/20 px-3 py-1.5 text-xs text-rose-100"
+              >
+                Delete
+              </button>
+            </div>
+          </motion.section>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
+  );
+};
 
 export const CRMPage = () => {
   const [view, setView] = useState<"table" | "kanban">("table");
   const [deals, setDeals] = useState<Deal[]>(MOCK_DEALS);
   const [isAdding, setIsAdding] = useState(false);
+  
+  // Modal states
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [modalPosition, setModalPosition] = useState<{ x: number; y: number } | null>(null);
+  const [isModalHover, setIsModalHover] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  
   const [newDeal, setNewDeal] = useState<Omit<Deal, "id">>({
     name: "",
     company: "",
-    status: "contacted",
+    status: "negotiation",
     score: 60,
     lastAction: "",
     daysInStage: 0,
     value: "$0",
   });
+
+  const activeDeal = useMemo(() => {
+    if (hoveredId) {
+      return deals.find((deal) => deal.id === hoveredId) ?? null;
+    }
+    if (selectedDealId) {
+      return deals.find((deal) => deal.id === selectedDealId) ?? null;
+    }
+    return null;
+  }, [hoveredId, selectedDealId, deals]);
+
+  const handleHoverStart = (dealId: string, event: React.MouseEvent) => {
+    setHoveredId(dealId);
+    setSelectedDealId(dealId);
+    setModalPosition({ x: event.clientX, y: event.clientY });
+  };
+
+  const handleHoverEnd = (dealId: string) => {
+    window.setTimeout(() => {
+      if (!isModalHover) {
+        setHoveredId((current) => (current === dealId ? null : current));
+      }
+    }, 40);
+  };
+
+  const openDetails = (dealId: string) => {
+    setSelectedDealId(dealId);
+    setDetailsOpen(true);
+  };
+
+  const openEdit = (dealId: string) => {
+    setSelectedDealId(dealId);
+    setEditOpen(true);
+  };
+
+  const handleDelete = (dealId: string) => {
+    setDeals((prev) => prev.filter((d) => d.id !== dealId));
+    setConfirmDeleteId(null);
+    setFeedback("Deal deleted and moved to recycle bin");
+  };
+
+  const handleSaveEdit = (updated: Omit<Deal, "id">) => {
+    if (!selectedDealId) return;
+    if (!window.confirm("Are you sure you want to update this deal?")) return;
+    setDeals((prev) =>
+      prev.map((deal) =>
+        deal.id === selectedDealId
+          ? { ...deal, ...updated, id: deal.id }
+          : deal
+      )
+    );
+    setEditOpen(false);
+    setFeedback("Deal updated successfully");
+  };
 
   const totalValue = useMemo(
     () =>
@@ -63,9 +226,9 @@ export const CRMPage = () => {
 
     // Drop on column header => move to that status
     const statuses: DealStatus[] = [
-      "contacted",
-      "replied",
       "negotiation",
+      "contracted",
+      "in-progress",
       "closed",
     ];
     if (statuses.includes(overId as DealStatus)) {
@@ -116,7 +279,7 @@ export const CRMPage = () => {
     setNewDeal({
       name: "",
       company: "",
-      status: "contacted",
+      status: "negotiation",
       score: 60,
       lastAction: "",
       daysInStage: 0,
@@ -141,19 +304,19 @@ export const CRMPage = () => {
   };
 
   const statusColumns: DealStatus[] = [
-    "contacted",
-    "replied",
     "negotiation",
+    "contracted",
+    "in-progress",
     "closed",
   ];
 
   const getStatusLabelColor = (status: DealStatus) => {
     switch (status) {
-      case "contacted":
-        return "from-sky-500/40 via-sky-400/20 to-transparent text-sky-200";
-      case "replied":
-        return "from-emerald-500/40 via-emerald-400/20 to-transparent text-emerald-200";
       case "negotiation":
+        return "from-sky-500/40 via-sky-400/20 to-transparent text-sky-200";
+      case "contracted":
+        return "from-emerald-500/40 via-emerald-400/20 to-transparent text-emerald-200";
+      case "in-progress":
         return "from-amber-500/40 via-amber-400/20 to-transparent text-amber-200";
       case "closed":
         return "from-violet-500/40 via-violet-400/20 to-transparent text-violet-200";
@@ -352,21 +515,26 @@ export const CRMPage = () => {
         </p>
       </div>
 
+      {feedback ? (
+        <div className="rounded-xl border border-emerald-300/40 bg-emerald-500/15 px-3 py-2 text-sm text-emerald-100">{feedback}</div>
+      ) : null}
+
       {/* main content */}
       {view === "table" ? (
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80 shadow-[0_22px_55px_rgba(15,23,42,0.95)] backdrop-blur-xl">
-          <div className="grid grid-cols-[2fr_1.5fr_1fr_90px_1fr] border-b border-white/10 bg-gradient-to-r from-white/5 via-slate-900/80 to-white/5 px-4 py-3 text-[10px] uppercase tracking-[0.18em] text-text-dim">
+          <div className="grid grid-cols-[2fr_1.5fr_1fr_90px_1fr_220px] border-b border-white/10 bg-gradient-to-r from-white/5 via-slate-900/80 to-white/5 px-4 py-3 text-[10px] uppercase tracking-[0.18em] text-text-dim">
             <span>Client</span>
             <span>Company</span>
             <span>Status</span>
             <span>Score</span>
             <span>Last action</span>
+            <span>Actions</span>
           </div>
           <div className="divide-y divide-white/5">
             {deals.map((deal, index) => (
               <div
                 key={deal.id}
-                className="grid grid-cols-[2fr_1.5fr_1fr_90px_1fr] items-center px-4 py-3 transition-colors hover:bg-white/5"
+                className="grid grid-cols-[2fr_1.5fr_1fr_90px_1fr_220px] items-center px-4 py-3 transition-colors hover:bg-white/5"
                 style={{
                   animation: `fadeInUp 0.35s ease-out ${index * 0.03}s both`,
                 }}
@@ -384,9 +552,9 @@ export const CRMPage = () => {
                     }
                     className="rounded border border-white/15 bg-black/40 px-2 py-1 text-xs text-white outline-none transition focus:border-emerald-400/70"
                   >
-                    <option value="contacted">contacted</option>
-                    <option value="replied">replied</option>
                     <option value="negotiation">negotiation</option>
+                    <option value="contracted">contracted</option>
+                    <option value="in-progress">in-progress</option>
                     <option value="closed">closed</option>
                   </select>
                   <StatusBadge status={deal.status} />
@@ -395,6 +563,11 @@ export const CRMPage = () => {
                 <span className="text-sm text-text-dim">
                   {deal.lastAction}
                 </span>
+                <div className="flex gap-1">
+                  <button type="button" className="rounded border border-white/10 px-2 py-1 text-[11px]" onClick={() => openDetails(deal.id)}>Details</button>
+                  <button type="button" className="rounded border border-white/10 px-2 py-1 text-[11px]" onClick={() => openEdit(deal.id)}>Edit</button>
+                  <button type="button" className="rounded border border-rose-300/35 bg-rose-500/15 px-2 py-1 text-[11px] text-rose-100" onClick={() => setConfirmDeleteId(deal.id)}>Delete</button>
+                </div>
               </div>
             ))}
           </div>
@@ -444,6 +617,8 @@ export const CRMPage = () => {
                           key={deal.id}
                           deal={deal}
                           index={index}
+                          onHoverStart={handleHoverStart}
+                          onHoverEnd={handleHoverEnd}
                         />
                       ))}
                     </div>
@@ -454,6 +629,123 @@ export const CRMPage = () => {
           </div>
         </DndContext>
       )}
+
+      <DealModal
+        deal={activeDeal}
+        open={view === "kanban" ? Boolean(hoveredId && activeDeal) : Boolean(detailsOpen && activeDeal)}
+        position={modalPosition}
+        onClose={() => {
+          setHoveredId(null);
+          setDetailsOpen(false);
+        }}
+        onMouseEnter={() => setIsModalHover(true)}
+        onMouseLeave={() => {
+          setIsModalHover(false);
+          setHoveredId(null);
+        }}
+        onDelete={() => {
+          if (!activeDeal) return;
+          setConfirmDeleteId(activeDeal.id);
+        }}
+        onEdit={view === "table" ? () => setEditOpen(true) : undefined}
+      />
+
+      {/* Edit Modal */}
+      <AnimatePresence>
+        {editOpen && activeDeal && (
+          <motion.div
+            className="fixed inset-0 z-[110] flex items-center justify-center bg-black/65 px-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setEditOpen(false)}
+          >
+            <motion.form
+              className="w-full max-w-xl space-y-3 rounded-2xl border border-white/10 bg-slate-950/95 p-5"
+              initial={{ opacity: 0, y: 10, scale: 0.985 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.985 }}
+              transition={{ duration: 0.16 }}
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSaveEdit({
+                  name: activeDeal.name,
+                  company: activeDeal.company,
+                  status: activeDeal.status,
+                  score: activeDeal.score,
+                  lastAction: activeDeal.lastAction,
+                  daysInStage: activeDeal.daysInStage,
+                  value: activeDeal.value,
+                });
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold text-white">Edit Deal</h3>
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="text-xs text-text-dim">
+                  Name
+                  <input
+                    defaultValue={activeDeal.name}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-sm text-white"
+                  />
+                </label>
+                <label className="text-xs text-text-dim">
+                  Company
+                  <input
+                    defaultValue={activeDeal.company}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-sm text-white"
+                  />
+                </label>
+                <label className="text-xs text-text-dim">
+                  Status
+                  <select
+                    defaultValue={activeDeal.status}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-sm text-white"
+                  >
+                    <option value="negotiation">negotiation</option>
+                    <option value="contracted">contracted</option>
+                    <option value="in-progress">in-progress</option>
+                    <option value="closed">closed</option>
+                  </select>
+                </label>
+                <label className="text-xs text-text-dim">
+                  Score
+                  <input
+                    type="number"
+                    defaultValue={activeDeal.score}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-sm text-white"
+                  />
+                </label>
+              </div>
+              <div className="flex justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  className="rounded-lg border border-white/15 bg-black/35 px-3 py-1.5 text-xs text-text-dim"
+                  onClick={() => setEditOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-semibold text-slate-950">
+                  Update Deal
+                </button>
+              </div>
+            </motion.form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <ConfirmDialog
+        open={Boolean(confirmDeleteId)}
+        title="Delete Deal"
+        description="Delete this deal? It will be moved to the recycle bin."
+        confirmLabel="Delete"
+        danger
+        onCancel={() => setConfirmDeleteId(null)}
+        onConfirm={() => {
+          if (!confirmDeleteId) return;
+          handleDelete(confirmDeleteId);
+        }}
+      />
 
       {/* simple keyframes for table rows */}
       <style >{`
@@ -475,12 +767,16 @@ export const CRMPage = () => {
 type KanbanCardProps = {
   deal: Deal;
   index: number;
+  onHoverStart: (dealId: string, event: React.MouseEvent) => void;
+  onHoverEnd: (dealId: string) => void;
 };
 
-const KanbanCard = ({ deal, index }: KanbanCardProps) => {
+const KanbanCard = ({ deal, index, onHoverStart, onHoverEnd }: KanbanCardProps) => {
   return (
     <div
       id={deal.id}
+      onMouseEnter={(e) => onHoverStart(deal.id, e)}
+      onMouseLeave={() => onHoverEnd(deal.id)}
       className="cursor-grab rounded-xl border border-white/15 bg-gradient-to-br from-white/5 via-slate-900/80 to-black/90 p-2.5 text-xs shadow-[0_14px_35px_rgba(15,23,42,0.95)] outline-none transition hover:-translate-y-0.5 hover:border-emerald-400/60 hover:bg-slate-900/90 hover:shadow-[0_20px_50px_rgba(34,197,94,0.35)] active:cursor-grabbing"
       style={{
         animation: `fadeInUp 0.35s ease-out ${index * 0.04}s both`,

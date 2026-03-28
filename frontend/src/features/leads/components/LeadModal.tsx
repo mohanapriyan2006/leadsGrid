@@ -6,9 +6,11 @@ type LeadModalProps = {
   lead: ManageLead | null;
   open: boolean;
   variant?: "dialog" | "hover";
+  position?: { x: number; y: number } | null;
   onClose: () => void;
   onDelete: () => void;
   onMoveNext: () => void;
+  onMoveToContacted?: () => void;
   onSendMessage: () => void;
   onScheduleCall: () => void;
   onEdit?: () => void;
@@ -23,16 +25,18 @@ const stageNextMap: Record<ManageLeadStage, ManageLeadStage | null> = {
   QUALIFIED: "CONTACTED",
   CONTACTED: "RESPONDED",
   RESPONDED: null,
-  CONTRACTED: null,
+  NEGOTIATION: null,
 };
 
 export const LeadModal = ({
   lead,
   open,
   variant = "dialog",
+  position,
   onClose,
   onDelete,
   onMoveNext,
+  onMoveToContacted,
   onSendMessage,
   onScheduleCall,
   onEdit,
@@ -43,12 +47,19 @@ export const LeadModal = ({
 
   const nextStage = stageNextMap[lead.stage];
   const isHover = variant === "hover";
+  const isLastStage = lead.stage === "RESPONDED";
+
+  // Calculate position for hover modal
+  const hoverStyle = position
+    ? { left: Math.min(position.x + 16, window.innerWidth - 340), top: Math.min(position.y, window.innerHeight - 400) }
+    : { right: 24, top: 96 };
 
   return (
     <AnimatePresence>
       {open ? (
         <motion.div
-          className={isHover ? "fixed right-6 top-24 z-[90]" : "fixed inset-0 z-[100] flex items-center justify-center bg-black/65 px-4"}
+          className={isHover ? "fixed z-[90]" : "fixed inset-0 z-[100] flex items-center justify-center bg-black/65 px-4"}
+          style={isHover ? hoverStyle : undefined}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -132,6 +143,15 @@ export const LeadModal = ({
               >
                 ➡ Move Next{nextStage ? ` (${nextStage})` : " (Final Stage)"}
               </button>
+              {isLastStage && onMoveToContacted ? (
+                <button
+                  type="button"
+                  onClick={onMoveToContacted}
+                  className="rounded-lg bg-emerald-400 px-3 py-1.5 text-xs font-semibold text-slate-950"
+                >
+                  ✓ Move to Negotiation
+                </button>
+              ) : null}
               {onEdit ? (
                 <button
                   type="button"

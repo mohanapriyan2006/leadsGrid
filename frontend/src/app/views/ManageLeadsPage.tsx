@@ -115,7 +115,7 @@ const BoardLeadCard = ({ lead, onHoverStart, onHoverEnd }: BoardLeadCardProps) =
       {...listeners}
       onMouseEnter={(event) => onHoverStart(lead.id, event)}
       onMouseLeave={() => onHoverEnd(lead.id)}
-      className={`rounded-xl border border-white/10 bg-gradient-to-br from-slate-900/75 via-slate-950/80 to-black/90 p-3 text-xs transition ${
+      className={`rounded-xl border border-white/10 bg-gradient-to-br from-slate-900/75 via-slate-950/80 to-black/90 p-3 text-xs transition cursor-grab active:cursor-grabbing ${
         isDragging ? "opacity-65" : ""
       }`}
       whileHover={{ y: -2 }}
@@ -217,6 +217,7 @@ export const ManageLeadsPage = () => {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const [newLead, setNewLead] = useState({
     name: "",
@@ -344,6 +345,7 @@ export const ManageLeadsPage = () => {
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
+    setIsDragging(false);
     const { active, over } = event;
     if (!over) return;
 
@@ -549,7 +551,10 @@ export const ManageLeadsPage = () => {
       ) : null}
 
       {manageLeadView === "kanban" ? (
-        <DndContext onDragEnd={(event) => void handleDragEnd(event)}>
+        <DndContext 
+          onDragStart={() => setIsDragging(true)}
+          onDragEnd={(event) => void handleDragEnd(event)}
+        >
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             {grouped.map((column) => (
               <StageColumn
@@ -598,7 +603,7 @@ export const ManageLeadsPage = () => {
 
       <LeadModal
         lead={activeLead}
-        open={manageLeadView === "kanban" ? Boolean(hoveredId && activeLead) : Boolean(detailsOpen && activeLead)}
+        open={manageLeadView === "kanban" ? Boolean(hoveredId && activeLead && !isDragging) : Boolean(detailsOpen && activeLead)}
         variant={manageLeadView === "kanban" ? "hover" : "dialog"}
         position={modalPosition}
         onClose={() => {

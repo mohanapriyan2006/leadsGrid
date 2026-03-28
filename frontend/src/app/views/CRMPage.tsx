@@ -5,7 +5,10 @@ import {
   SortableContext,
   verticalListSortingStrategy,
   arrayMove,
+  useSortable,
 } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { useDroppable } from "@dnd-kit/core";
 import { ScoreBadge } from "../../components/ui/ScoreBadge";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { MOCK_DEALS } from "../../features/crm/constants/mockDeals";
@@ -124,6 +127,7 @@ export const CRMPage = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   
   const [newDeal, setNewDeal] = useState<Omit<Deal, "id">>({
     name: "",
@@ -218,44 +222,47 @@ export const CRMPage = () => {
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    setIsDragging(false);
     const { active, over } = event;
     if (!over) return;
 
     const activeId = active.id as string;
     const overId = over.id as string;
+    if (activeId === overId) return;
 
-    // Drop on column header => move to that status
-    const statuses: DealStatus[] = [
-      "negotiation",
-      "contracted",
-      "in-progress",
-      "closed",
-    ];
-    if (statuses.includes(overId as DealStatus)) {
-      setDeals((prev) =>
-        prev.map((deal) =>
-          deal.id === activeId
-            ? { ...deal, status: overId as DealStatus }
-            : deal,
-        ),
-      );
-      return;
-    }
+    setDeals((prev) => {
+      const statuses: DealStatus[] = ["negotiation", "contracted", "in-progress", "closed"];
+      const activeIndex = prev.findIndex((deal) => deal.id === activeId);
+      if (activeIndex === -1) return prev;
 
-    // Reorder within same column
-    const activeDeal = deals.find((d) => d.id === activeId);
-    const overDeal = deals.find((d) => d.id === overId);
-    if (!activeDeal || !overDeal) return;
-    if (activeDeal.status !== overDeal.status) return;
+      const activeDeal = prev[activeIndex];
 
-    const columnDeals = deals.filter((d) => d.status === activeDeal.status);
-    const otherDeals = deals.filter((d) => d.status !== activeDeal.status);
+      if (statuses.includes(overId as DealStatus)) {
+        const targetStatus = overId as DealStatus;
+        return prev.map((deal) =>
+          deal.id === activeId ? { ...deal, status: targetStatus } : deal,
+        );
+      }
 
-    const oldIndex = columnDeals.findIndex((d) => d.id === activeId);
-    const newIndex = columnDeals.findIndex((d) => d.id === overId);
-    const reordered = arrayMove(columnDeals, oldIndex, newIndex);
+      const overIndex = prev.findIndex((deal) => deal.id === overId);
+      if (overIndex === -1) return prev;
+      const overDeal = prev[overIndex];
 
-    setDeals([...otherDeals, ...reordered]);
+      if (activeDeal.status === overDeal.status) {
+        return arrayMove(prev, activeIndex, overIndex);
+      }
+
+      const next = [...prev];
+      const [moved] = next.splice(activeIndex, 1);
+      const targetIndex = next.findIndex((deal) => deal.id === overId);
+      const updatedMoved = { ...moved, status: overDeal.status };
+      if (targetIndex === -1) {
+        next.push(updatedMoved);
+      } else {
+        next.splice(targetIndex, 0, updatedMoved);
+      }
+      return next;
+    });
   };
 
   const handleAddDeal = () => {
@@ -573,30 +580,21 @@ export const CRMPage = () => {
           </div>
         </div>
       ) : (
-        <DndContext onDragEnd={handleDragEnd}>
+        <DndContext 
+          onDragStart={() => setIsDragging(true)}
+          onDragCancel={() => setIsDragging(false)}
+          onDragEnd={handleDragEnd}
+        >
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             {statusColumns.map((status) => {
-              const columnDeals = deals
-                .filter((deal) => deal.status === status)
-                .sort((a, b) => a.name.localeCompare(b.name));
+              const columnDeals = deals.filter((deal) => deal.status === status);
 
               return (
-                <section
+                <DroppableStatusColumn
                   key={status}
-                  className="group flex flex-col rounded-2xl border border-white/10 bg-slate-950/80 p-3 shadow-[0_18px_40px_rgba(15,23,42,0.9)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-emerald-400/60 hover:shadow-[0_22px_55px_rgba(34,197,94,0.35)]"
+                  status={status}
+                  columnDeals={columnDeals}
                 >
-                  <div
-                    id={status}
-                    className={`mb-3 flex items-center justify-between rounded-xl bg-gradient-to-r px-3 py-2 text-xs font-semibold tracking-[0.16em] ${getStatusLabelColor(
-                      status,
-                    )}`}
-                  >
-                    <h3>{status.toUpperCase()}</h3>
-                    <span className="rounded-full bg-black/40 px-2 py-0.5 text-[11px] text-slate-100">
-                      {columnDeals.length}
-                    </span>
-                  </div>
-
                   <SortableContext
                     items={columnDeals.map((d) => d.id)}
                     strategy={verticalListSortingStrategy}
@@ -623,7 +621,7 @@ export const CRMPage = () => {
                       ))}
                     </div>
                   </SortableContext>
-                </section>
+                </DroppableStatusColumn>
               );
             })}
           </div>
@@ -632,7 +630,7 @@ export const CRMPage = () => {
 
       <DealModal
         deal={activeDeal}
-        open={view === "kanban" ? Boolean(hoveredId && activeDeal) : Boolean(detailsOpen && activeDeal)}
+        open={view === "kanban" ? Boolean(hoveredId && activeDeal && !isDragging) : Boolean(detailsOpen && activeDeal)}
         position={modalPosition}
         onClose={() => {
           setHoveredId(null);
@@ -772,13 +770,20 @@ type KanbanCardProps = {
 };
 
 const KanbanCard = ({ deal, index, onHoverStart, onHoverEnd }: KanbanCardProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: deal.id });
+  const baseStyle = { transform: CSS.Transform.toString(transform), transition };
+
   return (
     <div
+      ref={setNodeRef}
       id={deal.id}
       onMouseEnter={(e) => onHoverStart(deal.id, e)}
       onMouseLeave={() => onHoverEnd(deal.id)}
-      className="cursor-grab rounded-xl border border-white/15 bg-gradient-to-br from-white/5 via-slate-900/80 to-black/90 p-2.5 text-xs shadow-[0_14px_35px_rgba(15,23,42,0.95)] outline-none transition hover:-translate-y-0.5 hover:border-emerald-400/60 hover:bg-slate-900/90 hover:shadow-[0_20px_50px_rgba(34,197,94,0.35)] active:cursor-grabbing"
+      {...attributes}
+      {...listeners}
+      className={`cursor-grab rounded-xl border border-white/15 bg-gradient-to-br from-white/5 via-slate-900/80 to-black/90 p-2.5 text-xs shadow-[0_14px_35px_rgba(15,23,42,0.95)] outline-none transition hover:-translate-y-0.5 hover:border-emerald-400/60 hover:bg-slate-900/90 hover:shadow-[0_20px_50px_rgba(34,197,94,0.35)] active:cursor-grabbing ${isDragging ? 'opacity-50' : ''}`}
       style={{
+        ...baseStyle,
         animation: `fadeInUp 0.35s ease-out ${index * 0.04}s both`,
       }}
     >
@@ -791,6 +796,59 @@ const KanbanCard = ({ deal, index, onHoverStart, onHoverEnd }: KanbanCardProps) 
       <p className="mt-1 text-sm font-semibold text-emerald-300">
         {deal.value}
       </p>
+    </div>
+  );
+};
+
+type StatusColumnHeaderProps = {
+  status: DealStatus;
+  columnDeals: Deal[];
+};
+
+type DroppableStatusColumnProps = {
+  status: DealStatus;
+  columnDeals: Deal[];
+  children: React.ReactNode;
+};
+
+const DroppableStatusColumn = ({ status, columnDeals, children }: DroppableStatusColumnProps) => {
+  const { setNodeRef, isOver } = useDroppable({ id: status });
+
+  return (
+    <section
+      ref={setNodeRef}
+      className={`group flex flex-col rounded-2xl border border-white/10 bg-slate-950/80 p-3 shadow-[0_18px_40px_rgba(15,23,42,0.9)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-emerald-400/60 hover:shadow-[0_22px_55px_rgba(34,197,94,0.35)] ${isOver ? "border-cyan-300/70 ring-1 ring-cyan-300/40" : ""}`}
+    >
+      <StatusColumnHeader status={status} columnDeals={columnDeals} />
+      {children}
+    </section>
+  );
+};
+
+const StatusColumnHeader = ({ status, columnDeals }: StatusColumnHeaderProps) => {
+  const getStatusLabelColor = (s: DealStatus) => {
+    switch (s) {
+      case "negotiation":
+        return "from-sky-500/40 via-sky-400/20 to-transparent text-sky-200";
+      case "contracted":
+        return "from-emerald-500/40 via-emerald-400/20 to-transparent text-emerald-200";
+      case "in-progress":
+        return "from-amber-500/40 via-amber-400/20 to-transparent text-amber-200";
+      case "closed":
+        return "from-violet-500/40 via-violet-400/20 to-transparent text-violet-200";
+      default:
+        return "from-slate-500/40 via-slate-400/20 to-transparent text-slate-200";
+    }
+  };
+
+  return (
+    <div
+      className={`mb-3 flex items-center justify-between rounded-xl bg-gradient-to-r px-3 py-2 text-xs font-semibold tracking-[0.16em] ${getStatusLabelColor(status)}`}
+    >
+      <h3>{status.toUpperCase()}</h3>
+      <span className="rounded-full bg-black/40 px-2 py-0.5 text-[11px] text-slate-100">
+        {columnDeals.length}
+      </span>
     </div>
   );
 };

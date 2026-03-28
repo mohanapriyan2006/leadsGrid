@@ -10,7 +10,7 @@ env/
 
 # Environment and secrets
 .env
-.env.*
+
 
 # Test and coverage artifacts
 .pytest_cache/

@@ -2,6 +2,8 @@ import { lazy, Suspense, type ReactNode } from "react";
 import { createBrowserRouter } from "react-router-dom";
 
 import { AppShell } from "./shell/AppShell";
+import { ProtectedRoute } from "./shell/ProtectedRoute";
+import { LoginPage } from "./views/LoginPage";
 import { RouteSkeleton } from "./views/RouteSkeleton";
 
 const DashboardPage = lazy(() =>
@@ -42,8 +44,16 @@ export const router = createBrowserRouter([
     element: withSuspense(<LandingPage />),
   },
   {
+    path: "/login",
+    element: <LoginPage />,
+  },
+  {
     path: "/",
-    element: <AppShell />,
+    element: (
+      <ProtectedRoute>
+        <AppShell />
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: "dashboard",

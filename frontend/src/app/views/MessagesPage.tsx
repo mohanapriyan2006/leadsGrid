@@ -12,6 +12,7 @@ import type { ToneType } from "../../features/common/types/ui";
 const TONES: ToneType[] = ["professional", "friendly", "direct"];
 
 export const MessagesPage = () => {
+  const CONTEXT_PREVIEW_LIMIT = 140;
   const [selectedLeadId, setSelectedLeadId] = useState<string>(MOCK_LEADS[0].id);
   const [tone, setTone] = useState<ToneType>("professional");
   const [localDraft, setLocalDraft] = useState(MOCK_MESSAGES[0].content);
@@ -21,6 +22,8 @@ export const MessagesPage = () => {
   const [sent, setSent] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [contextExpanded, setContextExpanded] = useState(false);
 
   const { leads } = useLeadStore();
   const { generateMessage, generatedMessage, isGenerating } = useMessageGenerator();
@@ -46,7 +49,14 @@ export const MessagesPage = () => {
     setEmail(selectedLead.email ?? "");
     setSent(false);
     setSendError(null);
+    setContextExpanded(false);
+    setDetailsOpen(false);
   }, [selectedLead]);
+
+  const trimmedContent =
+    selectedLead.content.length > CONTEXT_PREVIEW_LIMIT
+      ? `${selectedLead.content.slice(0, CONTEXT_PREVIEW_LIMIT).trim()}...`
+      : selectedLead.content;
 
   const handleGenerate = async () => {
     if (!selectedLead) {
@@ -123,7 +133,16 @@ export const MessagesPage = () => {
           <div className="rounded border border-white/10 bg-black/20 p-3">
             <div className="mb-2 flex items-center justify-between">
               <p className="text-xs tracking-[0.1em] text-text-dim">CLIENT CONTEXT</p>
-              <SourceIcon source={selectedLead.source} />
+              <div className="flex items-center gap-2">
+                <SourceIcon source={selectedLead.source} />
+                <button
+                  type="button"
+                  onClick={() => setDetailsOpen(true)}
+                  className="rounded border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.08em] text-text-dim hover:text-white"
+                >
+                  Details
+                </button>
+              </div>
             </div>
             <div className="flex gap-3">
               <Avatar initials={selectedLead.avatar ?? selectedLead.author.slice(0, 2).toUpperCase()} size={40} />
@@ -132,7 +151,16 @@ export const MessagesPage = () => {
                 <p className="text-xs text-text-dim">{selectedLead.title ?? "Lead"}</p>
               </div>
             </div>
-            <p className="mt-2 text-sm text-text-dim">{selectedLead.content}</p>
+            <p className="mt-2 text-sm text-text-dim">{contextExpanded ? selectedLead.content : trimmedContent}</p>
+            {selectedLead.content.length > CONTEXT_PREVIEW_LIMIT ? (
+              <button
+                type="button"
+                onClick={() => setContextExpanded((value) => !value)}
+                className="mt-1 text-xs font-semibold text-cyan-200 hover:text-cyan-100"
+              >
+                {contextExpanded ? "View less" : "View more"}
+              </button>
+            ) : null}
             <p className="mt-2 text-xs text-accent">{selectedLead.summary}</p>
           </div>
 
@@ -201,6 +229,49 @@ export const MessagesPage = () => {
           {sendError ? <p className="mt-2 text-xs text-rose-300">{sendError}</p> : null}
         </section>
       </div>
+
+      {detailsOpen ? (
+        <div
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/65 px-4"
+          onClick={() => setDetailsOpen(false)}
+        >
+          <div
+            className="w-full max-w-lg rounded-xl border border-white/10 bg-slate-950/95 p-5 shadow-[0_20px_55px_rgba(2,6,23,0.85)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold text-white">{selectedLead.author}</h3>
+                <p className="text-sm text-text-dim">{selectedLead.title ?? "Lead"}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDetailsOpen(false)}
+                className="rounded border border-white/15 px-2 py-1 text-xs text-text-dim"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="space-y-2 text-sm text-text-dim">
+              <p>
+                <span className="text-white">Email:</span> {selectedLead.email ?? "N/A"}
+              </p>
+              <p>
+                <span className="text-white">Source:</span> {selectedLead.source}
+              </p>
+              <p>
+                <span className="text-white">Summary:</span> {selectedLead.summary}
+              </p>
+            </div>
+
+            <div className="mt-4 rounded-lg border border-white/10 bg-black/25 p-3">
+              <p className="text-xs uppercase tracking-[0.08em] text-text-dim">Full Context</p>
+              <p className="mt-2 text-sm leading-6 text-white/90">{selectedLead.content}</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };

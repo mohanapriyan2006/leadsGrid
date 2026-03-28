@@ -111,6 +111,8 @@ class LeadActionRequest(BaseModel):
 
 
 class LeadUpdateRequest(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    company: str | None = Field(default=None, min_length=1, max_length=160)
     stage: LeadStage | None = None
     notes: str | None = None
     budget_estimate: int | None = Field(default=None, ge=0)

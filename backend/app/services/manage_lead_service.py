@@ -385,6 +385,10 @@ class ManageLeadService:
             return None
 
         previous_stage = row.stage
+        if payload.name is not None:
+            row.name = payload.name
+        if payload.company is not None:
+            row.company = payload.company
         if payload.stage is not None:
             row.stage = payload.stage
         if payload.notes is not None:
@@ -614,7 +618,13 @@ class ManageLeadService:
         marked_cold = 0
 
         for lead in leads:
-            idle_days = (now - lead.last_activity_at).days
+            last_activity_at = lead.last_activity_at
+            if now.tzinfo is not None and last_activity_at.tzinfo is None:
+                last_activity_at = last_activity_at.replace(tzinfo=now.tzinfo)
+            elif now.tzinfo is None and last_activity_at.tzinfo is not None:
+                last_activity_at = last_activity_at.replace(tzinfo=None)
+
+            idle_days = (now - last_activity_at).days
             if idle_days >= 2 and lead.stage in {"QUALIFIED", "CONTACTED", "RESPONDED"}:
                 reminders_due += 1
                 manage_lead_repository.add_activity(

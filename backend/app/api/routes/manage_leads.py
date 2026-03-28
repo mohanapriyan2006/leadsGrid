@@ -151,6 +151,18 @@ def update_lead(
     return lead
 
 
+@router.put("/{lead_id}", response_model=ManageLead)
+def replace_lead(
+    lead_id: str,
+    payload: LeadUpdateRequest,
+    current_user: UserPublic = Depends(get_current_user),
+) -> ManageLead:
+    lead = manage_lead_service.update_lead(lead_id, payload)
+    if lead is None:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    return lead
+
+
 @router.post("/{lead_id}/actions", response_model=ManageLead)
 def lead_action(
     lead_id: str,

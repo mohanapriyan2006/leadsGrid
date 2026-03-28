@@ -88,6 +88,8 @@ export const leadService = {
   updateManageLead: async (
     leadId: string,
     payload: {
+      name?: string;
+      company?: string;
       stage?: ManageLeadStage;
       notes?: string;
       email?: string;

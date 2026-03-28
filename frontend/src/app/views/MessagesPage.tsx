@@ -236,7 +236,7 @@ export const MessagesPage = () => {
           onClick={() => setDetailsOpen(false)}
         >
           <div
-            className="w-full max-w-lg rounded-xl border border-white/10 bg-slate-950/95 p-5 shadow-[0_20px_55px_rgba(2,6,23,0.85)]"
+            className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-xl border border-white/10 bg-slate-950/95 p-5 shadow-[0_20px_55px_rgba(2,6,23,0.85)]"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-3 flex items-start justify-between gap-3">

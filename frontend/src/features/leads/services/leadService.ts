@@ -1,5 +1,5 @@
-import { collection, query, where, getDocs, doc, addDoc, updateDoc, deleteDoc, orderBy } from "firebase/firestore";
-import { db, auth } from "../../../lib/firebase";
+import { collection, query, where, getDocs, doc, addDoc, updateDoc, deleteDoc, orderBy, Timestamp } from "firebase/firestore";
+import { db, getFirebaseAuth } from "../../../lib/firebase";
 import type { Lead } from "../types/lead";
 import type {
   BinLead,
@@ -14,6 +14,20 @@ import type {
   ManageLeadStage,
   ManageLeadUrgency,
 } from "../types/manageLead";
+import { createFirestoreLead, toFirestoreLeadPatch, toManageLead } from "./leadModel";
+
+const getCurrentUser = () => {
+  const auth = getFirebaseAuth();
+  const user = auth?.currentUser;
+  if (!user) {
+    throw new Error("Unauthenticated or Firebase not configured");
+  }
+  return user;
+};
+
+const getUserLeadsCollection = (uid: string) => collection(db, "users", uid, "leads");
+
+const getUserLeadDocument = (uid: string, leadId: string) => doc(db, "users", uid, "leads", leadId);
 
 export const leadService = {
   // Discovery logic should call a Cloud Function or separate service for scraping
@@ -32,21 +46,19 @@ export const leadService = {
     only_cold?: boolean;
     urgency?: ManageLeadUrgency;
   }): Promise<ManageLead[]> => {
-    const user = auth.currentUser;
-    if (!user) throw new Error("Unauthenticated");
+    const user = getCurrentUser();
 
     let q = query(
-      collection(db, "leads"),
-      where("userId", "==", user.uid),
-      where("is_deleted", "==", false)
+      getUserLeadsCollection(user.uid),
+      where("isDeleted", "==", false),
     );
 
     if (params.stage) {
-      q = query(q, where("stage", "==", params.stage));
+      q = query(q, where("pipelineStage", "==", params.stage));
     }
     
     const snapshot = await getDocs(q);
-    let leads = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ManageLead));
+    let leads = snapshot.docs.map((row) => toManageLead(row.id, row.data()));
 
     if (params.only_hot) {
       leads = leads.filter(l => l.score >= 80);
@@ -85,9 +97,9 @@ export const leadService = {
   },
 
   getManageLeadTimeline: async (leadId: string): Promise<ManageLeadActivity[]> => {
+    const user = getCurrentUser();
     const q = query(
-      collection(db, "lead_activities"),
-      where("lead_id", "==", leadId),
+      collection(db, "users", user.uid, "leads", leadId, "activities"),
       orderBy("created_at", "desc")
     );
     const snapshot = await getDocs(q);
@@ -98,20 +110,20 @@ export const leadService = {
     leadId: string,
     payload: Partial<ManageLead>
   ): Promise<ManageLead> => {
-    const ref = doc(db, "leads", leadId);
-    await updateDoc(ref, {
-      ...payload,
-      updated_at: new Date().toISOString()
-    });
-    const snap = await getDocs(query(collection(db, "leads"), where("__name__", "==", leadId)));
-    return { id: snap.docs[0].id, ...snap.docs[0].data() } as ManageLead;
+    const user = getCurrentUser();
+    const ref = getUserLeadDocument(user.uid, leadId);
+    await updateDoc(ref, toFirestoreLeadPatch(payload));
+    const snap = await getDocs(query(getUserLeadsCollection(user.uid), where("__name__", "==", leadId)));
+    return toManageLead(snap.docs[0].id, snap.docs[0].data());
   },
 
   manageLeadAction: async (
     leadId: string,
     payload: { action_type: ManageLeadActionType; note?: string; target_stage?: ManageLeadStage },
   ): Promise<ManageLead> => {
-    await addDoc(collection(db, "lead_activities"), {
+    const user = getCurrentUser();
+
+    await addDoc(collection(db, "users", user.uid, "leads", leadId, "activities"), {
       lead_id: leadId,
       activity_type: payload.action_type,
       message: payload.note || "Action performed",
@@ -122,8 +134,8 @@ export const leadService = {
       return await leadService.updateManageLead(leadId, { stage: payload.target_stage });
     }
     
-    const snap = await getDocs(query(collection(db, "leads"), where("__name__", "==", leadId)));
-    return { id: snap.docs[0].id, ...snap.docs[0].data() } as ManageLead;
+    const snap = await getDocs(query(getUserLeadsCollection(user.uid), where("__name__", "==", leadId)));
+    return toManageLead(snap.docs[0].id, snap.docs[0].data());
   },
 
   runManageLeadAutomation: async (): Promise<{
@@ -142,22 +154,12 @@ export const leadService = {
     stage?: ManageLeadStage;
     budget_estimate?: number;
   }): Promise<ManageLead> => {
-    const user = auth.currentUser;
-    if (!user) throw new Error("Unauthenticated");
+    const user = getCurrentUser();
 
-    const newLead = {
-      ...payload,
-      userId: user.uid,
-      source: "website",
-      score: 50,
-      is_going_cold: false,
-      is_deleted: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    const newLead = createFirestoreLead(payload);
 
-    const docRef = await addDoc(collection(db, "leads"), newLead);
-    return { id: docRef.id, ...newLead } as unknown as ManageLead;
+    const docRef = await addDoc(getUserLeadsCollection(user.uid), newLead);
+    return toManageLead(docRef.id, newLead);
   },
 
   bulkManageLeadAction: async (payload: {
@@ -165,14 +167,15 @@ export const leadService = {
     action: BulkLeadAction;
     target_stage?: ManageLeadStage;
   }): Promise<{ updated: number }> => {
+    const user = getCurrentUser();
     let updated = 0;
     for (const id of payload.lead_ids) {
-      const ref = doc(db, "leads", id);
+      const ref = getUserLeadDocument(user.uid, id);
       if (payload.action === "SOFT_DELETE") {
-        await updateDoc(ref, { is_deleted: true, deleted_at: new Date().toISOString() });
+        await updateDoc(ref, { isDeleted: true, deletedAt: Timestamp.now(), updatedAt: Timestamp.now() });
         updated++;
       } else if (payload.action === "MOVE_STAGE" && payload.target_stage) {
-        await updateDoc(ref, { stage: payload.target_stage, updated_at: new Date().toISOString() });
+        await updateDoc(ref, toFirestoreLeadPatch({ stage: payload.target_stage }));
         updated++;
       }
     }
@@ -180,30 +183,40 @@ export const leadService = {
   },
 
   softDeleteManageLead: async (leadId: string): Promise<void> => {
-    const ref = doc(db, "leads", leadId);
-    await updateDoc(ref, { is_deleted: true, deleted_at: new Date().toISOString() });
+    const user = getCurrentUser();
+    const ref = getUserLeadDocument(user.uid, leadId);
+    await updateDoc(ref, { isDeleted: true, deletedAt: Timestamp.now(), updatedAt: Timestamp.now() });
   },
 
   listManageLeadBin: async (): Promise<BinLead[]> => {
-    const user = auth.currentUser;
-    if (!user) throw new Error("Unauthenticated");
+    const user = getCurrentUser();
 
     const q = query(
-      collection(db, "leads"),
-      where("userId", "==", user.uid),
-      where("is_deleted", "==", true)
+      getUserLeadsCollection(user.uid),
+      where("isDeleted", "==", true),
     );
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BinLead));
+    return snapshot.docs.map((row) => {
+      const lead = toManageLead(row.id, row.data());
+      return {
+        id: lead.id,
+        name: lead.name,
+        company: lead.company,
+        email: lead.email,
+        deleted_at: lead.deleted_at ?? lead.updated_at,
+      };
+    });
   },
 
   restoreManageLead: async (leadId: string): Promise<void> => {
-    const ref = doc(db, "leads", leadId);
-    await updateDoc(ref, { is_deleted: false, deleted_at: null, updated_at: new Date().toISOString() });
+    const user = getCurrentUser();
+    const ref = getUserLeadDocument(user.uid, leadId);
+    await updateDoc(ref, { isDeleted: false, deletedAt: null, updatedAt: Timestamp.now() });
   },
 
   deleteManageLeadForever: async (leadId: string): Promise<void> => {
-    const ref = doc(db, "leads", leadId);
+    const user = getCurrentUser();
+    const ref = getUserLeadDocument(user.uid, leadId);
     await deleteDoc(ref);
   },
 

@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { type Auth, getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 import { getStorage } from "firebase/storage";
@@ -15,12 +15,36 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+const isPlaceholder = (value: string | undefined) =>
+  !value || value.includes("your-project-id") || value.includes("here-is-");
+
+export const isFirebaseConfigured =
+  !isPlaceholder(firebaseConfig.apiKey) &&
+  !isPlaceholder(firebaseConfig.authDomain) &&
+  !isPlaceholder(firebaseConfig.projectId) &&
+  !isPlaceholder(firebaseConfig.storageBucket) &&
+  !isPlaceholder(firebaseConfig.messagingSenderId) &&
+  !isPlaceholder(firebaseConfig.appId);
+
 const app = initializeApp(firebaseConfig);
 
-export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 export const db = getFirestore(app);
 export const functions = getFunctions(app);
 export const storage = getStorage(app);
+
+let authInstance: Auth | null = null;
+
+export const getFirebaseAuth = () => {
+  if (!isFirebaseConfigured) {
+    return null;
+  }
+
+  if (!authInstance) {
+    authInstance = getAuth(app);
+  }
+
+  return authInstance;
+};
 
 export default app;

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { collection, query, where, onSnapshot, orderBy, doc, deleteDoc, updateDoc, writeBatch } from "firebase/firestore";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../../../lib/firebase";
 import { useAuth } from "../../auth/AuthContext";
-import type { ManageLead, BinLead } from "../types/manageLead";
+import type { ManageLead } from "../types/manageLead";
+import { toManageLead } from "../services/leadModel";
 
 export const useManageLeads = (isBin = false) => {
   const { user } = useAuth();
@@ -17,17 +18,10 @@ export const useManageLeads = (isBin = false) => {
     }
 
     // Query leads for the current user, filtering by deleted state
-    const q = query(
-      collection(db, "leads"),
-      where("userId", "==", user.uid),
-      where("is_deleted", "==", isBin)
-    );
+    const q = query(collection(db, "users", user.uid, "leads"), where("isDeleted", "==", isBin));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const leadsData = snapshot.docs.map((doc) => ({
-        ...(doc.data() as Omit<ManageLead, "id">),
-        id: doc.id,
-      })) as ManageLead[];
+      const leadsData = snapshot.docs.map((row) => toManageLead(row.id, row.data()));
       
       // Sort in memory to avoid needing immediate composite indexes
       leadsData.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());

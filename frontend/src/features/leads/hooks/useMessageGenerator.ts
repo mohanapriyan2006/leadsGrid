@@ -4,11 +4,19 @@ import {
   messageService,
   type MessageGenerationPayload,
 } from "../services/messageService";
+import { aiHistoryService } from "../../ai/services/aiHistoryService";
 
 export const useMessageGenerator = () => {
   const generateMutation = useMutation({
-    mutationFn: (payload: MessageGenerationPayload) =>
-      messageService.generateMessage(payload),
+    mutationFn: async (payload: MessageGenerationPayload) => {
+      const result = await messageService.generateMessage(payload);
+      await aiHistoryService.save({
+        type: "email",
+        prompt: payload.lead_context,
+        outputText: result.message,
+      });
+      return result;
+    },
   });
 
   return {

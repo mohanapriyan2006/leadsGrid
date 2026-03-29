@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useSpring, useMotionValue, animate } from "framer-motion";
+import { useManageLeads } from "../../features/leads/hooks/useManageLeads";
 
 // ── Animated counter hook ──────────────────────────────────────────────────
 function useCounter(target: number, duration = 1.4) {
@@ -207,20 +208,77 @@ function SystemHealth() {
 }
 
 // ── Main Dashboard ─────────────────────────────────────────────────────────
-const metrics = [
+const fallbackMetrics = [
   { title: "LEADS CAPTURED", rawValue: 1284, displayValue: "1,284", delta: "+12.4% this week", icon: "⊞", accent: "#a78bfa" },
   { title: "HIGH INTENT", rawValue: 42, displayValue: "42", delta: "ACTIVE_QUEUE", icon: "⚡", accent: "#f59e0b" },
   { title: "ENGAGEMENT", rawValue: 86, displayValue: "86", delta: "86_INDEX", icon: "◎", accent: "#34d399" },
   { title: "EFFICIENCY", rawValue: 6, displayValue: "6.4%", delta: "6PT_OPTIMIZER", icon: "↗", accent: "#60a5fa" },
 ];
 
-const signals = [
+const fallbackSignals = [
   { signal: "Scaling B2B outbound workflows with AI", tags: [{ label: "URGENT", type: "urgent" }, { label: "BUDGET_CONFIRMED", type: "budget" }], score: 92, source: "/r/sales" },
   { signal: "Evaluating CRM replacements for Q3", tags: [{ label: "ENTERPRISE", type: "enterprise" }, { label: "DECISION_MAKER", type: "decision" }], score: 88, source: "LinkedIn" },
   { signal: "Seeking tool for multi-channel prospecting", tags: [{ label: "EXPANSION", type: "expansion" }], score: 74, source: "Direct" },
 ];
 
 export function DashboardPage() {
+  const { leads: dashboardLeads } = useManageLeads(false);
+
+  const totalLeads = dashboardLeads.length;
+  const newLeads = dashboardLeads.filter((lead) => ["NEW", "QUALIFIED"].includes(lead.stage)).length;
+  const proposalLeads = dashboardLeads.filter((lead) => ["RESPONDED", "NEGOTIATION"].includes(lead.stage)).length;
+  const wonLeads = dashboardLeads.filter((lead) => lead.stage === "NEGOTIATION" && lead.score >= 85).length;
+  const conversionRate = totalLeads ? Number(((wonLeads / totalLeads) * 100).toFixed(1)) : 0;
+
+  const dashboardMetrics = totalLeads
+    ? [
+        {
+          title: "LEADS CAPTURED",
+          rawValue: totalLeads,
+          displayValue: totalLeads.toLocaleString(),
+          delta: `${newLeads} new in pipeline`,
+          icon: "⊞",
+          accent: "#a78bfa",
+        },
+        {
+          title: "NEW LEADS",
+          rawValue: newLeads,
+          displayValue: String(newLeads),
+          delta: "initial outreach",
+          icon: "⚡",
+          accent: "#f59e0b",
+        },
+        {
+          title: "PROPOSALS",
+          rawValue: proposalLeads,
+          displayValue: String(proposalLeads),
+          delta: "active opportunities",
+          icon: "◎",
+          accent: "#34d399",
+        },
+        {
+          title: "CONVERSION",
+          rawValue: Math.round(conversionRate),
+          displayValue: `${conversionRate}%`,
+          delta: `${wonLeads} likely won`,
+          icon: "↗",
+          accent: "#60a5fa",
+        },
+      ]
+    : fallbackMetrics;
+
+  const dashboardSignals = dashboardLeads.length
+    ? dashboardLeads.slice(0, 3).map((lead) => ({
+        signal: lead.notes || `${lead.name} from ${lead.company}`,
+        tags: [
+          { label: lead.stage, type: "enterprise" },
+          ...(lead.score >= 80 ? [{ label: "HIGH_SCORE", type: "urgent" }] : []),
+        ],
+        score: lead.score,
+        source: lead.company,
+      }))
+    : fallbackSignals;
+
   return (
     <>
       <style>{`
@@ -426,7 +484,7 @@ export function DashboardPage() {
           <div className="content">
             {/* Metric Cards */}
             <div className="metrics-row">
-              {metrics.map((m, i) => <MetricCard key={m.title} {...m} index={i} />)}
+              {dashboardMetrics.map((m, i) => <MetricCard key={m.title} {...m} index={i} />)}
             </div>
 
             {/* Signal Stream */}
@@ -455,7 +513,7 @@ export function DashboardPage() {
                 <span className="th">SOURCE</span>
                 <span className="th">ACTION</span>
               </div>
-              {signals.map((s, i) => <SignalRow key={s.signal} {...s} index={i} />)}
+              {dashboardSignals.map((s, i) => <SignalRow key={s.signal} {...s} index={i} />)}
             </motion.div>
 
             {/* Bottom Row */}

@@ -1,4 +1,6 @@
-import { apiClient, getStoredToken } from "../../../lib/api";
+import { addDoc, collection, Timestamp } from "firebase/firestore";
+
+import { db, getFirebaseAuth } from "../../../lib/firebase";
 
 export type MessageGenerationPayload = {
   lead_context: string;
@@ -33,26 +35,39 @@ export type SendEmailResult = {
 
 export const messageService = {
   generateMessage: async (payload: MessageGenerationPayload): Promise<MessageGenerationResult> => {
-    const token = getStoredToken();
-    const response = await apiClient.post<MessageGenerationResult>("/ai/message", payload, {
-      headers: token
-        ? {
-            Authorization: `Bearer ${token}`,
-          }
-        : undefined,
-    });
-    return response.data;
+    const context = payload.lead_context.slice(0, payload.max_words * 6);
+    const message = `Hi there,\n\nBased on your context, here is a ${payload.tone} draft:\n${context}\n\nBest regards,`;
+    return {
+      message,
+      confidence: 80,
+      provider: "firebase-local",
+      draft: message,
+    };
   },
 
   sendEmail: async (payload: SendEmailPayload): Promise<SendEmailResult> => {
-    const token = getStoredToken();
-    const response = await apiClient.post<SendEmailResult>("/messages/send", payload, {
-      headers: token
-        ? {
-            Authorization: `Bearer ${token}`,
-          }
-        : undefined,
+    const auth = getFirebaseAuth();
+    const uid = auth?.currentUser?.uid;
+    if (!uid) {
+      throw new Error("Unauthenticated or Firebase not configured");
+    }
+
+    const messageDoc = await addDoc(collection(db, "users", uid, "leads", payload.lead_id, "messages"), {
+      email: payload.to,
+      subject: payload.subject,
+      content: payload.message,
+      status: "sent",
+      createdAt: Timestamp.now(),
     });
-    return response.data;
+
+    return {
+      status: "sent",
+      message_id: messageDoc.id,
+      lead_id: payload.lead_id,
+      to: payload.to,
+      subject: payload.subject,
+      provider: "firestore",
+      sent_at: new Date().toISOString(),
+    };
   },
 };

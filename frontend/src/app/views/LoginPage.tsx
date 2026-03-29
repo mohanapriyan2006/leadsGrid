@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
-import { auth, googleProvider } from "../../lib/firebase";
+import { getFirebaseAuth, googleProvider, isFirebaseConfigured } from "../../lib/firebase";
 import { useNavigate } from "react-router-dom";
 
 export const LoginPage = () => {
@@ -13,6 +13,13 @@ export const LoginPage = () => {
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    const auth = getFirebaseAuth();
+    if (!auth) {
+      setError("Firebase is not configured. Set VITE_FIREBASE_* values in frontend/.env and restart Vite.");
+      return;
+    }
+
     try {
       if (isRegistering) {
         await createUserWithEmailAndPassword(auth, email, password);
@@ -26,6 +33,12 @@ export const LoginPage = () => {
   };
 
   const handleGoogleLogin = async () => {
+    const auth = getFirebaseAuth();
+    if (!auth) {
+      setError("Firebase is not configured. Set VITE_FIREBASE_* values in frontend/.env and restart Vite.");
+      return;
+    }
+
     try {
       await signInWithPopup(auth, googleProvider);
       navigate("/dashboard");
@@ -40,6 +53,12 @@ export const LoginPage = () => {
         <h2 className="text-2xl font-bold mb-6 text-center">
           {isRegistering ? "Create your account" : "Sign in to PitchPilot"}
         </h2>
+
+        {!isFirebaseConfigured && (
+          <p className="mb-4 rounded border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-sm text-amber-200">
+            Firebase is not configured. Update VITE_FIREBASE_* in frontend/.env with your real Firebase web app config.
+          </p>
+        )}
         
         {error && <p className="text-red-500 mb-4 text-sm">{error}</p>}
 

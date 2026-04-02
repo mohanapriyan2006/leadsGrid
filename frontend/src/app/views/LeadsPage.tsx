@@ -11,35 +11,31 @@ import type { Lead } from "../../features/leads/types/lead";
    Inline styles + keyframes (no Tailwind needed)
 ───────────────────────────────────────────── */
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 
   :root {
-    --bg-base:        #0c0d12;
-    --bg-panel:       #13141c;
-    --bg-card:        #181924;
-    --bg-card-hover:  #1e1f2e;
-    --bg-input:       #1a1b26;
-    --border:         rgba(255,255,255,0.06);
-    --border-active:  rgba(139,92,246,0.5);
-    --accent:         #8b5cf6;
-    --accent-glow:    rgba(139,92,246,0.25);
-    --accent-2:       #6366f1;
+    --bg-base:        #0a0c14;
+    --bg-panel:       #0f1420;
+    --bg-card:        #141b2d;
+    --bg-card-hover:  #1a2340;
+    --bg-input:       #141b2d;
+    --border:         rgba(167, 139, 250, 0.1);
+    --border-active:  rgba(167, 139, 250, 0.4);
+    --accent:         #a78bfa;
+    --accent-2:       #8b5cf6;
+    --accent-glow:    rgba(167, 139, 250, 0.25);
     --hot:            #f59e0b;
-    --hot-glow:       rgba(245,158,11,0.2);
-    --green:          #10b981;
-    --red:            #ef4444;
-    --text-primary:   #f1f0f5;
-    --text-secondary: #8b8fa8;
-    --text-dim:       #4a4d6a;
-    --score-high:     #8b5cf6;
-    --score-mid:      #6366f1;
-    --score-low:      #475569;
-    --radius-card:    14px;
+    --hot-glow:       rgba(245, 158, 11, 0.2);
+    --success:        #10b981;
+    --text-primary:   #e8ecff;
+    --text-secondary: #94a3b8;
+    --text-dim:       #64748b;
+    --radius-card:    16px;
     --radius-btn:     8px;
-    --shadow-card:    0 4px 24px rgba(0,0,0,0.4);
-    --shadow-glow:    0 0 32px rgba(139,92,246,0.12);
-    --font:           'DM Sans', sans-serif;
-    --font-mono:      'DM Mono', monospace;
+    --shadow-card:    0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    --shadow-glow:    0 0 32px rgba(167, 139, 250, 0.12);
+    --font:           'Space Grotesk', system-ui, sans-serif;
+    --font-mono:      'JetBrains Mono', monospace;
     --transition:     cubic-bezier(.22,.68,0,1.2);
   }
 
@@ -663,9 +659,9 @@ function initials(name: string) {
   return name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
 }
 function scoreColor(score: number) {
-  if (score >= 85) return "#8b5cf6";
-  if (score >= 65) return "#6366f1";
-  return "#475569";
+  if (score >= 85) return "#a78bfa";  // accent
+  if (score >= 65) return "#8b5cf6";  // accent-secondary
+  return "#64748b";  // content-tertiary
 }
 function useRipple() {
   return (e: React.MouseEvent<HTMLElement>) => {

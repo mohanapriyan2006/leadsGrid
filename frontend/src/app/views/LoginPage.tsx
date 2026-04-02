@@ -48,60 +48,84 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-900 text-white p-4">
-      <div className="w-full max-w-md bg-neutral-800 p-8 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold mb-6 text-center">
-          {isRegistering ? "Create your account" : "Sign in to PitchPilot"}
+    <div className="flex min-h-screen items-center justify-center bg-surface p-4">
+      {/* Background gradient effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent-secondary/15 rounded-full blur-3xl" />
+      </div>
+
+      {/* Glass Card */}
+      <div className="relative w-full max-w-md glass-card p-8 animate-fadeIn">
+        {/* Logo/Header */}
+        <div className="mb-8 flex items-center justify-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent-secondary font-black text-surface text-lg shadow-glow">
+            P
+          </div>
+          <span className="text-xl font-bold tracking-wider text-content">PitchPilot</span>
+        </div>
+
+        <h2 className="mb-2 text-center text-2xl font-semibold text-content">
+          {isRegistering ? "Create your account" : "Welcome back"}
         </h2>
+        <p className="mb-6 text-center text-sm text-content-secondary">
+          {isRegistering ? "Start your sales journey today" : "Sign in to access your sales engine"}
+        </p>
 
         {!isFirebaseConfigured && (
-          <p className="mb-4 rounded border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-sm text-amber-200">
+          <div className="mb-4 rounded-glass-sm border border-warning/30 bg-warning-soft px-4 py-3 text-sm text-warning">
             Firebase is not configured. Update VITE_FIREBASE_* in frontend/.env with your real Firebase web app config.
-          </p>
+          </div>
         )}
-        
-        {error && <p className="text-red-500 mb-4 text-sm">{error}</p>}
+
+        {error && (
+          <div className="mb-4 rounded-glass-sm border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleEmailAuth} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
+            <label className="mb-1.5 block text-sm font-medium text-content-secondary">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2 bg-neutral-700 rounded border border-neutral-600 focus:outline-none focus:border-brand-primary"
+              className="glass-input"
+              placeholder="Enter your email"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Password</label>
+            <label className="mb-1.5 block text-sm font-medium text-content-secondary">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 bg-neutral-700 rounded border border-neutral-600 focus:outline-none focus:border-brand-primary"
+              className="glass-input"
+              placeholder="Enter your password"
               required
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-brand-primary text-black font-semibold p-2 rounded hover:bg-brand-primary/90 transition-colors"
+            className="w-full accent-btn py-2.5"
           >
             {isRegistering ? "Sign Up" : "Sign In"}
           </button>
         </form>
 
-        <div className="mt-6 flex items-center justify-between">
-          <span className="border-b border-neutral-600 w-1/5 lg:w-1/4"></span>
-          <span className="text-xs text-center text-neutral-400 uppercase">or login with</span>
-          <span className="border-b border-neutral-600 w-1/5 lg:w-1/4"></span>
+        <div className="my-6 flex items-center gap-4">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
+          <span className="text-xs font-medium uppercase tracking-wider text-content-tertiary">Or continue with</span>
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
         </div>
 
         <button
           onClick={handleGoogleLogin}
-          className="mt-4 w-full bg-white text-black font-semibold p-2 rounded flex items-center justify-center gap-2 hover:bg-gray-100 transition-colors"
+          className="flex w-full items-center justify-center gap-3 rounded-glass-sm border border-accent/20 bg-surface-secondary/60 px-4 py-2.5 text-sm font-medium text-content transition-all duration-200 hover:border-accent/40 hover:bg-accent-soft"
         >
-          <svg className="w-5 h-5" viewBox="0 0 48 48">
+          <svg className="h-5 w-5" viewBox="0 0 48 48">
             <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
             <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
             <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
@@ -110,11 +134,11 @@ export const LoginPage = () => {
           Google
         </button>
 
-        <p className="mt-6 text-center text-sm text-neutral-400">
+        <p className="mt-6 text-center text-sm text-content-secondary">
           {isRegistering ? "Already have an account?" : "Don't have an account?"}{" "}
           <button
             onClick={() => setIsRegistering(!isRegistering)}
-            className="text-brand-primary hover:underline"
+            className="font-medium text-accent hover:text-accent-secondary transition-colors"
           >
             {isRegistering ? "Sign In" : "Sign Up"}
           </button>

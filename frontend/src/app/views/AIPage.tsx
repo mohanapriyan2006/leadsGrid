@@ -256,11 +256,11 @@ export const AIPage = () => {
   const visibleMessages = messages.filter((message) => !message.hidden);
 
   return (
-    <div className="flex min-h-[calc(100vh-140px)] flex-col gap-3">
+    <div className="flex min-h-[calc(100vh-140px)] flex-col gap-4 bg-surface p-6">
       <header className="relative flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
-          <h2 className="text-2xl font-semibold text-white">AI Sales Engine</h2>
-          <p className="text-sm text-text-dim">Real-time insights for your pipeline</p>
+          <h2 className="page-title">AI Sales Engine</h2>
+          <p className="page-subtitle">Real-time insights for your pipeline</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -268,7 +268,7 @@ export const AIPage = () => {
             type="button"
             onClick={saveCurrentChat}
             disabled={messages.length === 0}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 bg-black/30 text-sm text-text-dim transition hover:border-cyan-300/40 hover:text-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
+            className="glass-btn h-9 w-9 items-center justify-center p-0 disabled:cursor-not-allowed disabled:opacity-50"
             title="Save current chat"
             aria-label="Save current chat"
           >
@@ -277,7 +277,7 @@ export const AIPage = () => {
           <button
             type="button"
             onClick={startNewChat}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 bg-black/30 text-sm text-text-dim transition hover:border-cyan-300/40 hover:text-cyan-100"
+            className="glass-btn h-9 w-9 items-center justify-center p-0"
             title="Start new chat"
             aria-label="Start new chat"
           >
@@ -286,7 +286,7 @@ export const AIPage = () => {
           <button
             type="button"
             onClick={() => setHistoryOpen((open) => !open)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 bg-black/30 text-sm text-text-dim transition hover:border-cyan-300/40 hover:text-cyan-100"
+            className="glass-btn h-9 w-9 items-center justify-center p-0"
             title="Chat history"
             aria-label="Toggle chat history"
           >
@@ -295,8 +295,8 @@ export const AIPage = () => {
         </div>
 
         {historyOpen ? (
-          <div className="absolute right-0 top-12 z-20 w-full max-w-sm rounded-2xl border border-white/15 bg-panel/95 p-3 shadow-2xl backdrop-blur md:w-96">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-dim">Recent Chats</p>
+          <div className="absolute right-0 top-12 z-20 w-full max-w-sm glass-card p-3 md:w-96">
+            <p className="text-xs font-semibold uppercase tracking-wider text-content-secondary">Recent Chats</p>
             <div className="mt-2 max-h-64 space-y-2 overflow-y-auto pr-1">
               {chatHistory.length > 0 ? (
                 chatHistory.map((session) => (
@@ -304,15 +304,15 @@ export const AIPage = () => {
                     key={session.id}
                     type="button"
                     onClick={() => restoreChat(session)}
-                    className="w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2 text-left transition hover:border-cyan-300/35"
+                    className="w-full rounded-xl border border-accent/10 bg-surface-secondary/50 px-3 py-2 text-left transition hover:border-accent/30 hover:bg-surface-secondary/70"
                   >
-                    <p className="text-sm font-medium text-white">{session.title}</p>
-                    <p className="mt-1 line-clamp-2 text-xs text-text-dim">{session.preview}</p>
-                    <p className="mt-1 text-[11px] text-cyan-100/80">{session.createdAt}</p>
+                    <p className="text-sm font-medium text-content">{session.title}</p>
+                    <p className="mt-1 line-clamp-2 text-xs text-content-secondary">{session.preview}</p>
+                    <p className="mt-1 text-[11px] text-accent">{session.createdAt}</p>
                   </button>
                 ))
               ) : (
-                <p className="rounded-xl border border-dashed border-white/15 bg-black/20 px-3 py-4 text-xs text-text-dim">
+                <p className="rounded-xl border border-dashed border-accent/20 bg-surface-secondary/30 px-3 py-4 text-xs text-content-secondary">
                   No saved chats yet. Use the 💾 button to save your current conversation.
                 </p>
               )}
@@ -321,13 +321,13 @@ export const AIPage = () => {
         ) : null}
       </header>
 
-      <section className="mx-auto flex w-full max-w-6xl flex-1 min-h-0 flex-col gap-3">
-        <div className="flex min-h-0 flex-1 rounded-2xl border border-white/10 bg-panel/80 p-4 shadow-aura md:p-5">
+      <section className="mx-auto flex w-full max-w-6xl flex-1 min-h-0 flex-col gap-4">
+        <div className="glass-card flex min-h-0 flex-1 p-4 md:p-5">
           <div className="mx-auto flex h-full w-full max-w-4xl flex-col gap-4">
             <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
               {visibleMessages.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-white/15 bg-black/20 p-5 text-sm text-text-dim">
-                  <p className="text-base font-medium text-white">👋 Welcome to your AI Sales Engine</p>
+                <div className="rounded-xl border border-dashed border-accent/20 bg-surface-secondary/30 p-5 text-sm text-content-secondary">
+                  <p className="text-base font-medium text-content">👋 Welcome to your AI Sales Engine</p>
                   <p className="mt-2">Try one of the quick actions below:</p>
                   <p>• Find new leads</p>
                   <p>• Get best lead to contact</p>
@@ -338,10 +338,10 @@ export const AIPage = () => {
               {visibleMessages.map((message) => (
                 <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div
-                    className={`max-w-[90%] rounded-2xl px-4 py-3 text-[15px] leading-7 transition-all [animation:fadeIn_220ms_ease-out] ${
+                    className={`max-w-[90%] rounded-2xl px-4 py-3 text-[15px] leading-7 transition-all animate-fadeIn ${
                       message.role === "assistant"
-                        ? "border border-violet-300/25 bg-violet-500/12 text-violet-50"
-                        : "border border-white/15 bg-black/35 text-white"
+                        ? "border border-accent/25 bg-accent-soft text-content"
+                        : "border border-accent/15 bg-surface-secondary/70 text-content"
                     }`}
                   >
                     <p className="whitespace-pre-wrap">{message.content}</p>
@@ -351,21 +351,21 @@ export const AIPage = () => {
                         <button
                           type="button"
                           onClick={() => useMessage(message.content)}
-                          className="rounded border border-white/15 bg-black/35 px-2.5 py-1 text-xs text-white"
+                          className="glass-btn px-2.5 py-1 text-xs"
                         >
                           Use this
                         </button>
                         <button
                           type="button"
                           onClick={() => setInput(message.content)}
-                          className="rounded border border-white/15 bg-black/35 px-2.5 py-1 text-xs text-white"
+                          className="glass-btn px-2.5 py-1 text-xs"
                         >
                           Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => hideMessage(message.id)}
-                          className="rounded border border-rose-300/30 bg-rose-500/15 px-2.5 py-1 text-xs text-rose-100"
+                          className="rounded border border-danger/30 bg-danger-soft px-2.5 py-1 text-xs text-danger transition hover:bg-danger/20"
                         >
                           Ignore
                         </button>
@@ -373,29 +373,29 @@ export const AIPage = () => {
                     ) : null}
 
                     {message.card ? (
-                      <div className="mt-3 rounded-xl border border-white/15 bg-black/25 p-3 text-sm text-white/90">
-                        <p className="text-[13px] font-semibold text-amber-200">🔥 Best Lead: {message.card.leadName}</p>
-                        <p className="mt-1 text-xs text-text-dim">Score: {message.card.score}%</p>
-                        <p className="text-xs text-text-dim">Budget: {message.card.budget}</p>
-                        <div className="mt-2 text-xs text-text-dim">
-                          <p className="font-semibold text-white">Pain:</p>
+                      <div className="mt-3 rounded-xl border border-accent/15 bg-surface-secondary/50 p-3 text-sm">
+                        <p className="text-[13px] font-semibold text-warning">🔥 Best Lead: {message.card.leadName}</p>
+                        <p className="mt-1 text-xs text-content-secondary">Score: {message.card.score}%</p>
+                        <p className="text-xs text-content-secondary">Budget: {message.card.budget}</p>
+                        <div className="mt-2 text-xs text-content-secondary">
+                          <p className="font-semibold text-content">Pain:</p>
                           {message.card.pain.map((item) => (
                             <p key={item}>- {item}</p>
                           ))}
                         </div>
-                        <p className="mt-2 text-xs text-emerald-200">Suggestion: {message.card.suggestion}</p>
+                        <p className="mt-2 text-xs text-success">Suggestion: {message.card.suggestion}</p>
                         <div className="mt-3 flex flex-wrap gap-2">
                           <button
                             type="button"
                             onClick={() => void sendCardMessage(message.content)}
-                            className="rounded bg-emerald-500 px-2.5 py-1 text-xs font-semibold text-slate-950"
+                            className="accent-btn px-2.5 py-1 text-xs"
                           >
                             Send Message
                           </button>
                           <button
                             type="button"
                             onClick={() => addMessage({ id: createId(), role: "assistant", content: `${message.card?.leadName} added to pipeline actions.` })}
-                            className="rounded border border-cyan-300/30 bg-cyan-500/15 px-2.5 py-1 text-xs text-cyan-100"
+                            className="glass-btn px-2.5 py-1 text-xs"
                           >
                             Add to Pipeline
                           </button>
@@ -408,10 +408,10 @@ export const AIPage = () => {
 
               {loading ? (
                 <div className="flex justify-start">
-                  <div className="inline-flex items-center gap-1 rounded-2xl border border-violet-300/25 bg-violet-500/12 px-4 py-3">
-                    <span className="h-2 w-2 animate-bounce rounded-full bg-violet-100" />
-                    <span className="h-2 w-2 animate-bounce rounded-full bg-violet-100 [animation-delay:120ms]" />
-                    <span className="h-2 w-2 animate-bounce rounded-full bg-violet-100 [animation-delay:240ms]" />
+                  <div className="inline-flex items-center gap-1 rounded-2xl border border-accent/25 bg-accent-soft px-4 py-3">
+                    <span className="h-2 w-2 animate-bounce rounded-full bg-accent" />
+                    <span className="h-2 w-2 animate-bounce rounded-full bg-accent [animation-delay:120ms]" />
+                    <span className="h-2 w-2 animate-bounce rounded-full bg-accent [animation-delay:240ms]" />
                   </div>
                 </div>
               ) : null}
@@ -421,25 +421,25 @@ export const AIPage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-panel/80 p-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="glass-card grid grid-cols-2 gap-2 p-3 sm:grid-cols-3 lg:grid-cols-5">
           {QUICK_ACTIONS.map((action) => (
             <button
               key={action}
               type="button"
               onClick={() => handleQuickAction(action)}
-              className="rounded-full border border-white/15 bg-black/30 px-3 py-1.5 text-xs text-text-dim transition hover:border-cyan-300/40 hover:text-cyan-100"
+              className="glass-btn rounded-full px-3 py-1.5 text-xs text-content-secondary hover:text-content"
             >
               {action}
             </button>
           ))}
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-panel/85 p-3">
+        <div className="glass-card p-3">
           <div className="flex items-end gap-2">
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-text-dim transition hover:border-cyan-300/35 hover:text-white"
+              className="glass-btn px-3 py-2 text-sm"
             >
               📎
             </button>
@@ -457,14 +457,14 @@ export const AIPage = () => {
               }}
               rows={2}
               placeholder="Ask something..."
-              className="min-h-[52px] flex-1 resize-none rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-cyan-300/45"
+              className="glass-input min-h-[52px] flex-1 resize-none"
             />
 
             <button
               type="button"
               onClick={() => void sendMessage()}
               disabled={loading || !input.trim()}
-              className="rounded-lg bg-gradient-to-r from-cyan-400 to-violet-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-60"
+              className="accent-btn px-4 py-2 text-sm disabled:opacity-60"
             >
               Send
             </button>
@@ -472,9 +472,9 @@ export const AIPage = () => {
 
           <div className="mt-2 flex flex-wrap items-center gap-2">
             {attachedFile ? (
-              <span className="text-xs text-emerald-200">Attached: {attachedFile.name}</span>
+              <span className="text-xs text-success">Attached: {attachedFile.name}</span>
             ) : (
-              <span className="text-xs text-text-dim">Attach image, PDF, or CSV for deeper analysis.</span>
+              <span className="text-xs text-content-tertiary">Attach image, PDF, or CSV for deeper analysis.</span>
             )}
 
             <div className="ml-auto flex gap-2">
@@ -483,8 +483,8 @@ export const AIPage = () => {
                   key={option}
                   type="button"
                   onClick={() => setTone(option)}
-                  className={`rounded border px-2.5 py-1 text-[11px] uppercase tracking-[0.08em] ${
-                    tone === option ? "border-cyan-300/40 bg-cyan-500/10 text-cyan-100" : "border-white/10 text-text-dim"
+                  className={`rounded border px-2.5 py-1 text-[11px] uppercase tracking-wider ${
+                    tone === option ? "border-info/40 bg-info-soft text-info" : "border-accent/10 text-content-tertiary hover:border-accent/30"
                   }`}
                 >
                   {option}
@@ -494,13 +494,6 @@ export const AIPage = () => {
           </div>
         </div>
       </section>
-
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(4px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   );
 };

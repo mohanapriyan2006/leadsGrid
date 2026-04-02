@@ -55,7 +55,7 @@ const DealModal = ({
           exit={{ opacity: 0 }}
         >
           <motion.section
-            className="w-full max-w-sm rounded-2xl border border-white/10 bg-slate-950/95 p-4 shadow-[0_20px_55px_rgba(2,6,23,0.88)]"
+            className="w-full max-w-sm rounded-glass border border-accent/10 bg-surface-tertiary/95 p-4 shadow-glass-lg"
             initial={{ opacity: 0, y: 10, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.985 }}
@@ -65,25 +65,25 @@ const DealModal = ({
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-xl font-semibold text-white">{deal.name}</h3>
-                <p className="text-sm text-text-dim">{deal.company}</p>
+                <h3 className="text-xl font-semibold text-content">{deal.name}</h3>
+                <p className="text-sm text-content-secondary">{deal.company}</p>
               </div>
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-md border border-white/15 bg-black/30 px-2 py-1 text-xs text-text-dim"
+                className="glass-btn px-2 py-1 text-xs"
               >
                 Close
               </button>
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-              <span className="rounded-full border border-cyan-300/35 bg-cyan-500/15 px-2 py-1 text-cyan-100">Score {deal.score}</span>
-              <span className="rounded-full border border-white/15 bg-black/35 px-2 py-1 text-text-dim">Status {deal.status}</span>
-              <span className="rounded-full border border-emerald-300/35 bg-emerald-500/15 px-2 py-1 text-emerald-100">Value {deal.value}</span>
+              <span className="badge-info">Score {deal.score}</span>
+              <span className="glass-btn px-2 py-1 text-xs">Status {deal.status}</span>
+              <span className="badge-success">Value {deal.value}</span>
             </div>
 
-            <div className="mt-3 text-xs text-text-dim">
+            <div className="mt-3 text-xs text-content-secondary">
               <p>Last Action: {deal.lastAction}</p>
               <p>Days in Stage: {deal.daysInStage}</p>
             </div>
@@ -93,7 +93,7 @@ const DealModal = ({
                 <button
                   type="button"
                   onClick={onEdit}
-                  className="rounded-lg border border-white/15 bg-black/35 px-3 py-1.5 text-xs text-white"
+                  className="glass-btn px-3 py-1.5 text-xs"
                 >
                   Edit
                 </button>
@@ -101,7 +101,7 @@ const DealModal = ({
               <button
                 type="button"
                 onClick={onDelete}
-                className="rounded-lg border border-rose-300/35 bg-rose-500/20 px-3 py-1.5 text-xs text-rose-100"
+                className="rounded border border-danger/30 bg-danger-soft px-3 py-1.5 text-xs text-danger transition hover:bg-danger/20"
               >
                 Delete
               </button>

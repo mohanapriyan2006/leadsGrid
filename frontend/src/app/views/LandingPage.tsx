@@ -35,72 +35,104 @@ export const LandingPage = () => {
   const enterApp = () => navigate("/dashboard");
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-[#060A10] text-[#F9FAFB]">
-      <nav className="sticky top-0 z-20 flex h-14 items-center gap-8 border-b border-white/5 bg-[#060A10]/90 px-6 backdrop-blur lg:px-12">
-        <div className="mr-auto flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-accentSoft to-indigo-600 font-black">K</div>
-          <span className="text-sm font-bold tracking-[0.14em]">PITCHPILOT</span>
+    <div className="min-h-screen overflow-y-auto bg-surface text-content">
+      {/* Background Effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-accent/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-accent-secondary/8 rounded-full blur-3xl" />
+      </div>
+
+      {/* Navigation */}
+      <nav className="sticky top-0 z-20 flex h-16 items-center gap-8 border-b border-accent/10 bg-surface/80 px-6 backdrop-blur-glass lg:px-12">
+        <div className="mr-auto flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent-secondary font-black text-surface shadow-glow">
+            P
+          </div>
+          <span className="text-lg font-bold tracking-wider">PitchPilot</span>
         </div>
-        <button className="text-[11px] tracking-[0.12em] text-text-dim">HOME</button>
-        <button className="text-[11px] tracking-[0.12em] text-text-dim">SYSTEM</button>
-        <button className="text-[11px] tracking-[0.12em] text-text-dim">PROCESS</button>
-        <button className="text-[11px] tracking-[0.12em] text-text-dim">CAPITAL</button>
+        <button className="text-xs font-medium uppercase tracking-wider text-content-secondary transition-colors hover:text-content">
+          Home
+        </button>
+        <button className="text-xs font-medium uppercase tracking-wider text-content-secondary transition-colors hover:text-content">
+          System
+        </button>
+        <button className="text-xs font-medium uppercase tracking-wider text-content-secondary transition-colors hover:text-content">
+          Process
+        </button>
+        <button className="text-xs font-medium uppercase tracking-wider text-content-secondary transition-colors hover:text-content">
+          Capital
+        </button>
         <button
           onClick={enterApp}
-          className="rounded border border-accent/50 bg-accent/10 px-4 py-1.5 text-[11px] font-semibold tracking-[0.1em] text-accent"
+          className="badge-accent text-xs font-semibold uppercase tracking-wider hover:bg-accent/20"
         >
-          ACCESS ENGINE
+          Access Engine
         </button>
       </nav>
 
-      <section className="mx-auto max-w-5xl px-6 pb-14 pt-16 text-center lg:px-12">
-        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-[10px] font-bold tracking-[0.12em] text-emerald-300">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
-          VERSION 4.9 // DEPLOYMENT READY
+      {/* Hero Section */}
+      <section className="relative mx-auto max-w-5xl px-6 pb-14 pt-16 text-center lg:px-12">
+        <div className="inline-flex items-center gap-2 rounded-full border border-success/30 bg-success-soft px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-success">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-success" />
+          Version 4.9 // Deployment Ready
         </div>
-        <h1 className="mt-8 text-5xl font-black leading-[0.95] tracking-tight md:text-7xl">
-          THE PRECISION
+
+        <h1 className="mt-8 text-5xl font-bold leading-tight tracking-tight md:text-7xl">
+          The Precision
           <br />
-          <span className="bg-gradient-to-br from-accent to-indigo-400 bg-clip-text text-transparent">SALES ENGINE</span>
+          <span className="bg-gradient-to-r from-accent via-accent-secondary to-accent-tertiary bg-clip-text text-transparent">
+            Sales Engine
+          </span>
         </h1>
-        <p className="mx-auto mt-5 max-w-xl text-base text-text-dim">
+
+        <p className="mx-auto mt-5 max-w-xl text-base text-content-secondary">
           Autonomous client discovery and intent-based outreach. Engineered for enterprise velocity and execution quality.
         </p>
+
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <button
             onClick={enterApp}
-            className="rounded bg-gradient-to-br from-accentSoft to-indigo-600 px-8 py-3 text-xs font-bold tracking-[0.12em] text-white shadow-[0_0_30px_rgba(124,58,237,0.35)]"
+            className="accent-btn px-8 py-3 text-xs font-bold uppercase tracking-wider"
           >
-            INITIALIZE DEPLOYMENT
+            Initialize Deployment
           </button>
-          <button className="rounded border border-white/15 px-8 py-3 text-xs tracking-[0.12em] text-text-dim">TECHNICAL SPECIFICATIONS</button>
+          <button className="glass-btn px-8 py-3 text-xs font-medium uppercase tracking-wider">
+            Technical Specifications
+          </button>
         </div>
       </section>
 
+      {/* Demo Card */}
       <section className="mx-auto mb-16 max-w-5xl px-6 lg:px-12">
-        <div className="overflow-hidden rounded-xl border border-accent/25 bg-panel/85 shadow-aura">
-          <div className="flex items-center gap-2 border-b border-white/10 bg-panelSoft/70 px-4 py-2 text-sm">
-            <span className="font-bold text-white">PitchPilot</span>
-            <div className="ml-auto flex gap-2 text-text-dim">
+        <div className="glass-card-lg overflow-hidden">
+          <div className="flex items-center gap-3 border-b border-accent/10 bg-surface-secondary/50 px-5 py-3">
+            <span className="font-semibold text-content">PitchPilot</span>
+            <div className="ml-auto flex gap-2 text-content-tertiary">
               <span>◉</span>
               <span>—</span>
               <span>✕</span>
             </div>
           </div>
-          <div className="space-y-2 p-4">
+          <div className="space-y-2 p-5">
             {MOCK_LEADS.slice(0, 3).map((lead) => (
-              <div key={lead.id} className="flex items-center gap-3 rounded border border-white/10 bg-black/25 p-3">
+              <div
+                key={lead.id}
+                className="flex items-center gap-3 rounded-xl border border-accent/10 bg-surface-secondary/40 p-3 transition-all hover:border-accent/20 hover:bg-surface-secondary/60"
+              >
                 <div className="flex-1">
-                  <p className="text-sm text-white">{lead.content.slice(0, 52)}...</p>
-                  <div className="mt-1 flex gap-1">
+                  <p className="text-sm text-content">{lead.content.slice(0, 52)}...</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
                     {lead.tags.map((tag) => (
                       <Tag key={tag} label={tag} />
                     ))}
                   </div>
                 </div>
                 <ScoreBadge score={lead.score} />
-                <button onClick={enterApp} className="rounded border border-accent/45 bg-accent/15 px-3 py-1 text-[10px] font-bold tracking-[0.1em] text-accent">
-                  ENGAGE
+                <button
+                  onClick={enterApp}
+                  className="badge-accent text-xs font-semibold uppercase tracking-wider hover:bg-accent/20"
+                >
+                  Engage
                 </button>
               </div>
             ))}
@@ -108,10 +140,11 @@ export const LandingPage = () => {
         </div>
       </section>
 
+      {/* Features Grid */}
       <section className="mx-auto mb-16 max-w-5xl px-6 lg:px-12">
-        <div className="mb-6 flex items-center justify-between">
-          <span className="text-sm font-bold tracking-[0.12em]">CORE INFRASTRUCTURE</span>
-          <span className="text-[10px] tracking-[0.1em] text-text-dim">SYSTEM CAPABILITIES</span>
+        <div className="mb-8 flex items-center justify-between">
+          <span className="text-sm font-bold uppercase tracking-wider">Core Infrastructure</span>
+          <span className="text-xs uppercase tracking-wider text-content-tertiary">System Capabilities</span>
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {features.map((feature, index) => (
@@ -119,19 +152,24 @@ export const LandingPage = () => {
               key={feature.title}
               onMouseEnter={() => setHoveredFeature(index)}
               onMouseLeave={() => setHoveredFeature(null)}
-              className="rounded-xl border bg-panel/80 p-5 transition"
+              className="glass-card-sm p-5 transition-all duration-300"
               style={{
-                borderColor: hoveredFeature === index ? "rgba(181,149,255,0.45)" : "rgba(255,255,255,0.08)",
-                boxShadow: hoveredFeature === index ? "0 0 20px rgba(181,149,255,0.18)" : "none",
+                borderColor: hoveredFeature === index ? "rgba(167, 139, 250, 0.4)" : undefined,
+                boxShadow: hoveredFeature === index
+                  ? "0 0 24px rgba(167, 139, 250, 0.2), 0 4px 24px rgba(0, 0, 0, 0.35)"
+                  : undefined,
               }}
             >
-              <p className="text-xl" style={{ color: hoveredFeature === index ? "#b595ff" : "#667085" }}>
+              <p
+                className="text-2xl transition-colors duration-300"
+                style={{ color: hoveredFeature === index ? "#a78bfa" : "#64748b" }}
+              >
                 {feature.icon}
               </p>
-              <p className="mt-3 text-[11px] font-bold tracking-[0.12em] text-text-dim">
+              <p className="mt-3 text-xs font-bold uppercase tracking-wider text-content-secondary">
                 0{index + 1}. {feature.title.toUpperCase()}
               </p>
-              <p className="mt-2 text-sm text-text-dim">{feature.desc}</p>
+              <p className="mt-2 text-sm text-content-secondary">{feature.desc}</p>
             </div>
           ))}
         </div>

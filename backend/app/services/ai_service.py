@@ -41,7 +41,7 @@ class GeminiProvider(AIProvider):
         self._ensure_key()
         message = (
             "I noticed your team is actively evaluating outreach workflow changes. "
-            "PitchPilot can score intent and turn it into tailored outreach so your reps "
+            "leadsGrid can score intent and turn it into tailored outreach so your reps "
             "respond with context, not templates."
         )
         return MessageGenerationResponse(
@@ -76,7 +76,7 @@ class GroqProvider(AIProvider):
         self._ensure_key()
         message = (
             "Your post points to a process bottleneck and timing pressure. "
-            "PitchPilot maps these signals into ranked opportunities and drafts highly specific "
+            "leadsGrid maps these signals into ranked opportunities and drafts highly specific "
             "messages your team can send in minutes."
         )
         return MessageGenerationResponse(
@@ -108,7 +108,7 @@ class OpenRouterProvider(AIProvider):
         self._ensure_key()
         message = (
             "If your priority is higher-quality outbound without additional SDR overhead, "
-            "PitchPilot can help your team convert intent signals into response-ready messaging."
+            "leadsGrid can help your team convert intent signals into response-ready messaging."
         )
         return MessageGenerationResponse(
             message=" ".join(message.split()[:max_words]),
@@ -142,7 +142,7 @@ class HeuristicProvider(AIProvider):
         text = (
             "I saw your note about outbound friction and wanted to share one idea: "
             "use intent scoring to prioritize who gets personalized outreach first. "
-            "PitchPilot does this end-to-end and can reduce manual prospecting noise quickly."
+            "leadsGrid does this end-to-end and can reduce manual prospecting noise quickly."
         )
         return MessageGenerationResponse(
             message=" ".join(text.split()[:max_words]),

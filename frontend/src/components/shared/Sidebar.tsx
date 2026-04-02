@@ -6,8 +6,8 @@ export const Sidebar = () => {
   return (
     <aside className="hidden w-64 border-r border-accent/10 bg-surface-secondary/80 p-4 backdrop-blur-glass md:block">
       <div className="mb-8 px-2">
-        <img src={logo} alt="PitchPilot" className="h-10 w-10" />
-        <p className="text-xs uppercase tracking-[0.25em] text-content-tertiary">PitchPilot</p>
+        <img src={logo} alt="leadsGrid" className="h-10 w-10" />
+        <p className="text-xs uppercase tracking-[0.25em] text-content-tertiary">leadsGrid</p>
         <h1 className="mt-2 text-2xl font-bold text-content">Sales Engine Active</h1>
       </div>
 

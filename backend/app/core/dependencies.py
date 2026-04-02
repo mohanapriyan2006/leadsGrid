@@ -11,7 +11,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=Fals
 
 def get_current_user_email(token: str | None = Depends(oauth2_scheme)) -> str:
     if token is None and settings.allow_anonymous_dev:
-        return "demo@pitchpilot.local"
+        return "demo@leadsgrid.local"
 
     try:
         if token is None:
@@ -30,7 +30,7 @@ def get_current_user_email(token: str | None = Depends(oauth2_scheme)) -> str:
 
 
 def get_current_user(email: str = Depends(get_current_user_email)):
-    if email == "demo@pitchpilot.local":
+    if email == "demo@leadsgrid.local":
         return {"id": "demo-user", "full_name": "Demo User", "email": email}
 
     user = auth_service.get_user_by_email(email)

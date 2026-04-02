@@ -52,7 +52,7 @@ export const LandingPage = () => {
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent-secondary font-black text-surface shadow-glow">
             P
           </div>
-          <span className="text-lg font-bold tracking-wider">PitchPilot</span>
+          <span className="text-lg font-bold tracking-wider">leadsGrid</span>
         </div>
         <button className="text-xs font-medium uppercase tracking-wider text-content-secondary transition-colors hover:text-content">
           Home
@@ -110,7 +110,7 @@ export const LandingPage = () => {
       <section className="mx-auto mb-16 max-w-5xl px-6 lg:px-12">
         <div className="glass-card-lg overflow-hidden">
           <div className="flex items-center gap-3 border-b border-accent/10 bg-surface-secondary/50 px-5 py-3">
-            <span className="font-semibold text-content">PitchPilot</span>
+            <span className="font-semibold text-content">leadsGrid</span>
             <div className="ml-auto flex gap-2 text-content-tertiary">
               <span>◉</span>
               <span>—</span>

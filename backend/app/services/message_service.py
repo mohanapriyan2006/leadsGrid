@@ -52,7 +52,7 @@ class MessageService:
         issues: list[str] = []
         if len(words) > max_words:
             issues.append("too long")
-        if "PitchPilot" not in message:
+        if "leadsGrid" not in message:
             issues.append("product not referenced")
         if "you" not in message.lower():
             issues.append("low personalization")

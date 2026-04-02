@@ -13,7 +13,7 @@ class RedditService:
             "restrict_sr": "false",
         }
         headers = {
-            "User-Agent": "PitchPilot/0.1 (+https://pitchpilot.local)",
+            "User-Agent": "leadsGrid/0.1 (+https://leadsgrid.local)",
         }
 
         async with httpx.AsyncClient(timeout=12.0) as client:

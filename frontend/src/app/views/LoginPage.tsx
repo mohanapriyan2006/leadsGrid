@@ -136,7 +136,7 @@ export const LoginPage = () => {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent-secondary font-black text-surface text-lg shadow-glow">
             P
           </div>
-          <span className="text-xl font-bold tracking-wider text-content">PitchPilot</span>
+          <span className="text-xl font-bold tracking-wider text-content">leadsGrid</span>
         </div>
 
         <h2 className="mb-2 text-center text-2xl font-semibold text-content">

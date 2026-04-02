@@ -1,6 +1,6 @@
-# PitchPilot Backend
+# leadsGrid Backend
 
-FastAPI API gateway and core services for the PitchPilot SaaS platform.
+FastAPI API gateway and core services for the leadsGrid SaaS platform.
 
 ## Tech Stack
 - FastAPI
@@ -70,7 +70,7 @@ pip install -r requirements.txt
 APP_ENV=development
 SECRET_KEY=change-me-in-production
 ACCESS_TOKEN_EXPIRE_MINUTES=120
-DATABASE_URL=sqlite:///./pitchpilot.db
+DATABASE_URL=sqlite:///./leadsgrid.db
 REDIS_URL=redis://localhost:6379/0
 CORS_ORIGINS=["http://localhost:5173"]
 GEMINI_API_KEY=

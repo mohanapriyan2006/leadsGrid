@@ -1,10 +1,10 @@
-# 🚀 PITCHPILOT — MASTER BUILD PLAN (REAL SaaS)
+# 🚀 LEADSGRID — MASTER BUILD PLAN (REAL SaaS)
 
 ---
 
 # 🧠 0. CORE SYSTEM THINKING (IMPORTANT)
 
-PitchPilot is **3 engines combined**:
+leadsGrid is **3 engines combined**:
 
 ```
 1. DATA ENGINE      → finds leads

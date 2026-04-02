@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 
-logger = logging.getLogger("pitchpilot.api")
+logger = logging.getLogger("leadsgrid.api")
 
 
 def register_exception_handlers(app: FastAPI) -> None:

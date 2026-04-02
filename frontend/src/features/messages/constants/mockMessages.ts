@@ -17,7 +17,7 @@ export const MOCK_MESSAGES: MockMessage[] = [
     leadName: "Sarah Chen",
     tone: "professional",
     content:
-      "Hi Sarah,\n\nI saw your recent post about the frustration with robotic outbound tools.\n\nAt PitchPilot, we focused on contextual signal analysis + human-sounding drafts to help teams scale without losing message quality.\n\nWould you be open to a quick 10-minute walkthrough this week?\n\nBest,\nAlex",
+      "Hi Sarah,\n\nI saw your recent post about the frustration with robotic outbound tools.\n\nAt leadsGrid, we focused on contextual signal analysis + human-sounding drafts to help teams scale without losing message quality.\n\nWould you be open to a quick 10-minute walkthrough this week?\n\nBest,\nAlex",
     confidence: 98,
     createdAt: "2024-01-15",
   },

@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     secret_key: str = "change-me-in-production"
     access_token_expire_minutes: int = 120
 
-    database_url: str = "sqlite:///./pitchpilot.db"
+    database_url: str = "sqlite:///./leadsgrid.db"
     redis_url: str = "redis://localhost:6379/0"
 
     cors_origins: list[str] = ["http://localhost:5173"]
@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     groq_api_key: str | None = None
     openrouter_api_key: str | None = None
 
-    email_from: str = "PitchPilot <no-reply@pitchpilot.local>"
+    email_from: str = "leadsGrid <no-reply@leadsgrid.local>"
     smtp_host: str = "smtp.gmail.com"
     smtp_port: int = 465
     smtp_username: str | None = None

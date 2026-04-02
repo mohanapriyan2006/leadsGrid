@@ -1,6 +1,6 @@
-# PitchPilot Frontend
+# leadsGrid Frontend
 
-React + TypeScript frontend for the PitchPilot precision sales engine UI.
+React + TypeScript frontend for the leadsGrid precision sales engine UI.
 
 ## Tech Stack
 - React

@@ -46,34 +46,39 @@ export const leadService = {
     only_cold?: boolean;
     urgency?: ManageLeadUrgency;
   }): Promise<ManageLead[]> => {
-    const user = getCurrentUser();
+    try {
+      const user = getCurrentUser();
 
-    let q = query(
-      getUserLeadsCollection(user.uid),
-      where("isDeleted", "==", false),
-    );
-
-    if (params.stage) {
-      q = query(q, where("pipelineStage", "==", params.stage));
-    }
-    
-    const snapshot = await getDocs(q);
-    let leads = snapshot.docs.map((row) => toManageLead(row.id, row.data()));
-
-    if (params.only_hot) {
-      leads = leads.filter(l => l.score >= 80);
-    }
-    if (params.query) {
-      const lowerQ = params.query.toLowerCase();
-      leads = leads.filter(l => 
-        l.name.toLowerCase().includes(lowerQ) || 
-        l.company.toLowerCase().includes(lowerQ)
+      let q = query(
+        getUserLeadsCollection(user.uid),
+        where("isDeleted", "==", false),
       );
+
+      if (params.stage) {
+        q = query(q, where("pipelineStage", "==", params.stage));
+      }
+      
+      const snapshot = await getDocs(q);
+      let leads = snapshot.docs.map((row) => toManageLead(row.id, row.data()));
+
+      if (params.only_hot) {
+        leads = leads.filter(l => l.score >= 80);
+      }
+      if (params.query) {
+        const lowerQ = params.query.toLowerCase();
+        leads = leads.filter(l => 
+          l.name.toLowerCase().includes(lowerQ) || 
+          l.company.toLowerCase().includes(lowerQ)
+        );
+      }
+
+      leads.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+
+      return leads;
+    } catch (error) {
+      console.error("listManageLeads error:", error);
+      throw error;
     }
-
-    leads.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
-
-    return leads;
   },
 
   getManageLeadInsights: async (): Promise<ManageLeadInsights> => {

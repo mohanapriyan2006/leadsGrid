@@ -93,7 +93,7 @@
   /* Glass Card Component */
   .glass-card {
     @apply rounded-glass backdrop-blur-glass;
-    background: rgba(20, 27, 45, 0.15);
+    background: rgba(20, 27, 45, 0.45);
     box-shadow:
       0 8px 32px rgba(0, 0, 0, 0.4),
       inset 0 1px 0 rgba(255, 255, 255, 0.08),
@@ -103,7 +103,7 @@
 
   .glass-card-sm {
     @apply rounded-glass-sm backdrop-blur-glass;
-    background: rgba(20, 27, 45, 0.2);
+    background: rgba(20, 27, 45, 0.50);
     box-shadow:
       0 4px 24px rgba(0, 0, 0, 0.35),
       inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -112,7 +112,7 @@
 
   .glass-card-lg {
     @apply rounded-glass-lg backdrop-blur-glass;
-    background: rgba(20, 27, 45, 0.25);
+    background: rgba(20, 27, 45, 0.55);
     box-shadow:
       0 16px 48px rgba(0, 0, 0, 0.4),
       inset 0 1px 0 rgba(255, 255, 255, 0.1),
@@ -124,7 +124,7 @@
   .glass-btn {
     @apply rounded-glass-sm px-4 py-2 text-sm font-medium text-content;
     @apply border border-accent/20 transition-all duration-200 backdrop-blur-sm;
-    background: rgba(20, 27, 45, 0.25);
+    background: rgba(20, 27, 45, 0.55);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
 

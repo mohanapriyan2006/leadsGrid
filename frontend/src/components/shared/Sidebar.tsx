@@ -1,14 +1,12 @@
 import { NavLink } from "react-router-dom";
-
+import logo from "../../assets/logo.png";
 import { navigationItems } from "../../constants/navigation";
 
 export const Sidebar = () => {
   return (
     <aside className="hidden w-64 border-r border-accent/10 bg-surface-secondary/80 p-4 backdrop-blur-glass md:block">
       <div className="mb-8 px-2">
-        <NavLink to="/" className="mb-4 inline-flex h-8 w-8 items-center justify-center rounded-glass-sm bg-gradient-to-br from-accent to-accent-secondary text-sm font-black text-content-inverse shadow-glow">
-          K
-        </NavLink>
+        <img src={logo} alt="PitchPilot" className="h-10 w-10" />
         <p className="text-xs uppercase tracking-[0.25em] text-content-tertiary">PitchPilot</p>
         <h1 className="mt-2 text-2xl font-bold text-content">Sales Engine Active</h1>
       </div>

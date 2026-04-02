@@ -53,7 +53,11 @@ const toISO = (value: Timestamp | string | null | undefined) => {
   if (typeof value === "string") {
     return value;
   }
-  return value.toDate().toISOString();
+  try {
+    return value.toDate().toISOString();
+  } catch {
+    return new Date().toISOString();
+  }
 };
 
 export const toManageLead = (id: string, data: DocumentData): ManageLead => {

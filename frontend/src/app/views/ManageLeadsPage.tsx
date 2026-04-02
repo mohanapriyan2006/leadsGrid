@@ -205,6 +205,7 @@ export const ManageLeadsPage = () => {
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const [showAddRow, setShowAddRow] = useState(false);
@@ -253,10 +254,13 @@ export const ManageLeadsPage = () => {
       try {
         setLoading(true);
         setError(null);
+        setErrorDetails(null);
         await Promise.all([loadLeads("", onlyHot), loadInsights()]);
         setInitialized(true);
-      } catch {
+      } catch (err) {
+        console.error("ManageLeads load error:", err);
         setError("Unable to load manage leads right now.");
+        setErrorDetails(err instanceof Error ? err.message : String(err));
       } finally {
         setLoading(false);
       }
@@ -427,7 +431,14 @@ export const ManageLeadsPage = () => {
   }
 
   if (error) {
-    return <div className="glass-card border-danger/30 p-4 text-sm text-danger">{error}</div>;
+    return (
+      <div className="glass-card border-danger/30 p-4 text-sm text-danger">
+        <p className="font-semibold">{error}</p>
+        {errorDetails && (
+          <p className="mt-2 text-xs text-danger/80">Details: {errorDetails}</p>
+        )}
+      </div>
+    );
   }
 
   return (

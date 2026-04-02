@@ -6,6 +6,7 @@ import { LeadsStream } from "../../features/leads/components/LeadsStream";
 import { useMessageGenerator } from "../../features/leads/hooks/useMessageGenerator";
 import { useLeads } from "../../features/leads/hooks/useLeads";
 import type { Lead } from "../../features/leads/types/lead";
+import bgConnecting from "../../assets/bg-images/connecting-teams.svg";
 
 /* ─────────────────────────────────────────────
    Inline styles + keyframes (no Tailwind needed)
@@ -33,7 +34,7 @@ const css = `
     --radius-card:    16px;
     --radius-btn:     8px;
     --shadow-card:    0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    --shadow-glow:    0 0 32px rgba(167, 139, 250, 0.12);
+    --shadow-glow:    0 0 32px rgba(167, 139, 250,0.80);
     --font:           'Space Grotesk', system-ui, sans-serif;
     --font-mono:      'JetBrains Mono', monospace;
     --transition:     cubic-bezier(.22,.68,0,1.2);
@@ -84,7 +85,13 @@ const css = `
     min-height: 100vh;
     padding: 32px 28px;
     animation: fadeIn 0.4s ease;
+    position: relative;
   }
+  .leads-page-bg { pointer-events: none; position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+  .leads-page-bg img { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%) translateY(8%); width: min(75%, 520px); height: auto; opacity: 0.035; user-select: none; }
+  .leads-page-bg .bg-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 60% at 50% 100%, rgba(16, 185, 129, 0.10) 0%, transparent 70%); }
+  .leads-page-bg .bg-fade { position: absolute; inset: 0; background: linear-gradient(to bottom, var(--bg-base) 0%, rgba(10,12,20,0.7) 40%, transparent 100%); }
+  .leads-page > *:not(.leads-page-bg) { position: relative; z-index: 1; }
 
   /* Header */
   .lp-header {
@@ -787,6 +794,11 @@ export const LeadsPage = () => {
 
   return (
     <div className="leads-page">
+      <div className="leads-page-bg" aria-hidden="true">
+        <div className="bg-glow" />
+        <img src={bgConnecting} alt="" draggable={false} style={{ filter: 'drop-shadow(0 0 60px rgba(16, 185, 129, 0.80))' }} />
+        <div className="bg-fade" />
+      </div>
       {/* ── Header ── */}
       <div className="lp-header">
         <div className="lp-header-left">

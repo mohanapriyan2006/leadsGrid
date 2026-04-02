@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
+import { PageBackground } from "../../components/ui/PageBackground";
+import bgBusinessPlan from "../../assets/bg-images/business-plan.svg";
+
 import { leadService } from "../../features/leads/services/leadService";
 import type { BinLead } from "../../features/leads/types/manageLead";
 
@@ -51,7 +54,8 @@ export const RecyclicBinPage = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="page-with-bg space-y-4">
+      <PageBackground image={bgBusinessPlan} tint="rgba(255, 55, 55, 0.3)" />
       <header className="glass-card p-5">
         <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-3xl font-semibold text-transparent">Manage Leads Bin</h2>
         <p className="mt-1 text-sm text-content-secondary">Restore soft deleted leads or delete permanently.</p>

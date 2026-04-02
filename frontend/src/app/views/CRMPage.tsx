@@ -13,6 +13,8 @@ import { ScoreBadge } from "../../components/ui/ScoreBadge";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { MOCK_DEALS } from "../../features/crm/constants/mockDeals";
 import { ConfirmDialog } from "../../features/leads/components/ConfirmDialog";
+import { PageBackground } from "../../components/ui/PageBackground";
+import bgConnecting from "../../assets/bg-images/connecting-teams.svg";
 import type { DealStatus } from "../../features/common/types/ui";
 
 type Deal = (typeof MOCK_DEALS)[number];
@@ -333,9 +335,8 @@ export const CRMPage = () => {
   };
 
   return (
-    <div className="relative space-y-5">
-      {/* gradient glow backdrop */}
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(129,140,248,0.35),transparent_55%),radial-gradient(circle_at_bottom,_rgba(45,212,191,0.25),transparent_55%)] opacity-80" />
+    <div className="page-with-bg space-y-5">
+      <PageBackground image={bgConnecting} tint="rgba(99, 102, 241,0.80)" />
 
       <header className="glass-card-lg flex flex-col justify-between gap-3 px-5 py-5 md:flex-row md:items-center md:px-6">
         <div>

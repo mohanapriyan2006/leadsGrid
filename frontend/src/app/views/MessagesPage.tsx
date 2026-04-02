@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Avatar } from "../../components/ui/Avatar";
 import { SourceIcon } from "../../components/ui/SourceIcon";
 import { MOCK_LEADS } from "../../features/leads/constants/mockLeads";
+import { PageBackground } from "../../components/ui/PageBackground";
+import bgRemotely from "../../assets/bg-images/remotely.svg";
 import { useMessageGenerator } from "../../features/leads/hooks/useMessageGenerator";
 import { messageService } from "../../features/leads/services/messageService";
 import { useLeadStore } from "../../store/useLeadStore";
@@ -108,7 +110,8 @@ export const MessagesPage = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="page-with-bg space-y-4">
+      <PageBackground image={bgRemotely} tint="rgba(56, 189, 248 , 0.80)" />
       <header className="glass-card p-5">
         <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-3xl font-semibold text-transparent">Message Synthesis</h2>
         <p className="mt-1 text-sm text-content-secondary">Generate personalized outbound drafts from live lead context.</p>

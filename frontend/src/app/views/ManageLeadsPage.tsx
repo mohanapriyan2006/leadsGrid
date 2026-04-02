@@ -19,6 +19,8 @@ import type {
 } from "../../features/leads/types/manageLead";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { useLeadStore } from "../../store/useLeadStore";
+import { PageBackground } from "../../components/ui/PageBackground";
+import bgTeamCollab from "../../assets/bg-images/team-collaboration.svg";
 
 const BOARD_STAGES: { id: ManageLeadStage; label: string; icon: string }[] = [
   { id: "NEW", label: "New", icon: "🧲" },
@@ -429,7 +431,8 @@ export const ManageLeadsPage = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="page-with-bg space-y-4">
+      <PageBackground image={bgTeamCollab} tint="rgba(168, 85, 247, 0.80)" />
       <header className="glass-card-lg p-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div>

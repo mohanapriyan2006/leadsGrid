@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useSpring, useMotionValue, animate } from "framer-motion";
 import { useManageLeads } from "../../features/leads/hooks/useManageLeads";
+import bgDataAtWork from "../../assets/bg-images/data-at-work.svg";
 
 // ── Animated counter hook ──────────────────────────────────────────────────
 function useCounter(target: number, duration = 1.4) {
@@ -376,7 +377,13 @@ export function DashboardPage() {
         @keyframes pulse-anim { 0% { transform: scale(0.6); opacity: 0.8; } 100% { transform: scale(2); opacity: 0; } }
 
         /* ── Content ── */
-        .content { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+        .content { padding: 20px; display: flex; flex-direction: column; gap: 16px; position: relative; }
+        .main-area { position: relative; }
+        .page-bg-layer { pointer-events: none; position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+        .page-bg-layer img { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%) translateY(8%); width: min(75%, 520px); height: auto; opacity: 0.035; user-select: none; }
+        .page-bg-layer .bg-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 60% at 50% 100%, rgba(167, 139, 250, 0.10) 0%, transparent 70%); }
+        .page-bg-layer .bg-fade { position: absolute; inset: 0; background: linear-gradient(to bottom, var(--bg) 0%, rgba(10,12,20,0.7) 40%, transparent 100%); }
+        .content > * { position: relative; z-index: 1; }
 
         /* ── Metric Cards ── */
         .metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
@@ -449,7 +456,7 @@ export function DashboardPage() {
 
             /* ── Gen button ── */
             .gen-report-btn {
-              width: 100%; background: rgba(167, 139, 250, 0.12); border: 1px solid rgba(167, 139, 250, 0.4);
+              width: 100%; background: rgba(167, 139, 250,0.80); border: 1px solid rgba(167, 139, 250, 0.4);
               color: var(--accent); font-family: var(--font-mono); font-size: 10px; padding: 9px;
               border-radius: 8px; cursor: pointer; letter-spacing: 0.1em; transition: all 0.2s;
             }
@@ -478,6 +485,11 @@ export function DashboardPage() {
 
       <div className="app-shell">
         <div className="main-area">
+          <div className="page-bg-layer" aria-hidden="true">
+            <div className="bg-glow" />
+            <img src={bgDataAtWork} alt="" draggable={false} style={{ filter: 'drop-shadow(0 0 60px rgba(167, 139, 250, 0.10))' }} />
+            <div className="bg-fade" />
+          </div>
           <div className="content">
             {/* Metric Cards */}
             <div className="metrics-row">

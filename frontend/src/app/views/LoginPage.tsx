@@ -3,9 +3,20 @@ import { FirebaseError } from "firebase/app";
 import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { getFirebaseAuth, googleProvider, isFirebaseConfigured } from "../../lib/firebase";
 import { useNavigate } from "react-router-dom";
+import bgTeamCollab from "../../assets/bg-images/team-collaboration.svg";
 
 const getFirebaseAuthErrorMessage = (error: unknown, isRegistering: boolean) => {
   if (error instanceof FirebaseError) {
+    const normalizedMessage = error.message.toUpperCase();
+
+    // Firebase may surface this as auth/internal-error with CONFIGURATION_NOT_FOUND in message.
+    if (
+      error.code === "auth/configuration-not-found" ||
+      normalizedMessage.includes("CONFIGURATION_NOT_FOUND")
+    ) {
+      return "Firebase Auth config was not found for this API key/project. In Firebase Console, verify this web app config (API key, authDomain, projectId) and enable Authentication for the same project.";
+    }
+
     switch (error.code) {
       case "auth/email-already-in-use":
         return "This email is already registered. Please sign in instead.";
@@ -109,10 +120,13 @@ export const LoginPage = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface p-4">
-      {/* Background gradient effects */}
+      {/* Background gradient effects + bg image */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent-secondary/15 rounded-full blur-3xl" />
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 100%, rgba(139, 92, 246, 0.10) 0%, transparent 70%)' }} />
+        <img src={bgTeamCollab} alt="" draggable={false} className="absolute bottom-0 left-1/2 h-auto w-[min(75%,520px)] -translate-x-1/2 translate-y-[8%] select-none opacity-[0.03]" style={{ filter: 'drop-shadow(0 0 60px rgba(139, 92, 246, 0.10))' }} />
+        <div className="absolute inset-0 bg-gradient-to-b from-surface via-surface/70 to-transparent" />
       </div>
 
       {/* Glass Card */}

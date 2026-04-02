@@ -1,5 +1,8 @@
 import { useState } from "react";
 
+import { PageBackground } from "../../components/ui/PageBackground";
+import bgDataAtWork from "../../assets/bg-images/data-at-work.svg";
+
 import { SETTINGS_DEFAULTS } from "../../features/settings/constants/settingsDefaults";
 
 export const SettingsPage = () => {
@@ -21,7 +24,8 @@ export const SettingsPage = () => {
   );
 
   return (
-    <div className="max-w-3xl space-y-4">
+    <div className="page-with-bg max-w-3xl space-y-4">
+      <PageBackground image={bgDataAtWork} tint="rgba(245, 158, 11, 0.80)" />
       <header className="glass-card p-5">
         <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-3xl font-semibold text-transparent">System Configuration</h2>
         <p className="mt-1 text-sm text-content-secondary">Configure outreach engine behavior and signal cadence.</p>

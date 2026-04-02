@@ -92,32 +92,45 @@
 @layer components {
   /* Glass Card Component */
   .glass-card {
-    @apply rounded-glass bg-surface-tertiary/80 backdrop-blur-glass;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(167, 139, 250, 0.1);
+    @apply rounded-glass backdrop-blur-glass;
+    background: rgba(20, 27, 45, 0.65);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      inset 0 0 0 0.5px rgba(167, 139, 250, 0.06);
+    border: 1px solid rgba(167, 139, 250, 0.12);
   }
 
   .glass-card-sm {
-    @apply rounded-glass-sm bg-surface-tertiary/70 backdrop-blur-glass;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(167, 139, 250, 0.08);
+    @apply rounded-glass-sm backdrop-blur-glass;
+    background: rgba(20, 27, 45, 0.55);
+    box-shadow:
+      0 4px 24px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(167, 139, 250, 0.1);
   }
 
   .glass-card-lg {
-    @apply rounded-glass-lg bg-surface-tertiary/85 backdrop-blur-glass;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(167, 139, 250, 0.12);
+    @apply rounded-glass-lg backdrop-blur-glass;
+    background: rgba(20, 27, 45, 0.7);
+    box-shadow:
+      0 16px 48px rgba(0, 0, 0, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 0 0 0.5px rgba(167, 139, 250, 0.08);
+    border: 1px solid rgba(167, 139, 250, 0.15);
   }
 
   /* Glass Button */
   .glass-btn {
-    @apply rounded-glass-sm px-4 py-2 text-sm font-medium text-content bg-surface-tertiary/60;
-    @apply border border-accent/20 transition-all duration-200;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    @apply rounded-glass-sm px-4 py-2 text-sm font-medium text-content;
+    @apply border border-accent/20 transition-all duration-200 backdrop-blur-sm;
+    background: rgba(20, 27, 45, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   }
 
   .glass-btn:hover {
-    @apply border-accent/40 bg-accent-soft;
+    @apply border-accent/40;
+    background: rgba(167, 139, 250, 0.12);
     box-shadow: 0 0 20px var(--accent-glow);
   }
 
@@ -135,13 +148,14 @@
 
   /* Glass Input */
   .glass-input {
-    @apply w-full rounded-glass-sm bg-surface-secondary/80 px-4 py-2.5 text-sm text-content;
-    @apply border border-accent/10 outline-none transition-all duration-200;
+    @apply w-full rounded-glass-sm px-4 py-2.5 text-sm text-content;
+    @apply border border-accent/10 outline-none transition-all duration-200 backdrop-blur-sm;
+    background: rgba(15, 20, 32, 0.7);
   }
 
   .glass-input:focus {
     @apply border-accent/30;
-    box-shadow: 0 0 0 3px var(--accent-soft);
+    box-shadow: 0 0 0 3px var(--accent-soft), 0 0 20px rgba(167, 139, 250, 0.1);
   }
 
   .glass-input::placeholder {
@@ -172,6 +186,11 @@
   /* Page Layout */
   .page-container {
     @apply min-h-screen bg-surface p-6;
+  }
+
+  /* Page with background — wrapper for pages that use PageBackground */
+  .page-with-bg {
+    @apply relative min-h-[calc(100vh-100px)];
   }
 
   .page-header {

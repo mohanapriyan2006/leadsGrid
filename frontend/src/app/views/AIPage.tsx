@@ -5,6 +5,8 @@ import { useMessageGenerator } from "../../features/leads/hooks/useMessageGenera
 import { messageService } from "../../features/leads/services/messageService";
 import { useLeadStore } from "../../store/useLeadStore";
 import type { ToneType } from "../../features/common/types/ui";
+import { PageBackground } from "../../components/ui/PageBackground";
+import bgChatBot from "../../assets/bg-images/chat-bot.svg";
 
 type ChatRole = "assistant" | "user";
 
@@ -256,7 +258,8 @@ export const AIPage = () => {
   const visibleMessages = messages.filter((message) => !message.hidden);
 
   return (
-    <div className="flex min-h-[calc(100vh-140px)] flex-col gap-4 bg-surface p-6">
+    <div className="relative flex min-h-[calc(100vh-140px)] flex-col gap-4 p-6">
+      <PageBackground image={bgChatBot} tint="rgba(6, 182, 212, 0.80)" />
       <header className="relative flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
           <h2 className="page-title">AI Sales Engine</h2>

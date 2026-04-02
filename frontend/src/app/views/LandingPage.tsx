@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import bgRemotely from "../../assets/bg-images/remotely.svg";
 
 import { ScoreBadge } from "../../components/ui/ScoreBadge";
 import { Tag } from "../../components/ui/Tag";
@@ -36,10 +37,13 @@ export const LandingPage = () => {
 
   return (
     <div className="min-h-screen overflow-y-auto bg-surface text-content">
-      {/* Background Effects */}
+      {/* Background Effects + bg image */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-accent/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-accent-secondary/8 rounded-full blur-3xl" />
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 100%, rgba(45, 212, 191, 0.10) 0%, transparent 70%)' }} />
+        <img src={bgRemotely} alt="" draggable={false} className="absolute bottom-0 left-1/2 h-auto w-[min(75%,520px)] -translate-x-1/2 translate-y-[8%] select-none opacity-[0.03]" style={{ filter: 'drop-shadow(0 0 60px rgba(45, 212, 191, 0.10))' }} />
+        <div className="absolute inset-0 bg-gradient-to-b from-surface via-surface/70 to-transparent" />
       </div>
 
       {/* Navigation */}

@@ -58,7 +58,7 @@ export const LeadModal = ({
     <AnimatePresence>
       {open ? (
         <motion.div
-          className={isHover ? "fixed z-[90]" : "fixed inset-0 z-[100] flex items-center justify-center bg-black/65 px-4"}
+          className={isHover ? "fixed z-[90]" : "fixed inset-0 z-[100] flex items-center justify-center bg-surface/80 backdrop-blur-sm px-4"}
           style={isHover ? hoverStyle : undefined}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -66,7 +66,7 @@ export const LeadModal = ({
           onClick={isHover ? undefined : onClose}
         >
           <motion.section
-            className={`w-full rounded-2xl border border-white/10 bg-slate-950/95 p-4 shadow-[0_20px_55px_rgba(2,6,23,0.88)] ${
+            className={`glass-card-lg w-full p-4 ${
               isHover ? "max-w-sm" : "max-w-2xl"
             }`}
             initial={{ opacity: 0, y: 10, scale: 0.985 }}
@@ -79,38 +79,38 @@ export const LeadModal = ({
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-xl font-semibold text-white">{lead.name}</h3>
-                <p className="text-sm text-text-dim">{lead.company}</p>
+                <h3 className="text-xl font-semibold text-content">{lead.name}</h3>
+                <p className="text-sm text-content-secondary">{lead.company}</p>
               </div>
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-md border border-white/15 bg-black/30 px-2 py-1 text-xs text-text-dim"
+                className="glass-btn px-2 py-1 text-xs"
               >
                 Close
               </button>
             </div>
 
-            <div className="mt-3 grid gap-2 text-xs text-text-dim md:grid-cols-2">
+            <div className="mt-3 grid gap-2 text-xs text-content-secondary md:grid-cols-2">
               <p>📧 {lead.email || "N/A"}</p>
               <p>📱 {lead.phone || "N/A"}</p>
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-              <span className="rounded-full border border-cyan-300/35 bg-cyan-500/15 px-2 py-1 text-cyan-100">Score {lead.score}</span>
-              <span className="rounded-full border border-emerald-300/35 bg-emerald-500/15 px-2 py-1 text-emerald-100">Budget {formatMoney(lead.budget_estimate)}</span>
-              <span className="rounded-full border border-white/15 bg-black/35 px-2 py-1 text-text-dim">Stage {lead.stage}</span>
+              <span className="badge-info">Score {lead.score}</span>
+              <span className="badge-success">Budget {formatMoney(lead.budget_estimate)}</span>
+              <span className="badge-accent">Stage {lead.stage}</span>
             </div>
 
-            <div className="mt-3 rounded-xl border border-cyan-300/25 bg-cyan-500/10 p-3 text-xs">
+            <div className="glass-card-sm mt-3 p-3 text-xs">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-amber-300/30 bg-amber-500/15 px-2 py-0.5 text-amber-100">
+                <span className="badge-warning">
                   Pain: {lead.ai_analysis.pain_points[0] ?? "Unknown"}
                 </span>
-                <span className="rounded-full border border-violet-300/30 bg-violet-500/15 px-2 py-0.5 text-violet-100">
+                <span className="badge-accent">
                   Fix: {lead.ai_analysis.suggested_pitch || "No suggestion"}
                 </span>
-                <span className="rounded-full border border-emerald-300/30 bg-emerald-500/15 px-2 py-0.5 text-emerald-100">
+                <span className="badge-success">
                   Deal: {lead.ai_analysis.deal_probability}%
                 </span>
               </div>
@@ -120,14 +120,14 @@ export const LeadModal = ({
               <button
                 type="button"
                 onClick={onSendMessage}
-                className="rounded-lg border border-white/15 bg-black/35 px-3 py-1.5 text-xs text-white"
+                className="glass-btn px-3 py-1.5 text-xs"
               >
                 ⚡ Send Message
               </button>
               <button
                 type="button"
                 onClick={onScheduleCall}
-                className="rounded-lg border border-white/15 bg-black/35 px-3 py-1.5 text-xs text-white"
+                className="glass-btn px-3 py-1.5 text-xs"
               >
                 📞 Call
               </button>
@@ -135,10 +135,10 @@ export const LeadModal = ({
                 type="button"
                 onClick={onMoveNext}
                 disabled={!nextStage}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                className={`rounded-glass-sm px-3 py-1.5 text-xs font-semibold transition ${
                   nextStage
-                    ? "bg-cyan-400 text-slate-950"
-                    : "cursor-not-allowed border border-white/15 bg-black/35 text-text-dim"
+                    ? "accent-btn"
+                    : "cursor-not-allowed border border-accent/10 bg-surface-secondary/80 text-content-tertiary"
                 }`}
               >
                 ➡ Move Next{nextStage ? ` (${nextStage})` : " (Final Stage)"}
@@ -147,7 +147,7 @@ export const LeadModal = ({
                 <button
                   type="button"
                   onClick={onMoveToContacted}
-                  className="rounded-lg bg-emerald-400 px-3 py-1.5 text-xs font-semibold text-slate-950"
+                  className="rounded-glass-sm bg-success px-3 py-1.5 text-xs font-semibold text-content-inverse shadow-[0_0_16px_rgba(16,185,129,0.3)] transition hover:shadow-[0_0_24px_rgba(16,185,129,0.5)]"
                 >
                   ✓ Move to Negotiation
                 </button>
@@ -156,7 +156,7 @@ export const LeadModal = ({
                 <button
                   type="button"
                   onClick={onEdit}
-                  className="rounded-lg border border-white/15 bg-black/35 px-3 py-1.5 text-xs text-white"
+                  className="glass-btn px-3 py-1.5 text-xs"
                 >
                   Edit
                 </button>
@@ -164,7 +164,7 @@ export const LeadModal = ({
               <button
                 type="button"
                 onClick={onDelete}
-                className="rounded-lg border border-rose-300/35 bg-rose-500/20 px-3 py-1.5 text-xs text-rose-100"
+                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-3 py-1.5 text-xs text-danger transition hover:shadow-[0_0_16px_rgba(239,68,68,0.3)]"
               >
                 Delete
               </button>

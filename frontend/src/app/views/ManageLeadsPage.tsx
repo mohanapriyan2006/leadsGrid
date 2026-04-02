@@ -115,14 +115,14 @@ const BoardLeadCard = ({ lead, onHoverStart, onHoverEnd }: BoardLeadCardProps) =
       {...listeners}
       onMouseEnter={(event) => onHoverStart(lead.id, event)}
       onMouseLeave={() => onHoverEnd(lead.id)}
-      className={`rounded-xl border border-white/10 bg-gradient-to-br from-slate-900/75 via-slate-950/80 to-black/90 p-3 text-xs transition cursor-grab active:cursor-grabbing ${
+      className={`glass-card-sm p-3 text-xs transition cursor-grab active:cursor-grabbing ${
         isDragging ? "opacity-65" : ""
       }`}
       whileHover={{ y: -2 }}
     >
-      <p className="text-sm font-semibold text-white">{lead.name}</p>
-      <p className="text-[11px] text-text-dim">{lead.company}</p>
-      <div className="mt-3 flex items-center gap-2 text-[11px] text-text-dim">
+      <p className="text-sm font-semibold text-content">{lead.name}</p>
+      <p className="text-[11px] text-content-secondary">{lead.company}</p>
+      <div className="mt-3 flex items-center gap-2 text-[11px] text-content-tertiary">
         <span>Score {lead.score}</span>
         <span>|</span>
         <span>{formatMoney(lead.budget_estimate)}</span>
@@ -148,16 +148,16 @@ const StageColumn = ({ stage, leads, onHoverStart, onHoverEnd, onAddLead, upload
   return (
     <section
       ref={setNodeRef}
-      className={`rounded-2xl border border-white/10 bg-slate-950/75 p-3 transition ${
-        isOver ? "border-cyan-300/70" : ""
+      className={`glass-card p-3 transition ${
+        isOver ? "border-accent/50 shadow-glow" : ""
       }`}
     >
-      <div className="mb-3 rounded-xl border border-white/10 bg-gradient-to-r from-cyan-500/15 to-violet-500/10 px-3 py-2">
+      <div className="mb-3 rounded-glass-sm border border-accent/15 bg-gradient-to-r from-accent/10 to-accent-secondary/5 px-3 py-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-white/90">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-content">
             {stage.icon} {stage.label}
           </h3>
-          <span className="rounded-full border border-white/10 bg-black/40 px-2 py-0.5 text-[11px] text-text-dim">
+          <span className="badge-accent px-2 py-0.5 text-[11px]">
             {leads.length}
           </span>
         </div>
@@ -166,11 +166,11 @@ const StageColumn = ({ stage, leads, onHoverStart, onHoverEnd, onAddLead, upload
       <SortableContext items={leads.map((lead) => lead.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-2">
           {leads.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/10 bg-black/35 p-5 text-center text-xs text-text-dim">
+            <div className="rounded-glass-sm border border-dashed border-accent/15 bg-surface-secondary/50 p-5 text-center text-xs text-content-secondary">
               <p>No leads here yet</p>
               <div className="mt-3 flex items-center justify-center gap-2">
                 {uploadControl}
-                <button type="button" className="rounded-lg border border-white/10 px-2 py-1" onClick={onAddLead}>
+                <button type="button" className="glass-btn px-2 py-1 text-xs" onClick={onAddLead}>
                   Add Lead
                 </button>
               </div>
@@ -404,7 +404,7 @@ export const ManageLeadsPage = () => {
   };
 
   const uploadButton = (
-    <label className="rounded-lg border border-white/10 bg-black/40 px-2 py-1 text-[11px] text-text-dim">
+    <label className="glass-btn cursor-pointer px-2 py-1 text-[11px]">
       Upload CSV
       <input
         type="file"
@@ -421,20 +421,20 @@ export const ManageLeadsPage = () => {
   );
 
   if (loading) {
-    return <div className="rounded-2xl border border-white/10 bg-black/30 p-8 text-sm text-text-dim">Loading Manage Leads dashboard...</div>;
+    return <div className="glass-card p-8 text-sm text-content-secondary">Loading Manage Leads dashboard...</div>;
   }
 
   if (error) {
-    return <div className="rounded-2xl border border-rose-400/40 bg-rose-950/30 p-4 text-sm text-rose-100">{error}</div>;
+    return <div className="glass-card border-danger/30 p-4 text-sm text-danger">{error}</div>;
   }
 
   return (
     <div className="space-y-4">
-      <header className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-transparent to-cyan-500/10 p-4 backdrop-blur-xl">
+      <header className="glass-card-lg p-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-3xl font-semibold text-white">Manage Leads</h2>
-            <p className="text-sm text-text-dim">Not a CRM. A lead conversion engine.</p>
+            <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-3xl font-semibold text-transparent">Manage Leads</h2>
+            <p className="mt-1 text-sm text-content-secondary">Not a CRM. A lead conversion engine.</p>
           </div>
           <div className="flex items-center gap-2">
             {VIEW_OPTIONS.map((view) => (
@@ -442,10 +442,10 @@ export const ManageLeadsPage = () => {
                 key={view.value}
                 type="button"
                 onClick={() => setManageLeadView(view.value)}
-                className={`rounded-full px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] ${
+                className={`rounded-full px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] transition-all duration-200 ${
                   manageLeadView === view.value
-                    ? "bg-gradient-to-r from-cyan-400 to-violet-400 text-slate-950"
-                    : "border border-white/10 bg-black/30 text-text-dim"
+                    ? "bg-gradient-to-r from-accent to-accent-secondary text-content-inverse shadow-glow"
+                    : "border border-accent/10 bg-surface-secondary/80 text-content-tertiary hover:border-accent/30 hover:text-content-secondary"
                 }`}
               >
                 {view.label}
@@ -455,17 +455,17 @@ export const ManageLeadsPage = () => {
         </div>
 
         <div className="grid gap-3 md:grid-cols-3">
-          <div className="rounded-xl border border-white/10 bg-black/35 p-3">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-text-dim">Hot leads</p>
-            <p className="text-2xl font-semibold text-cyan-200">{insights?.hot_leads_need_reply ?? 0}</p>
+          <div className="glass-card-sm p-3">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-content-tertiary">Hot leads</p>
+            <p className="text-2xl font-semibold text-danger">{insights?.hot_leads_need_reply ?? 0}</p>
           </div>
-          <div className="rounded-xl border border-white/10 bg-black/35 p-3">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-text-dim">Going cold</p>
-            <p className="text-2xl font-semibold text-amber-200">{insights?.leads_going_cold ?? 0}</p>
+          <div className="glass-card-sm p-3">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-content-tertiary">Going cold</p>
+            <p className="text-2xl font-semibold text-warning">{insights?.leads_going_cold ?? 0}</p>
           </div>
-          <div className="rounded-xl border border-white/10 bg-black/35 p-3">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-text-dim">Likely to close</p>
-            <p className="text-2xl font-semibold text-emerald-200">{insights?.leads_likely_to_close ?? 0}</p>
+          <div className="glass-card-sm p-3">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-content-tertiary">Likely to close</p>
+            <p className="text-2xl font-semibold text-success">{insights?.leads_likely_to_close ?? 0}</p>
           </div>
         </div>
 
@@ -474,12 +474,12 @@ export const ManageLeadsPage = () => {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search by name/company/email/phone"
-            className="min-w-[220px] flex-1 rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none"
+            className="glass-input min-w-[220px] flex-1"
           />
           <button
             type="button"
             onClick={() => setOnlyHot((v) => !v)}
-            className="rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-xs text-text-dim"
+            className="glass-btn text-xs"
           >
             {onlyHot ? "Hot only: on" : "Hot only"}
           </button>
@@ -487,7 +487,7 @@ export const ManageLeadsPage = () => {
           <button
             type="button"
             onClick={() => setShowAddRow((v) => !v)}
-            className="rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-xs text-text-dim"
+            className="glass-btn text-xs"
           >
             Add Lead
           </button>
@@ -495,34 +495,34 @@ export const ManageLeadsPage = () => {
       </header>
 
       {feedback ? (
-        <div className="rounded-xl border border-emerald-300/40 bg-emerald-500/15 px-3 py-2 text-sm text-emerald-100">{feedback}</div>
+        <div className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-2 text-sm text-success">{feedback}</div>
       ) : null}
 
       {showAddRow ? (
-        <div className="grid gap-2 rounded-2xl border border-white/10 bg-black/35 p-3 md:grid-cols-6">
-          <input className="rounded border border-white/10 bg-black/30 px-2 py-1 text-sm" placeholder="Name" value={newLead.name} onChange={(e) => setNewLead((prev) => ({ ...prev, name: e.target.value }))} />
-          <input className="rounded border border-white/10 bg-black/30 px-2 py-1 text-sm" placeholder="Company" value={newLead.company} onChange={(e) => setNewLead((prev) => ({ ...prev, company: e.target.value }))} />
-          <input className="rounded border border-white/10 bg-black/30 px-2 py-1 text-sm" placeholder="Email" value={newLead.email} onChange={(e) => setNewLead((prev) => ({ ...prev, email: e.target.value }))} />
-          <input className="rounded border border-white/10 bg-black/30 px-2 py-1 text-sm" placeholder="Phone" value={newLead.phone} onChange={(e) => setNewLead((prev) => ({ ...prev, phone: e.target.value }))} />
-          <input type="number" className="rounded border border-white/10 bg-black/30 px-2 py-1 text-sm" placeholder="Budget" value={newLead.budget_estimate} onChange={(e) => setNewLead((prev) => ({ ...prev, budget_estimate: Number(e.target.value) || 0 }))} />
+        <div className="glass-card grid gap-2 p-3 md:grid-cols-6">
+          <input className="glass-input px-2 py-1 text-sm" placeholder="Name" value={newLead.name} onChange={(e) => setNewLead((prev) => ({ ...prev, name: e.target.value }))} />
+          <input className="glass-input px-2 py-1 text-sm" placeholder="Company" value={newLead.company} onChange={(e) => setNewLead((prev) => ({ ...prev, company: e.target.value }))} />
+          <input className="glass-input px-2 py-1 text-sm" placeholder="Email" value={newLead.email} onChange={(e) => setNewLead((prev) => ({ ...prev, email: e.target.value }))} />
+          <input className="glass-input px-2 py-1 text-sm" placeholder="Phone" value={newLead.phone} onChange={(e) => setNewLead((prev) => ({ ...prev, phone: e.target.value }))} />
+          <input type="number" className="glass-input px-2 py-1 text-sm" placeholder="Budget" value={newLead.budget_estimate} onChange={(e) => setNewLead((prev) => ({ ...prev, budget_estimate: Number(e.target.value) || 0 }))} />
           <div className="flex gap-2">
-            <button type="button" className="rounded border border-emerald-300/40 bg-emerald-500/15 px-3 py-1 text-xs" onClick={() => void createLeadRow()}>Save</button>
-            <button type="button" className="rounded border border-white/10 px-3 py-1 text-xs" onClick={() => setShowAddRow(false)}>Cancel</button>
+            <button type="button" className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-1 text-xs text-success" onClick={() => void createLeadRow()}>Save</button>
+            <button type="button" className="glass-btn px-3 py-1 text-xs" onClick={() => setShowAddRow(false)}>Cancel</button>
           </div>
         </div>
       ) : null}
 
       {csvFile && csvHeaders.length > 0 ? (
-        <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
-          <p className="text-sm text-white">CSV Field Mapping: {csvFile.name}</p>
+        <div className="glass-card p-4">
+          <p className="text-sm text-content">CSV Field Mapping: {csvFile.name}</p>
           <div className="mt-2 grid gap-2 md:grid-cols-2">
             {csvHeaders.map((header) => (
-              <label key={header} className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-black/25 px-2 py-1 text-xs">
-                <span className="text-text-dim">{header}</span>
+              <label key={header} className="glass-card-sm flex items-center justify-between gap-2 px-2 py-1 text-xs">
+                <span className="text-content-secondary">{header}</span>
                 <select
                   value={csvMapping[header] ?? ""}
                   onChange={(event) => setCsvMapping((prev) => ({ ...prev, [header]: event.target.value }))}
-                  className="rounded border border-white/15 bg-black/40 px-2 py-1 text-white"
+                  className="glass-input px-2 py-1 text-sm"
                 >
                   <option value="">Ignore</option>
                   {APP_IMPORT_FIELDS.map((field) => (
@@ -535,15 +535,15 @@ export const ManageLeadsPage = () => {
             ))}
           </div>
           <div className="mt-2 flex gap-2">
-            <button type="button" onClick={() => void importCsv()} className="rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-semibold text-slate-950">
+            <button type="button" onClick={() => void importCsv()} className="accent-btn px-3 py-1.5 text-xs font-semibold">
               Import CSV
             </button>
-            <button type="button" onClick={() => setCsvFile(null)} className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-text-dim">
+            <button type="button" onClick={() => setCsvFile(null)} className="glass-btn px-3 py-1.5 text-xs">
               Cancel
             </button>
           </div>
           {csvResult ? (
-            <p className="mt-2 text-xs text-text-dim">
+            <p className="mt-2 text-xs text-content-secondary">
               Imported {csvResult.accepted}, skipped {csvResult.skipped}, invalid {csvResult.invalid}
             </p>
           ) : null}
@@ -572,8 +572,8 @@ export const ManageLeadsPage = () => {
       ) : null}
 
       {manageLeadView === "table" ? (
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80">
-          <div className="grid grid-cols-[1.2fr_1.2fr_1.4fr_130px_80px_110px_220px] border-b border-white/10 px-4 py-2 text-[10px] uppercase tracking-[0.16em] text-text-dim">
+        <div className="glass-card overflow-hidden">
+          <div className="grid grid-cols-[1.2fr_1.2fr_1.4fr_130px_80px_110px_220px] border-b border-accent/10 bg-gradient-to-r from-accent/5 via-transparent to-transparent px-4 py-2 text-[10px] uppercase tracking-[0.16em] text-content-tertiary">
             <span>Name</span>
             <span>Company</span>
             <span>Contact</span>
@@ -584,17 +584,17 @@ export const ManageLeadsPage = () => {
           </div>
 
           {filteredLeads.map((lead) => (
-            <div key={lead.id} className="grid grid-cols-[1.2fr_1.2fr_1.4fr_130px_80px_110px_220px] items-center border-b border-white/5 px-4 py-2 text-xs">
-              <span className="text-white">{lead.name}</span>
-              <span className="text-text-dim">{lead.company}</span>
-              <span className="text-text-dim">{lead.email || lead.phone || "N/A"}</span>
-              <span className="text-text-dim">{lead.stage}</span>
-              <span className="text-cyan-200">{lead.score}</span>
-              <span className="text-text-dim">{formatMoney(lead.budget_estimate)}</span>
+            <div key={lead.id} className="grid grid-cols-[1.2fr_1.2fr_1.4fr_130px_80px_110px_220px] items-center border-b border-accent/5 px-4 py-2 text-xs transition-colors hover:bg-accent/5">
+              <span className="text-content">{lead.name}</span>
+              <span className="text-content-secondary">{lead.company}</span>
+              <span className="text-content-secondary">{lead.email || lead.phone || "N/A"}</span>
+              <span className="text-content-secondary">{lead.stage}</span>
+              <span className="text-accent">{lead.score}</span>
+              <span className="text-content-secondary">{formatMoney(lead.budget_estimate)}</span>
               <div className="flex gap-1">
-                <button type="button" className="rounded border border-white/10 px-2 py-1 text-[11px]" onClick={() => openDetails(lead.id)}>Details</button>
-                <button type="button" className="rounded border border-white/10 px-2 py-1 text-[11px]" onClick={() => openEdit(lead.id)}>Edit</button>
-                <button type="button" className="rounded border border-rose-300/35 bg-rose-500/15 px-2 py-1 text-[11px] text-rose-100" onClick={() => setConfirmDeleteId(lead.id)}>Delete</button>
+                <button type="button" className="glass-btn px-2 py-1 text-[11px]" onClick={() => openDetails(lead.id)}>Details</button>
+                <button type="button" className="glass-btn px-2 py-1 text-[11px]" onClick={() => openEdit(lead.id)}>Edit</button>
+                <button type="button" className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2 py-1 text-[11px] text-danger" onClick={() => setConfirmDeleteId(lead.id)}>Delete</button>
               </div>
             </div>
           ))}

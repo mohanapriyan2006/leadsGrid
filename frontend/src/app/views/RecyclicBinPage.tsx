@@ -44,7 +44,7 @@ export const RecyclicBinPage = () => {
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-black/30 p-8 text-sm text-text-dim">
+      <div className="glass-card p-8 text-sm text-content-secondary">
         Loading bin...
       </div>
     );
@@ -52,13 +52,13 @@ export const RecyclicBinPage = () => {
 
   return (
     <div className="space-y-4">
-      <header className="rounded-2xl border border-white/10 bg-black/35 p-4">
-        <h2 className="text-3xl font-semibold text-white">Manage Leads Bin</h2>
-        <p className="text-sm text-text-dim">Restore soft deleted leads or delete permanently.</p>
+      <header className="glass-card p-5">
+        <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-3xl font-semibold text-transparent">Manage Leads Bin</h2>
+        <p className="mt-1 text-sm text-content-secondary">Restore soft deleted leads or delete permanently.</p>
       </header>
 
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80">
-        <div className="grid grid-cols-[1.5fr_1.5fr_1fr_220px] border-b border-white/10 px-4 py-2 text-[10px] uppercase tracking-[0.18em] text-text-dim">
+      <div className="glass-card overflow-hidden">
+        <div className="grid grid-cols-[1.5fr_1.5fr_1fr_220px] border-b border-accent/10 bg-gradient-to-r from-accent/5 via-transparent to-transparent px-4 py-2 text-[10px] uppercase tracking-[0.18em] text-content-tertiary">
           <span>Name</span>
           <span>Company</span>
           <span>Deleted time</span>
@@ -66,32 +66,32 @@ export const RecyclicBinPage = () => {
         </div>
 
         {binLeads.length === 0 ? (
-          <div className="px-4 py-8 text-center text-sm text-text-dim">Bin is empty.</div>
+          <div className="px-4 py-8 text-center text-sm text-content-secondary">Bin is empty.</div>
         ) : (
           binLeads.map((row) => (
             <div
               key={row.id}
-              className="grid grid-cols-[1.5fr_1.5fr_1fr_220px] items-center border-b border-white/5 px-4 py-3 text-sm"
+              className="grid grid-cols-[1.5fr_1.5fr_1fr_220px] items-center border-b border-accent/5 px-4 py-3 text-sm transition-colors hover:bg-accent/5"
             >
-              <span className="text-white">{row.name}</span>
-              <span className="text-text-dim">{row.company}</span>
-              <span className="text-text-dim">{new Date(row.deleted_at).toLocaleString()}</span>
+              <span className="text-content">{row.name}</span>
+              <span className="text-content-secondary">{row.company}</span>
+              <span className="text-content-secondary">{new Date(row.deleted_at).toLocaleString()}</span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => openDetails(row)}
-                  className="rounded-lg border border-white/15 bg-black/35 px-2 py-1 text-xs text-text-dim hover:text-white"
+                  className="glass-btn px-2 py-1 text-xs"
                 >
                   Details
                 </button>
                 <button
                   onClick={() => void handleRestore(row.id)}
-                  className="rounded-lg border border-emerald-300/30 bg-emerald-500/15 px-2 py-1 text-xs text-emerald-100"
+                  className="badge-success cursor-pointer transition hover:shadow-[0_0_12px_rgba(16,185,129,0.3)]"
                 >
                   Restore
                 </button>
                 <button
                   onClick={() => void handleDeleteForever(row.id)}
-                  className="rounded-lg border border-rose-300/30 bg-rose-500/15 px-2 py-1 text-xs text-rose-100"
+                  className="badge-danger cursor-pointer transition hover:shadow-[0_0_12px_rgba(239,68,68,0.3)]"
                 >
                   Delete forever
                 </button>
@@ -104,14 +104,14 @@ export const RecyclicBinPage = () => {
       <AnimatePresence>
         {detailsOpen && selectedLead && (
           <motion.div
-            className="fixed inset-0 z-[110] flex items-center justify-center bg-black/65 px-4"
+            className="fixed inset-0 z-[110] flex items-center justify-center bg-surface/80 backdrop-blur-sm px-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setDetailsOpen(false)}
           >
             <motion.div
-              className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-950/95 p-5 shadow-[0_20px_50px_rgba(2,6,23,0.85)]"
+              className="glass-card-lg w-full max-w-md p-5"
               initial={{ opacity: 0, y: 10, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.98 }}
@@ -120,28 +120,28 @@ export const RecyclicBinPage = () => {
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-xl font-semibold text-white">{selectedLead.name}</h3>
-                  <p className="text-sm text-text-dim">{selectedLead.company}</p>
+                  <h3 className="text-xl font-semibold text-content">{selectedLead.name}</h3>
+                  <p className="text-sm text-content-secondary">{selectedLead.company}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setDetailsOpen(false)}
-                  className="rounded-md border border-white/15 bg-black/30 px-2 py-1 text-xs text-text-dim"
+                  className="glass-btn px-2 py-1 text-xs"
                 >
                   Close
                 </button>
               </div>
 
-              <div className="mt-4 space-y-2 text-sm text-text-dim">
-                <p><span className="text-white">Email:</span> {selectedLead.email || "N/A"}</p>
-                <p><span className="text-white">Deleted:</span> {new Date(selectedLead.deleted_at).toLocaleString()}</p>
-                <p><span className="text-white">ID:</span> {selectedLead.id}</p>
+              <div className="mt-4 space-y-2 text-sm text-content-secondary">
+                <p><span className="text-content">Email:</span> {selectedLead.email || "N/A"}</p>
+                <p><span className="text-content">Deleted:</span> {new Date(selectedLead.deleted_at).toLocaleString()}</p>
+                <p><span className="text-content">ID:</span> {selectedLead.id}</p>
               </div>
 
               <div className="mt-5 flex justify-end gap-2">
                 <button
                   type="button"
-                  className="rounded-lg border border-emerald-300/30 bg-emerald-500/15 px-3 py-1.5 text-xs text-emerald-100"
+                  className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-1.5 text-xs text-success transition hover:shadow-[0_0_16px_rgba(16,185,129,0.3)]"
                   onClick={() => {
                     void handleRestore(selectedLead.id);
                     setDetailsOpen(false);
@@ -151,7 +151,7 @@ export const RecyclicBinPage = () => {
                 </button>
                 <button
                   type="button"
-                  className="rounded-lg border border-rose-300/35 bg-rose-500/20 px-3 py-1.5 text-xs text-rose-100"
+                  className="rounded-glass-sm border border-danger/30 bg-danger-soft px-3 py-1.5 text-xs text-danger transition hover:shadow-[0_0_16px_rgba(239,68,68,0.3)]"
                   onClick={() => {
                     void handleDeleteForever(selectedLead.id);
                     setDetailsOpen(false);

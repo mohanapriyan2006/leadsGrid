@@ -1,17 +1,93 @@
 import { useState } from "react";
+import { FirebaseError } from "firebase/app";
 import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { getFirebaseAuth, googleProvider, isFirebaseConfigured } from "../../lib/firebase";
 import { useNavigate } from "react-router-dom";
+
+const getFirebaseAuthErrorMessage = (error: unknown, isRegistering: boolean) => {
+  if (error instanceof FirebaseError) {
+    switch (error.code) {
+      case "auth/email-already-in-use":
+        return "This email is already registered. Please sign in instead.";
+      case "auth/invalid-email":
+        return "Please enter a valid email address.";
+      case "auth/weak-password":
+        return "Password is too weak. Use at least 6 characters.";
+      case "auth/invalid-credential":
+        return "Invalid email or password.";
+      case "auth/user-not-found":
+        return "No account found for this email. Create an account first.";
+      case "auth/wrong-password":
+        return "Incorrect password. Please try again.";
+      case "auth/too-many-requests":
+        return "Too many attempts. Please wait a minute and try again.";
+      case "auth/network-request-failed":
+        return "Network error. Check your connection and try again.";
+      case "auth/operation-not-allowed":
+        return isRegistering
+          ? "Email/password sign-up is disabled in Firebase. Enable it in Authentication > Sign-in method."
+          : "Email/password sign-in is disabled in Firebase. Enable it in Authentication > Sign-in method.";
+      case "auth/unauthorized-domain":
+        return "This domain is not authorized in Firebase Auth. Add localhost in Authentication > Settings > Authorized domains.";
+      case "auth/invalid-api-key":
+        return "Invalid Firebase API key. Check VITE_FIREBASE_API_KEY in frontend/.env.";
+      case "auth/popup-blocked":
+      case "auth/popup-closed-by-user":
+      case "auth/cancelled-popup-request":
+        return "Google sign-in popup was blocked or closed. Please retry and allow popups.";
+      default:
+        return error.message;
+    }
+  }
+
+  return "Authentication failed. Please try again.";
+};
 
 export const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail) {
+      setError("Email is required.");
+      return;
+    }
+
+    if (isRegistering && password.length < 6) {
+      setError("Password must be at least 6 characters for Firebase sign-up.");
+      return;
+    }
+
+    const auth = getFirebaseAuth();
+    if (!auth) {
+      setError("Firebase is not configured. Set VITE_FIREBASE_* values in frontend/.env and restart Vite.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      if (isRegistering) {
+        await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+      } else {
+        await signInWithEmailAndPassword(auth, normalizedEmail, password);
+      }
+      navigate("/dashboard");
+    } catch (err: unknown) {
+      setError(getFirebaseAuthErrorMessage(err, isRegistering));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
     setError("");
 
     const auth = getFirebaseAuth();
@@ -21,29 +97,13 @@ export const LoginPage = () => {
     }
 
     try {
-      if (isRegistering) {
-        await createUserWithEmailAndPassword(auth, email, password);
-      } else {
-        await signInWithEmailAndPassword(auth, email, password);
-      }
-      navigate("/dashboard");
-    } catch (err: any) {
-      setError(err.message);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    const auth = getFirebaseAuth();
-    if (!auth) {
-      setError("Firebase is not configured. Set VITE_FIREBASE_* values in frontend/.env and restart Vite.");
-      return;
-    }
-
-    try {
+      setIsSubmitting(true);
       await signInWithPopup(auth, googleProvider);
       navigate("/dashboard");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getFirebaseAuthErrorMessage(err, false));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -91,6 +151,7 @@ export const LoginPage = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
               className="glass-input"
               placeholder="Enter your email"
               required
@@ -102,16 +163,22 @@ export const LoginPage = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete={isRegistering ? "new-password" : "current-password"}
+              minLength={isRegistering ? 6 : undefined}
               className="glass-input"
               placeholder="Enter your password"
               required
             />
+            {isRegistering && (
+              <p className="mt-1 text-xs text-content-tertiary">Use at least 6 characters.</p>
+            )}
           </div>
           <button
             type="submit"
+            disabled={!isFirebaseConfigured || isSubmitting}
             className="w-full accent-btn py-2.5"
           >
-            {isRegistering ? "Sign Up" : "Sign In"}
+            {isSubmitting ? "Please wait..." : isRegistering ? "Sign Up" : "Sign In"}
           </button>
         </form>
 
@@ -123,6 +190,7 @@ export const LoginPage = () => {
 
         <button
           onClick={handleGoogleLogin}
+          disabled={!isFirebaseConfigured || isSubmitting}
           className="flex w-full items-center justify-center gap-3 rounded-glass-sm border border-accent/20 bg-surface-secondary/60 px-4 py-2.5 text-sm font-medium text-content transition-all duration-200 hover:border-accent/40 hover:bg-accent-soft"
         >
           <svg className="h-5 w-5" viewBox="0 0 48 48">
@@ -137,7 +205,10 @@ export const LoginPage = () => {
         <p className="mt-6 text-center text-sm text-content-secondary">
           {isRegistering ? "Already have an account?" : "Don't have an account?"}{" "}
           <button
-            onClick={() => setIsRegistering(!isRegistering)}
+            onClick={() => {
+              setError("");
+              setIsRegistering(!isRegistering);
+            }}
             className="font-medium text-accent hover:text-accent-secondary transition-colors"
           >
             {isRegistering ? "Sign In" : "Sign Up"}

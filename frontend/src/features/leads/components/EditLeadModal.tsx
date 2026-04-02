@@ -48,14 +48,14 @@ export const EditLeadModal = ({ lead, open, onClose, onSave }: EditLeadModalProp
     <AnimatePresence>
       {open && lead ? (
         <motion.div
-          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/65 px-4"
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-surface/80 backdrop-blur-sm px-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
         >
           <motion.form
-            className="w-full max-w-xl space-y-3 rounded-2xl border border-white/10 bg-slate-950/95 p-5"
+            className="glass-card-lg w-full max-w-xl space-y-3 p-5"
             initial={{ opacity: 0, y: 10, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.985 }}
@@ -66,85 +66,85 @@ export const EditLeadModal = ({ lead, open, onClose, onSave }: EditLeadModalProp
             }}
             onClick={(event) => event.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold text-white">Edit Lead</h3>
+            <h3 className="text-lg font-semibold text-content">Edit Lead</h3>
 
             <div className="grid gap-3 md:grid-cols-2">
-              <label className="text-xs text-text-dim">
+              <label className="text-xs text-content-secondary">
                 Name
                 <input
                   value={form.name}
                   onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-                  className="mt-1 w-full rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-sm text-white"
+                  className="glass-input mt-1"
                 />
               </label>
-              <label className="text-xs text-text-dim">
+              <label className="text-xs text-content-secondary">
                 Company
                 <input
                   value={form.company}
                   onChange={(event) => setForm((prev) => ({ ...prev, company: event.target.value }))}
-                  className="mt-1 w-full rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-sm text-white"
+                  className="glass-input mt-1"
                 />
               </label>
-              <label className="text-xs text-text-dim">
+              <label className="text-xs text-content-secondary">
                 Email
                 <input
                   value={form.email}
                   onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-                  className="mt-1 w-full rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-sm text-white"
+                  className="glass-input mt-1"
                 />
               </label>
-              <label className="text-xs text-text-dim">
+              <label className="text-xs text-content-secondary">
                 Phone
                 <input
                   value={form.phone}
                   onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))}
-                  className="mt-1 w-full rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-sm text-white"
+                  className="glass-input mt-1"
                 />
               </label>
-              <label className="text-xs text-text-dim">
+              <label className="text-xs text-content-secondary">
                 Stage
                 <select
                   value={form.stage}
                   onChange={(event) => setForm((prev) => ({ ...prev, stage: event.target.value as ManageLeadStage }))}
-                  className="mt-1 w-full rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-sm text-white"
+                  className="glass-input mt-1"
                 >
                   {STAGES.map((stage) => (
-                    <option key={stage} value={stage}>
+                    <option key={stage} value={stage} className="bg-surface-tertiary">
                       {stage}
                     </option>
                   ))}
                 </select>
               </label>
-              <label className="text-xs text-text-dim">
+              <label className="text-xs text-content-secondary">
                 Budget
                 <input
                   type="number"
                   value={form.budget_estimate}
                   onChange={(event) => setForm((prev) => ({ ...prev, budget_estimate: Number(event.target.value) || 0 }))}
-                  className="mt-1 w-full rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-sm text-white"
+                  className="glass-input mt-1"
                 />
               </label>
             </div>
 
-            <label className="block text-xs text-text-dim">
+            <label className="block text-xs text-content-secondary">
               Notes
               <textarea
                 value={form.notes}
                 onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
                 rows={3}
-                className="mt-1 w-full rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-sm text-white"
+                className="glass-input mt-1"
               />
             </label>
 
             <div className="flex justify-end gap-2 pt-1">
               <button
                 type="button"
-                className="rounded-lg border border-white/15 bg-black/35 px-3 py-1.5 text-xs text-text-dim"
+                className="glass-btn px-3 py-1.5 text-xs"
                 onClick={onClose}
               >
                 Cancel
               </button>
-              <button type="submit" className="rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-semibold text-slate-950">
+              <button type="submit" className="accent-btn px-3 py-1.5 text-xs font-semibold">
                 Update Lead
               </button>
             </div>

@@ -55,15 +55,15 @@ export const LeadList = ({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-white/10 bg-panel/60 p-3">
+      <div className="glass-card p-3">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <input
             value={searchTerm}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Search intent signals..."
-            className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none transition focus:border-accent md:max-w-lg"
+            className="glass-input md:max-w-lg"
           />
-          <p className="text-xs uppercase tracking-[0.2em] text-text-dim">
+          <p className="text-xs uppercase tracking-[0.2em] text-content-tertiary">
             {isFetching ? "refreshing" : "live intent stream"}
           </p>
         </div>
@@ -71,8 +71,8 @@ export const LeadList = ({
 
       {isLoading ? (
         <div className="space-y-3">
-          <div className="h-40 animate-pulse rounded-xl border border-white/10 bg-panel/60" />
-          <div className="h-40 animate-pulse rounded-xl border border-white/10 bg-panel/60" />
+          <div className="h-40 animate-pulse glass-card" />
+          <div className="h-40 animate-pulse glass-card" />
         </div>
       ) : (
         <div className="space-y-3">

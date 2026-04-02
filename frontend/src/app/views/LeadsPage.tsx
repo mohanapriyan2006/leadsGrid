@@ -14,25 +14,25 @@ const css = `
   @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 
   :root {
-    --bg-base:        #0a0c14;
-    --bg-panel:       #0f1420;
-    --bg-card:        #141b2d;
-    --bg-card-hover:  #1a2340;
-    --bg-input:       #141b2d;
+    --bg-base:        var(--surface, #0a0c14);
+    --bg-panel:       var(--surface-secondary, #0f1420);
+    --bg-card:        var(--surface-tertiary, #141b2d);
+    --bg-card-hover:  var(--surface-elevated, #1a2340);
+    --bg-input:       var(--surface-tertiary, #141b2d);
     --border:         rgba(167, 139, 250, 0.1);
     --border-active:  rgba(167, 139, 250, 0.4);
-    --accent:         #a78bfa;
-    --accent-2:       #8b5cf6;
+    --accent:         var(--accent, #a78bfa);
+    --accent-2:       var(--accent-secondary, #8b5cf6);
     --accent-glow:    rgba(167, 139, 250, 0.25);
-    --hot:            #f59e0b;
+    --hot:            var(--warning, #f59e0b);
     --hot-glow:       rgba(245, 158, 11, 0.2);
-    --success:        #10b981;
-    --text-primary:   #e8ecff;
-    --text-secondary: #94a3b8;
-    --text-dim:       #64748b;
+    --success:        var(--success, #10b981);
+    --text-primary:   var(--content, #e8ecff);
+    --text-secondary: var(--content-secondary, #94a3b8);
+    --text-dim:       var(--content-tertiary, #64748b);
     --radius-card:    16px;
     --radius-btn:     8px;
-    --shadow-card:    0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    --shadow-card:    0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
     --shadow-glow:    0 0 32px rgba(167, 139, 250, 0.12);
     --font:           'Space Grotesk', system-ui, sans-serif;
     --font-mono:      'JetBrains Mono', monospace;

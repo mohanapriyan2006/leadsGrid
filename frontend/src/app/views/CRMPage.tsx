@@ -320,15 +320,15 @@ export const CRMPage = () => {
   const getStatusLabelColor = (status: DealStatus) => {
     switch (status) {
       case "negotiation":
-        return "from-sky-500/40 via-sky-400/20 to-transparent text-sky-200";
+        return "from-info/30 via-info/10 to-transparent text-info";
       case "contracted":
-        return "from-emerald-500/40 via-emerald-400/20 to-transparent text-emerald-200";
+        return "from-success/30 via-success/10 to-transparent text-success";
       case "in-progress":
-        return "from-amber-500/40 via-amber-400/20 to-transparent text-amber-200";
+        return "from-warning/30 via-warning/10 to-transparent text-warning";
       case "closed":
-        return "from-violet-500/40 via-violet-400/20 to-transparent text-violet-200";
+        return "from-accent-secondary/30 via-accent-secondary/10 to-transparent text-accent-secondary";
       default:
-        return "from-slate-500/40 via-slate-400/20 to-transparent text-slate-200";
+        return "from-content-tertiary/30 via-content-tertiary/10 to-transparent text-content-secondary";
     }
   };
 
@@ -337,25 +337,25 @@ export const CRMPage = () => {
       {/* gradient glow backdrop */}
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(129,140,248,0.35),transparent_55%),radial-gradient(circle_at_bottom,_rgba(45,212,191,0.25),transparent_55%)] opacity-80" />
 
-      <header className="flex flex-col justify-between gap-3 rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 via-white/0 to-accent/10 px-4 py-4 shadow-[0_18px_45px_rgba(15,23,42,0.85)] backdrop-blur-xl md:flex-row md:items-center md:px-6">
+      <header className="glass-card-lg flex flex-col justify-between gap-3 px-5 py-5 md:flex-row md:items-center md:px-6">
         <div>
-          <h2 className="bg-gradient-to-r from-white via-sky-100 to-emerald-200 bg-clip-text text-3xl font-semibold text-transparent">
+          <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-3xl font-semibold text-transparent">
             Pipeline CRM
           </h2>
-          <p className="mt-1 text-sm text-text-dim">
+          <p className="mt-1 text-sm text-content-secondary">
             Deal intelligence, live pipeline control, and adaptive execution.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-[11px] text-text-dim shadow-inner shadow-white/5 md:flex">
-            <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+          <div className="hidden items-center gap-2 rounded-full border border-accent/10 bg-surface-secondary/80 px-3 py-1.5 text-[11px] text-content-tertiary backdrop-blur-glass md:flex">
+            <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-success" />
             Realtime scoring enabled
           </div>
           <button
             onClick={() => setIsAdding((s) => !s)}
-            className="group inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500 via-emerald-400 to-sky-400 px-3 py-1.5 text-xs font-medium text-slate-950 shadow-lg shadow-emerald-500/40 transition hover:translate-y-0.5 hover:shadow-xl hover:shadow-emerald-400/50 active:translate-y-0"
+            className="accent-btn group inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium"
           >
-            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-slate-950/80 text-[11px] text-emerald-300">
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-surface/80 text-[11px] text-accent">
               +
             </span>
             New deal
@@ -365,7 +365,7 @@ export const CRMPage = () => {
 
       {/* add deal form */}
       {isAdding && (
-        <div className="animate-in slide-in-from-top-2 fade-in rounded-2xl border border-emerald-500/40 bg-slate-900/80 p-4 shadow-[0_22px_55px_rgba(5,46,22,0.85)] backdrop-blur-xl">
+        <div className="glass-card border-accent/20 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-1 flex-wrap gap-3">
               <input
@@ -374,7 +374,7 @@ export const CRMPage = () => {
                   handleNewDealChange("name", e.target.value)
                 }
                 placeholder="Client name"
-                className="min-w-[140px] flex-1 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white outline-none ring-0 transition focus:border-emerald-400/60 focus:bg-black/70"
+                className="glass-input min-w-[140px] flex-1 px-3 py-2 text-xs"
               />
               <input
                 value={newDeal.company}
@@ -382,7 +382,7 @@ export const CRMPage = () => {
                   handleNewDealChange("company", e.target.value)
                 }
                 placeholder="Company"
-                className="min-w-[140px] flex-1 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white outline-none ring-0 transition focus:border-emerald-400/60 focus:bg-black/70"
+                className="glass-input min-w-[140px] flex-1 px-3 py-2 text-xs"
               />
               <select
                 value={newDeal.status}
@@ -392,12 +392,12 @@ export const CRMPage = () => {
                     e.target.value as DealStatus,
                   )
                 }
-                className="rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400/60"
+                className="glass-input px-3 py-2 text-xs"
               >
-                <option value="contacted">contacted</option>
-                <option value="replied">replied</option>
-                <option value="negotiation">negotiation</option>
-                <option value="closed">closed</option>
+                <option value="contacted" className="bg-surface-tertiary">contacted</option>
+                <option value="replied" className="bg-surface-tertiary">replied</option>
+                <option value="negotiation" className="bg-surface-tertiary">negotiation</option>
+                <option value="closed" className="bg-surface-tertiary">closed</option>
               </select>
               <div className="flex items-center gap-2">
                 <input
@@ -407,7 +407,7 @@ export const CRMPage = () => {
                     handleNewDealChange("score", e.target.value)
                   }
                   placeholder="Score"
-                  className="w-20 rounded-lg border border-white/10 bg-black/40 px-2 py-2 text-xs text-white outline-none focus:border-emerald-400/60"
+                  className="glass-input w-20 px-2 py-2 text-xs"
                 />
                 <ScoreBadge score={newDeal.score} />
               </div>
@@ -417,7 +417,7 @@ export const CRMPage = () => {
                   handleNewDealChange("value", e.target.value)
                 }
                 placeholder="$10,000"
-                className="w-28 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-emerald-200 outline-none focus:border-emerald-400/60"
+                className="glass-input w-28 px-3 py-2 text-xs text-success"
               />
               <input
                 value={newDeal.lastAction}
@@ -425,19 +425,19 @@ export const CRMPage = () => {
                   handleNewDealChange("lastAction", e.target.value)
                 }
                 placeholder="Last touchpoint"
-                className="min-w-[160px] flex-1 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400/60"
+                className="glass-input min-w-[160px] flex-1 px-3 py-2 text-xs"
               />
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={handleAddDeal}
-                className="rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 transition hover:bg-emerald-400 hover:shadow-emerald-400/60"
+                className="accent-btn px-3 py-2 text-xs font-semibold"
               >
                 Add to pipeline
               </button>
               <button
                 onClick={() => setIsAdding(false)}
-                className="text-xs text-text-dim hover:text-slate-200"
+                className="text-xs text-content-tertiary hover:text-content-secondary transition"
               >
                 Cancel
               </button>
@@ -481,12 +481,12 @@ export const CRMPage = () => {
         ].map((item) => (
           <article
             key={item.label}
-            className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 via-slate-900/70 to-black/80 p-4 shadow-[0_18px_40px_rgba(15,23,42,0.9)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-emerald-400/60 hover:shadow-[0_22px_55px_rgba(34,197,94,0.35)]"
+            className="glass-card group relative overflow-hidden p-4 transition hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-glow"
           >
             <div className="pointer-events-none absolute inset-0 opacity-0 blur-3xl transition group-hover:opacity-100">
-              <div className="h-full w-full bg-[radial-gradient(circle_at_top,_rgba(129,140,248,0.55),transparent_60%),radial-gradient(circle_at_bottom,_rgba(34,197,94,0.55),transparent_60%)]" />
+              <div className="h-full w-full bg-[radial-gradient(circle_at_top,_rgba(167,139,250,0.4),transparent_60%)]" />
             </div>
-            <p className="text-[11px] tracking-[0.18em] text-text-dim">
+            <p className="text-[11px] tracking-[0.18em] text-content-tertiary">
               {item.label}
             </p>
             <p
@@ -495,41 +495,41 @@ export const CRMPage = () => {
             >
               {item.value}
             </p>
-            <p className="mt-1 text-[11px] text-text-dim">{item.sub}</p>
+            <p className="mt-1 text-[11px] text-content-secondary">{item.sub}</p>
           </article>
         ))}
       </div>
 
       {/* view toggle */}
       <div className="flex items-center justify-between gap-2">
-        <div className="inline-flex rounded-full border border-white/15 bg-black/70 p-1 text-[11px] shadow-lg shadow-black/60 backdrop-blur">
+        <div className="glass-card-sm inline-flex p-1 text-[11px]">
           {(["table", "kanban"] as const).map((option) => (
             <button
               key={option}
               onClick={() => setView(option)}
-              className={`relative rounded-full px-4 py-1.5 uppercase tracking-[0.18em] transition ${
+              className={`relative rounded-full px-4 py-1.5 uppercase tracking-[0.18em] transition-all duration-200 ${
                 view === option
-                  ? "bg-gradient-to-r from-emerald-500/90 to-sky-500/90 text-slate-950 shadow-[0_0_22px_rgba(16,185,129,0.65)]"
-                  : "text-text-dim hover:text-slate-100"
+                  ? "bg-gradient-to-r from-accent to-accent-secondary text-content-inverse shadow-glow"
+                  : "text-content-tertiary hover:text-content-secondary"
               }`}
             >
               {option}
             </button>
           ))}
         </div>
-        <p className="hidden text-[11px] text-text-dim md:block">
+        <p className="hidden text-[11px] text-content-tertiary md:block">
           Drag deals between stages in Kanban view to instantly update status.
         </p>
       </div>
 
       {feedback ? (
-        <div className="rounded-xl border border-emerald-300/40 bg-emerald-500/15 px-3 py-2 text-sm text-emerald-100">{feedback}</div>
+        <div className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-2 text-sm text-success">{feedback}</div>
       ) : null}
 
       {/* main content */}
       {view === "table" ? (
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80 shadow-[0_22px_55px_rgba(15,23,42,0.95)] backdrop-blur-xl">
-          <div className="grid grid-cols-[2fr_1.5fr_1fr_90px_1fr_220px] border-b border-white/10 bg-gradient-to-r from-white/5 via-slate-900/80 to-white/5 px-4 py-3 text-[10px] uppercase tracking-[0.18em] text-text-dim">
+        <div className="glass-card overflow-hidden">
+          <div className="grid grid-cols-[2fr_1.5fr_1fr_90px_1fr_220px] border-b border-accent/10 bg-gradient-to-r from-accent/5 via-transparent to-transparent px-4 py-3 text-[10px] uppercase tracking-[0.18em] text-content-tertiary">
             <span>Client</span>
             <span>Company</span>
             <span>Status</span>
@@ -537,17 +537,17 @@ export const CRMPage = () => {
             <span>Last action</span>
             <span>Actions</span>
           </div>
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-accent/5">
             {deals.map((deal, index) => (
               <div
                 key={deal.id}
-                className="grid grid-cols-[2fr_1.5fr_1fr_90px_1fr_220px] items-center px-4 py-3 transition-colors hover:bg-white/5"
+                className="grid grid-cols-[2fr_1.5fr_1fr_90px_1fr_220px] items-center px-4 py-3 transition-colors hover:bg-accent/5"
                 style={{
                   animation: `fadeInUp 0.35s ease-out ${index * 0.03}s both`,
                 }}
               >
-                <span className="text-sm text-white">{deal.name}</span>
-                <span className="text-sm text-text-dim">{deal.company}</span>
+                <span className="text-sm text-content">{deal.name}</span>
+                <span className="text-sm text-content-secondary">{deal.company}</span>
                 <div className="flex items-center gap-2">
                   <select
                     value={deal.status}
@@ -557,7 +557,7 @@ export const CRMPage = () => {
                         event.target.value as DealStatus,
                       )
                     }
-                    className="rounded border border-white/15 bg-black/40 px-2 py-1 text-xs text-white outline-none transition focus:border-emerald-400/70"
+                    className="glass-input px-2 py-1 text-xs"
                   >
                     <option value="negotiation">negotiation</option>
                     <option value="contracted">contracted</option>
@@ -567,13 +567,13 @@ export const CRMPage = () => {
                   <StatusBadge status={deal.status} />
                 </div>
                 <ScoreBadge score={deal.score} />
-                <span className="text-sm text-text-dim">
+                <span className="text-sm text-content-secondary">
                   {deal.lastAction}
                 </span>
                 <div className="flex gap-1">
-                  <button type="button" className="rounded border border-white/10 px-2 py-1 text-[11px]" onClick={() => openDetails(deal.id)}>Details</button>
-                  <button type="button" className="rounded border border-white/10 px-2 py-1 text-[11px]" onClick={() => openEdit(deal.id)}>Edit</button>
-                  <button type="button" className="rounded border border-rose-300/35 bg-rose-500/15 px-2 py-1 text-[11px] text-rose-100" onClick={() => setConfirmDeleteId(deal.id)}>Delete</button>
+                  <button type="button" className="glass-btn px-2 py-1 text-[11px]" onClick={() => openDetails(deal.id)}>Details</button>
+                  <button type="button" className="glass-btn px-2 py-1 text-[11px]" onClick={() => openEdit(deal.id)}>Edit</button>
+                  <button type="button" className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2 py-1 text-[11px] text-danger" onClick={() => setConfirmDeleteId(deal.id)}>Delete</button>
                 </div>
               </div>
             ))}
@@ -601,7 +601,7 @@ export const CRMPage = () => {
                   >
                     <div className="flex-1 space-y-2 overflow-hidden">
                       {columnDeals.length === 0 && (
-                        <div className="flex h-28 items-center justify-center rounded-xl border border-dashed border-white/10 bg-black/30 text-[11px] text-text-dim">
+                        <div className="flex h-28 items-center justify-center rounded-glass-sm border border-dashed border-accent/15 bg-surface-secondary/50 text-[11px] text-content-secondary">
                           Drop deals here to move into{" "}
                           <span className="ml-1 font-semibold">
                             {status}
@@ -652,14 +652,14 @@ export const CRMPage = () => {
       <AnimatePresence>
         {editOpen && activeDeal && (
           <motion.div
-            className="fixed inset-0 z-[110] flex items-center justify-center bg-black/65 px-4"
+            className="fixed inset-0 z-[110] flex items-center justify-center bg-surface/80 backdrop-blur-sm px-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setEditOpen(false)}
           >
             <motion.form
-              className="w-full max-w-xl space-y-3 rounded-2xl border border-white/10 bg-slate-950/95 p-5"
+              className="glass-card-lg w-full max-w-xl space-y-3 p-5"
               initial={{ opacity: 0, y: 10, scale: 0.985 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.985 }}
@@ -678,52 +678,52 @@ export const CRMPage = () => {
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-lg font-semibold text-white">Edit Deal</h3>
+              <h3 className="text-lg font-semibold text-content">Edit Deal</h3>
               <div className="grid gap-3 md:grid-cols-2">
-                <label className="text-xs text-text-dim">
+                <label className="text-xs text-content-secondary">
                   Name
                   <input
                     defaultValue={activeDeal.name}
-                    className="mt-1 w-full rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-sm text-white"
+                    className="glass-input mt-1"
                   />
                 </label>
-                <label className="text-xs text-text-dim">
+                <label className="text-xs text-content-secondary">
                   Company
                   <input
                     defaultValue={activeDeal.company}
-                    className="mt-1 w-full rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-sm text-white"
+                    className="glass-input mt-1"
                   />
                 </label>
-                <label className="text-xs text-text-dim">
+                <label className="text-xs text-content-secondary">
                   Status
                   <select
                     defaultValue={activeDeal.status}
-                    className="mt-1 w-full rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-sm text-white"
+                    className="glass-input mt-1"
                   >
-                    <option value="negotiation">negotiation</option>
-                    <option value="contracted">contracted</option>
-                    <option value="in-progress">in-progress</option>
-                    <option value="closed">closed</option>
+                    <option value="negotiation" className="bg-surface-tertiary">negotiation</option>
+                    <option value="contracted" className="bg-surface-tertiary">contracted</option>
+                    <option value="in-progress" className="bg-surface-tertiary">in-progress</option>
+                    <option value="closed" className="bg-surface-tertiary">closed</option>
                   </select>
                 </label>
-                <label className="text-xs text-text-dim">
+                <label className="text-xs text-content-secondary">
                   Score
                   <input
                     type="number"
                     defaultValue={activeDeal.score}
-                    className="mt-1 w-full rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-sm text-white"
+                    className="glass-input mt-1"
                   />
                 </label>
               </div>
               <div className="flex justify-end gap-2 pt-1">
                 <button
                   type="button"
-                  className="rounded-lg border border-white/15 bg-black/35 px-3 py-1.5 text-xs text-text-dim"
+                  className="glass-btn px-3 py-1.5 text-xs"
                   onClick={() => setEditOpen(false)}
                 >
                   Cancel
                 </button>
-                <button type="submit" className="rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-semibold text-slate-950">
+                <button type="submit" className="accent-btn px-3 py-1.5 text-xs font-semibold">
                   Update Deal
                 </button>
               </div>
@@ -781,19 +781,19 @@ const KanbanCard = ({ deal, index, onHoverStart, onHoverEnd }: KanbanCardProps) 
       onMouseLeave={() => onHoverEnd(deal.id)}
       {...attributes}
       {...listeners}
-      className={`cursor-grab rounded-xl border border-white/15 bg-gradient-to-br from-white/5 via-slate-900/80 to-black/90 p-2.5 text-xs shadow-[0_14px_35px_rgba(15,23,42,0.95)] outline-none transition hover:-translate-y-0.5 hover:border-emerald-400/60 hover:bg-slate-900/90 hover:shadow-[0_20px_50px_rgba(34,197,94,0.35)] active:cursor-grabbing ${isDragging ? 'opacity-50' : ''}`}
+      className={`glass-card-sm cursor-grab p-2.5 text-xs outline-none transition hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-glow active:cursor-grabbing ${isDragging ? 'opacity-50' : ''}`}
       style={{
         ...baseStyle,
         animation: `fadeInUp 0.35s ease-out ${index * 0.04}s both`,
       }}
     >
       <div className="mb-1.5 flex items-center justify-between">
-        <p className="text-sm text-white">{deal.name}</p>
+        <p className="text-sm text-content">{deal.name}</p>
         <ScoreBadge score={deal.score} />
       </div>
-      <p className="text-[11px] text-text-dim">{deal.company}</p>
-      <p className="mt-1 text-[11px] text-text-dim">{deal.lastAction}</p>
-      <p className="mt-1 text-sm font-semibold text-emerald-300">
+      <p className="text-[11px] text-content-secondary">{deal.company}</p>
+      <p className="mt-1 text-[11px] text-content-tertiary">{deal.lastAction}</p>
+      <p className="mt-1 text-sm font-semibold text-success">
         {deal.value}
       </p>
     </div>
@@ -817,7 +817,7 @@ const DroppableStatusColumn = ({ status, columnDeals, children }: DroppableStatu
   return (
     <section
       ref={setNodeRef}
-      className={`group flex flex-col rounded-2xl border border-white/10 bg-slate-950/80 p-3 shadow-[0_18px_40px_rgba(15,23,42,0.9)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-emerald-400/60 hover:shadow-[0_22px_55px_rgba(34,197,94,0.35)] ${isOver ? "border-cyan-300/70 ring-1 ring-cyan-300/40" : ""}`}
+      className={`glass-card group flex flex-col p-3 transition hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-glow ${isOver ? "border-accent/50 ring-1 ring-accent/30 shadow-glow" : ""}`}
     >
       <StatusColumnHeader status={status} columnDeals={columnDeals} />
       {children}
@@ -829,15 +829,15 @@ const StatusColumnHeader = ({ status, columnDeals }: StatusColumnHeaderProps) =>
   const getStatusLabelColor = (s: DealStatus) => {
     switch (s) {
       case "negotiation":
-        return "from-sky-500/40 via-sky-400/20 to-transparent text-sky-200";
+        return "from-info/30 via-info/10 to-transparent text-info";
       case "contracted":
-        return "from-emerald-500/40 via-emerald-400/20 to-transparent text-emerald-200";
+        return "from-success/30 via-success/10 to-transparent text-success";
       case "in-progress":
-        return "from-amber-500/40 via-amber-400/20 to-transparent text-amber-200";
+        return "from-warning/30 via-warning/10 to-transparent text-warning";
       case "closed":
-        return "from-violet-500/40 via-violet-400/20 to-transparent text-violet-200";
+        return "from-accent-secondary/30 via-accent-secondary/10 to-transparent text-accent-secondary";
       default:
-        return "from-slate-500/40 via-slate-400/20 to-transparent text-slate-200";
+        return "from-content-tertiary/30 via-content-tertiary/10 to-transparent text-content-secondary";
     }
   };
 
@@ -846,7 +846,7 @@ const StatusColumnHeader = ({ status, columnDeals }: StatusColumnHeaderProps) =>
       className={`mb-3 flex items-center justify-between rounded-xl bg-gradient-to-r px-3 py-2 text-xs font-semibold tracking-[0.16em] ${getStatusLabelColor(status)}`}
     >
       <h3>{status.toUpperCase()}</h3>
-      <span className="rounded-full bg-black/40 px-2 py-0.5 text-[11px] text-slate-100">
+      <span className="rounded-full bg-surface/60 px-2 py-0.5 text-[11px] text-content">
         {columnDeals.length}
       </span>
     </div>

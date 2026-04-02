@@ -25,7 +25,7 @@ export const ConfirmDialog = ({
     <AnimatePresence>
       {open ? (
         <motion.div
-          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/65 px-4"
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-surface/80 backdrop-blur-sm px-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -36,25 +36,25 @@ export const ConfirmDialog = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.98 }}
             transition={{ duration: 0.18 }}
-            className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-950/95 p-5 shadow-[0_20px_50px_rgba(2,6,23,0.85)]"
+            className="glass-card-lg w-full max-w-md p-5"
             onClick={(event) => event.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold text-white">{title}</h3>
-            <p className="mt-2 text-sm text-text-dim">{description}</p>
+            <h3 className="text-lg font-semibold text-content">{title}</h3>
+            <p className="mt-2 text-sm text-content-secondary">{description}</p>
             <div className="mt-5 flex justify-end gap-2">
               <button
                 type="button"
-                className="rounded-lg border border-white/15 bg-black/35 px-3 py-1.5 text-xs text-text-dim"
+                className="glass-btn px-3 py-1.5 text-xs"
                 onClick={onCancel}
               >
                 {cancelLabel}
               </button>
               <button
                 type="button"
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                className={`rounded-glass-sm px-3 py-1.5 text-xs font-semibold transition ${
                   danger
-                    ? "border border-rose-300/35 bg-rose-500/20 text-rose-100"
-                    : "bg-cyan-400 text-slate-950"
+                    ? "border border-danger/30 bg-danger-soft text-danger hover:shadow-[0_0_16px_rgba(239,68,68,0.3)]"
+                    : "accent-btn"
                 }`}
                 onClick={onConfirm}
               >

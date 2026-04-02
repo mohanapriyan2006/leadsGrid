@@ -50,9 +50,9 @@ export const router = createBrowserRouter([
   {
     path: "/",
     element: (
-      <ProtectedRoute>
+      
         <AppShell />
-      </ProtectedRoute>
+      
     ),
     children: [
       {
@@ -90,3 +90,5 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+
+

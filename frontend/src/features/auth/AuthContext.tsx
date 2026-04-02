@@ -34,23 +34,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        // Automatically create or update user document in Firestore
-        const userRef = doc(db, "users", firebaseUser.uid);
-        const userDoc = await getDoc(userRef);
+      try {
+        if (firebaseUser) {
+          // Automatically create user profile document when first seen in Firestore.
+          const userRef = doc(db, "users", firebaseUser.uid);
+          const userDoc = await getDoc(userRef);
 
-        if (!userDoc.exists()) {
-          await setDoc(userRef, {
-            name: firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "User",
-            email: firebaseUser.email,
-            photoURL: firebaseUser.photoURL,
-            createdAt: serverTimestamp(),
-            plan: "free",
-          });
+          if (!userDoc.exists()) {
+            await setDoc(userRef, {
+              name: firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "User",
+              email: firebaseUser.email,
+              photoURL: firebaseUser.photoURL,
+              createdAt: serverTimestamp(),
+              plan: "free",
+            });
+          }
         }
+      } catch (error) {
+        console.error("Failed to sync Firebase user profile", error);
+      } finally {
+        setUser(firebaseUser);
+        setLoading(false);
       }
-      setUser(firebaseUser);
-      setLoading(false);
     });
 
     return () => unsubscribe();

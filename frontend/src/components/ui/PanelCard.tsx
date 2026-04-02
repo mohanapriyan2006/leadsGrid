@@ -6,7 +6,7 @@ type PanelCardProps = PropsWithChildren<{
 
 export const PanelCard = ({ className = "", children }: PanelCardProps) => {
   return (
-    <article className={`rounded-xl border border-white/10 bg-panel/80 p-4 shadow-aura backdrop-blur ${className}`}>
+    <article className={`glass-card p-4 ${className}`}>
       {children}
     </article>
   );

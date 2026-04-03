@@ -243,6 +243,7 @@ export const ManageLeadsPage = () => {
   const [modalPosition, setModalPosition] = useState<{ x: number; y: number } | null>(null);
   const [isModalHover, setIsModalHover] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [disableDetailsPopup, setDisableDetailsPopup] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -407,6 +408,7 @@ export const ManageLeadsPage = () => {
   };
 
   const handleHoverStart = (leadId: string, event: React.MouseEvent) => {
+    if (disableDetailsPopup) return; // Don't show popup if disabled
     setHoveredId(leadId);
     setSelectedManageLeadId(leadId);
     setModalPosition({ x: event.clientX, y: event.clientY });
@@ -516,6 +518,14 @@ export const ManageLeadsPage = () => {
             className="glass-btn text-xs"
           >
             {onlyHot ? "Hot only: on" : "Hot only"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setDisableDetailsPopup((v) => !v)}
+            className={`glass-btn text-xs ${disableDetailsPopup ? "text-danger" : "text-success"}`}
+            title={disableDetailsPopup ? "Click to enable details popup" : "Click to disable details popup"}
+          >
+            {disableDetailsPopup ? "🚫 Popups Off" : "✓ Popups On"}
           </button>
           {uploadButton}
           <button
@@ -636,6 +646,7 @@ export const ManageLeadsPage = () => {
       ) : null}
 
       <LeadModal
+        key={hoveredId || selectedManageLeadId || "closed"}
         lead={activeLead}
         open={manageLeadView === "kanban" ? Boolean(hoveredId && activeLead && !isDragging) : Boolean(detailsOpen && activeLead)}
         variant={manageLeadView === "kanban" ? "hover" : "dialog"}

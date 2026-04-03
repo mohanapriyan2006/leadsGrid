@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 
 import { AnimatePresence, motion } from "framer-motion";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
@@ -56,6 +56,7 @@ const formatCurrency = (value: number) => `$${value.toLocaleString()}`;
 type DealModalProps = {
   deal: Deal | null;
   open: boolean;
+  variant?: "hover" | "dialog";
   position?: { x: number; y: number } | null;
   onClose: () => void;
   onDelete: () => void;
@@ -67,6 +68,7 @@ type DealModalProps = {
 const DealModal = ({
   deal,
   open,
+  variant = "hover",
   position,
   onClose,
   onDelete,
@@ -74,72 +76,162 @@ const DealModal = ({
   onMouseEnter,
   onMouseLeave,
 }: DealModalProps) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const [isDraggingModal, setIsDraggingModal] = useState(false);
+  const [modalOffset, setModalOffset] = useState({ x: 0, y: 0 });
+  const dragStartPos = useRef({ x: 0, y: 0 });
+
   if (!deal) return null;
+  const isHover = variant === "hover";
+
+  // Handle drag start
+  const handleDragStart = (e: React.MouseEvent) => {
+    setIsDraggingModal(true);
+    dragStartPos.current = {
+      x: e.clientX - modalOffset.x,
+      y: e.clientY - modalOffset.y,
+    };
+  };
+
+  // Handle drag move
+  const handleDragMove = (e: React.MouseEvent) => {
+    if (!isDraggingModal) return;
+    e.preventDefault();
+    setModalOffset({
+      x: e.clientX - dragStartPos.current.x,
+      y: e.clientY - dragStartPos.current.y,
+    });
+  };
+
+  // Handle drag end
+  const handleDragEnd = () => {
+    setIsDraggingModal(false);
+  };
 
   const hoverStyle = position
-    ? { left: Math.min(position.x + 16, window.innerWidth - 340), top: Math.min(position.y, window.innerHeight - 300) }
+    ? { left: Math.min(position.x + 16, window.innerWidth - 380), top: Math.min(position.y, window.innerHeight - 400) }
     : { right: 24, top: 96 };
+
+  // Merge hover position with drag offset for draggable popups
+  const dialogStyle = isHover
+    ? { ...hoverStyle, transform: `translate(${modalOffset.x}px, ${modalOffset.y}px)` }
+    : { transform: `translate(${modalOffset.x}px, ${modalOffset.y}px)` };
+
+  // Determine status color
+  const getStatusColor = (status: DealStatus) => {
+    switch (status) {
+      case "negotiation": return "text-info";
+      case "contracted": return "text-success";
+      case "in-progress": return "text-warning";
+      case "closed": return "text-accent-secondary";
+      default: return "text-content-secondary";
+    }
+  };
+
+  // Progress percentage based on status
+  const getProgress = (status: DealStatus) => {
+    switch (status) {
+      case "negotiation": return 25;
+      case "contracted": return 50;
+      case "in-progress": return 75;
+      case "closed": return 100;
+      default: return 0;
+    }
+  };
 
   return (
     <AnimatePresence>
       {open ? (
         <motion.div
-          className="fixed z-[90]"
-          style={hoverStyle}
+          className={isHover ? "fixed z-[90]" : "fixed inset-0 z-[100] flex items-center justify-center bg-surface/80 backdrop-blur-sm px-4"}
+          style={isHover ? hoverStyle : undefined}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          onClick={isHover ? undefined : onClose}
         >
           <motion.section
-            className="w-full max-w-sm rounded-glass border border-accent/10 bg-surface-tertiary/95 p-4 shadow-glass-lg"
+            ref={modalRef}
+            className={`glass-card-lg w-full p-4 ${isHover ? "max-w-sm" : "max-w-md"} ${isDraggingModal ? "cursor-grabbing" : ""}`}
+            style={dialogStyle}
             initial={{ opacity: 0, y: 10, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.985 }}
             transition={{ duration: 0.16 }}
+            onClick={(event) => event.stopPropagation()}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
+            onMouseMove={handleDragMove}
+            onMouseUp={handleDragEnd}
           >
-            <div className="flex items-start justify-between gap-3">
-              <div>
+            {/* Draggable Header */}
+            <div
+              className={`flex items-start justify-between gap-3 cursor-grab active:cursor-grabbing`}
+              onMouseDown={handleDragStart}
+            >
+              <div className="flex-1">
                 <h3 className="text-xl font-semibold text-content">{deal.name}</h3>
                 <p className="text-sm text-content-secondary">{deal.company}</p>
               </div>
-              <button
-                type="button"
-                onClick={onClose}
-                className="glass-btn px-2 py-1 text-xs"
-              >
-                Close
-              </button>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-content-tertiary">⋮⋮ Drag</span>
+                <button type="button" onClick={onClose} className="glass-btn px-2 py-1 text-xs">Close</button>
+              </div>
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+            {/* Status & Progress */}
+            <div className="mt-4">
+              <div className="flex items-center justify-between text-xs mb-1">
+                <span className="text-content-tertiary uppercase tracking-[0.1em]">Pipeline Progress</span>
+                <span className={`font-semibold ${getStatusColor(deal.status)}`}>{getProgress(deal.status)}%</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-surface-secondary overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-accent to-accent-secondary transition-all duration-500"
+                  style={{ width: `${getProgress(deal.status)}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Badges */}
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
               <span className="badge-info">Score {deal.score}</span>
-              <span className="glass-btn px-2 py-1 text-xs">Status {deal.status}</span>
-              <span className="badge-success">Value {deal.value}</span>
+              <span className={`badge-success ${getStatusColor(deal.status)}`}>Status {deal.status}</span>
+              <span className="badge-accent">Value {deal.value}</span>
             </div>
 
-            <div className="mt-3 text-xs text-content-secondary">
-              <p>Last Action: {deal.lastAction}</p>
-              <p>Days in Stage: {deal.daysInStage}</p>
+            {/* Contact Details */}
+            <div className="glass-card-sm mt-4 p-3 text-xs">
+              <p className="text-content-tertiary uppercase tracking-[0.08em] mb-2">Contact Info</p>
+              <div className="grid gap-1 text-content-secondary">
+                {deal.email && <p>📧 {deal.email}</p>}
+                {deal.phone && <p>📱 {deal.phone}</p>}
+                <p>📅 Last Action: {deal.lastAction}</p>
+                <p>⏱️ Days in Stage: {deal.daysInStage}</p>
+              </div>
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              {onEdit ? (
-                <button
-                  type="button"
-                  onClick={onEdit}
-                  className="glass-btn px-3 py-1.5 text-xs"
-                >
-                  Edit
+            {/* Deal Stats */}
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="glass-card-sm p-2 text-center">
+                <p className="text-[10px] text-content-tertiary uppercase tracking-[0.08em]">Deal Value</p>
+                <p className="text-sm font-semibold text-success">{deal.value}</p>
+              </div>
+              <div className="glass-card-sm p-2 text-center">
+                <p className="text-[10px] text-content-tertiary uppercase tracking-[0.08em]">Quality Score</p>
+                <p className="text-sm font-semibold text-accent">{deal.score}/100</p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {onEdit && (
+                <button type="button" onClick={onEdit} className="glass-btn px-3 py-1.5 text-xs">
+                  ✏️ Edit
                 </button>
-              ) : null}
-              <button
-                type="button"
-                onClick={onDelete}
-                className="rounded border border-danger/30 bg-danger-soft px-3 py-1.5 text-xs text-danger transition hover:bg-danger/20"
-              >
-                Delete
+              )}
+              <button type="button" onClick={onDelete} className="rounded-glass-sm border border-danger/30 bg-danger-soft px-3 py-1.5 text-xs text-danger transition hover:shadow-[0_0_16px_rgba(239,68,68,0.3)]">
+                🗑️ Delete
               </button>
             </div>
           </motion.section>
@@ -160,6 +252,7 @@ export const CRMPage = () => {
   const [modalPosition, setModalPosition] = useState<{ x: number; y: number } | null>(null);
   const [isModalHover, setIsModalHover] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [disableDetailsPopup, setDisableDetailsPopup] = useState(false);
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -211,6 +304,7 @@ export const CRMPage = () => {
   }, [hoveredId, selectedDealId, deals]);
 
   const handleHoverStart = (dealId: string, event: React.MouseEvent) => {
+    if (disableDetailsPopup) return; // Don't show popup if disabled
     setHoveredId(dealId);
     setSelectedDealId(dealId);
     setModalPosition({ x: event.clientX, y: event.clientY });
@@ -389,6 +483,13 @@ export const CRMPage = () => {
               <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-success" />
               Realtime scoring enabled
             </div>
+            <button
+              onClick={() => setDisableDetailsPopup((v) => !v)}
+              className={`glass-btn text-xs ${disableDetailsPopup ? "text-danger" : "text-success"}`}
+              title={disableDetailsPopup ? "Click to enable details popup" : "Click to disable details popup"}
+            >
+              {disableDetailsPopup ? "🚫 Popups Off" : "✓ Popups On"}
+            </button>
             <button
               onClick={() => setIsAdding((s) => !s)}
               className="accent-btn group inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium"
@@ -670,8 +771,10 @@ export const CRMPage = () => {
         )}
 
         <DealModal
+          key={hoveredId || selectedDealId || "closed"}
           deal={activeDeal}
           open={view === "kanban" ? Boolean(hoveredId && activeDeal && !isDragging) : Boolean(detailsOpen && activeDeal)}
+          variant={view === "kanban" ? "hover" : "dialog"}
           position={modalPosition}
           onClose={() => {
             setHoveredId(null);

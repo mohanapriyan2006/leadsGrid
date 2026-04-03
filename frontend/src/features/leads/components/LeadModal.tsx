@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
 
 import type { ManageLead, ManageLeadStage } from "../types/manageLead";
 
@@ -16,6 +17,8 @@ type LeadModalProps = {
   onEdit?: () => void;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
+  onNotesUpdate?: (notes: string) => void;
+  disableAutoPopup?: boolean;
 };
 
 const formatMoney = (amount: number) => `$${amount.toLocaleString()}`;
@@ -45,6 +48,8 @@ export const LeadModal = ({
   onEdit,
   onMouseEnter,
   onMouseLeave,
+  onNotesUpdate,
+  disableAutoPopup,
 }: LeadModalProps) => {
   if (!lead) return null;
 
@@ -52,10 +57,60 @@ export const LeadModal = ({
   const isHover = variant === "hover";
   const isLastStage = lead.stage === "RESPONDED";
 
+  // Draggable modal state
+  const modalRef = useRef<HTMLDivElement>(null);
+  const [isDraggingModal, setIsDraggingModal] = useState(false);
+  const [modalOffset, setModalOffset] = useState({ x: 0, y: 0 });
+  const dragStartPos = useRef({ x: 0, y: 0 });
+
+  // Notes state
+  const [notes, setNotes] = useState(lead.notes || "");
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+
+  // Update notes when lead changes
+  useEffect(() => {
+    setNotes(lead.notes || "");
+  }, [lead.notes, lead.id]);
+
+  // Handle drag start
+  const handleDragStart = (e: React.MouseEvent) => {
+    setIsDraggingModal(true);
+    dragStartPos.current = {
+      x: e.clientX - modalOffset.x,
+      y: e.clientY - modalOffset.y,
+    };
+  };
+
+  // Handle drag move
+  const handleDragMove = (e: React.MouseEvent) => {
+    if (!isDraggingModal) return;
+    e.preventDefault();
+    setModalOffset({
+      x: e.clientX - dragStartPos.current.x,
+      y: e.clientY - dragStartPos.current.y,
+    });
+  };
+
+  // Handle drag end
+  const handleDragEnd = () => {
+    setIsDraggingModal(false);
+  };
+
+  // Save notes
+  const handleSaveNotes = () => {
+    onNotesUpdate?.(notes);
+    setIsEditingNotes(false);
+  };
+
   // Calculate position for hover modal
   const hoverStyle = position
     ? { left: Math.min(position.x + 16, window.innerWidth - 340), top: Math.min(position.y, window.innerHeight - 400) }
     : { right: 24, top: 96 };
+
+  // Merge hover position with drag offset for draggable popups
+  const dialogStyle = isHover
+    ? { ...hoverStyle, transform: `translate(${modalOffset.x}px, ${modalOffset.y}px)` }
+    : { transform: `translate(${modalOffset.x}px, ${modalOffset.y}px)` };
 
   return (
     <AnimatePresence>
@@ -69,9 +124,11 @@ export const LeadModal = ({
           onClick={isHover ? undefined : onClose}
         >
           <motion.section
+            ref={modalRef}
             className={`glass-card-lg w-full p-4 ${
               isHover ? "max-w-sm" : "max-w-2xl"
-            }`}
+            } ${isDraggingModal ? "cursor-grabbing" : ""}`}
+            style={dialogStyle}
             initial={{ opacity: 0, y: 10, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.985 }}
@@ -79,19 +136,28 @@ export const LeadModal = ({
             onClick={(event) => event.stopPropagation()}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
+            onMouseMove={handleDragMove}
+            onMouseUp={handleDragEnd}
           >
-            <div className="flex items-start justify-between gap-3">
-              <div>
+            {/* Draggable header area */}
+            <div
+              className={`flex items-start justify-between gap-3 cursor-grab active:cursor-grabbing`}
+              onMouseDown={handleDragStart}
+            >
+              <div className="flex-1">
                 <h3 className="text-xl font-semibold text-content">{lead.name}</h3>
                 <p className="text-sm text-content-secondary">{lead.company}</p>
               </div>
-              <button
-                type="button"
-                onClick={onClose}
-                className="glass-btn px-2 py-1 text-xs"
-              >
-                Close
-              </button>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-content-tertiary">⋮⋮ Drag</span>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="glass-btn px-2 py-1 text-xs"
+                >
+                  Close
+                </button>
+              </div>
             </div>
 
             <div className="mt-3 grid gap-2 text-xs text-content-secondary md:grid-cols-2">
@@ -141,6 +207,54 @@ export const LeadModal = ({
                   Deal: {lead.ai_analysis.deal_probability}%
                 </span>
               </div>
+            </div>
+
+            {/* Notes Section */}
+            <div className="glass-card-sm mt-3 p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-content-tertiary uppercase tracking-[0.08em]">Notes</span>
+                {!isEditingNotes ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingNotes(true)}
+                    className="text-[10px] text-accent hover:text-accent-secondary"
+                  >
+                    ✏️ Edit
+                  </button>
+                ) : (
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      onClick={handleSaveNotes}
+                      className="text-[10px] text-success hover:text-success"
+                    >
+                      ✓ Save
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNotes(lead.notes || "");
+                        setIsEditingNotes(false);
+                      }}
+                      className="text-[10px] text-danger hover:text-danger"
+                    >
+                      ✕ Cancel
+                    </button>
+                  </div>
+                )}
+              </div>
+              {isEditingNotes ? (
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Add notes about this lead..."
+                  className="glass-input w-full min-h-[80px] p-2 text-xs resize-y"
+                />
+              ) : (
+                <p className="text-xs text-content-secondary whitespace-pre-wrap">
+                  {notes || "No notes added yet."}
+                </p>
+              )}
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">

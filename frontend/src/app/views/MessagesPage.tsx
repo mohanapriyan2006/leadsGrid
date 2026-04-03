@@ -163,7 +163,6 @@ export const MessagesPage = () => {
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-xs tracking-[0.1em] text-content-tertiary">CLIENT CONTEXT</p>
                   <div className="flex items-center gap-2">
-                    <SourceIcon source={toUiSource(selectedLead.source)} />
                     <button
                       type="button"
                       onClick={() => setDetailsOpen(true)}

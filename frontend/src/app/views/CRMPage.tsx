@@ -225,7 +225,7 @@ export const CRMPage = () => {
 
   return (
     <div className="page-with-bg">
-      <PageBackground image={bgConnecting} tint="rgba(99, 102, 241,0.80)" />
+      <PageBackground image={bgConnecting} tint="rgba(109, 111, 252, 0.58)" />
       <div className="h-[calc(100vh-100px)] overflow-auto space-y-4 p-6">
         <header className="glass-card-lg flex flex-col justify-between gap-3 px-5 py-5 md:flex-row md:items-center md:px-6">
           <div>

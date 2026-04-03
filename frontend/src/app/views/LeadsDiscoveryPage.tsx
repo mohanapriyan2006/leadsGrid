@@ -94,7 +94,7 @@ export const LeadsDiscoveryPage = () => {
 
   return (
     <div className="page-with-bg">
-      <PageBackground image={bgConnecting} tint="rgba(56, 255, 185, 0.60)" />
+      <PageBackground image={bgConnecting} tint="rgba(77, 255, 207, 0.42)" />
 
       <div className="h-[calc(100vh-100px)] overflow-auto space-y-4 p-6">
         <header className="glass-card p-5">

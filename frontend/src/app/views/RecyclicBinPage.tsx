@@ -42,7 +42,7 @@ export const RecyclicBinPage = () => {
 
   return (
     <div className="page-with-bg">
-      <PageBackground image={bgBusinessPlan} tint="rgba(255, 55, 55, 0.3)" />
+      <PageBackground image={bgBusinessPlan} tint="rgba(255, 102, 102, 0.47)" />
       <div className="h-[calc(100vh-100px)] overflow-auto space-y-4 p-6">
         <header className="glass-card p-5">
           <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-3xl font-semibold text-transparent">Manage Leads Bin</h2>

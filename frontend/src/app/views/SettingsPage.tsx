@@ -21,7 +21,7 @@ export const SettingsPage = () => {
 
   return (
     <div className="page-with-bg">
-      <PageBackground image={bgDataAtWork} tint="rgba(245, 158, 11, 0.80)" />
+      <PageBackground image={bgDataAtWork} tint="rgba(236, 254, 72, 0.51)" />
       <div className="h-[calc(100vh-100px)] overflow-auto space-y-4 p-6">
         <header className="glass-card p-5">
           <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-3xl font-semibold text-transparent">System Configuration</h2>

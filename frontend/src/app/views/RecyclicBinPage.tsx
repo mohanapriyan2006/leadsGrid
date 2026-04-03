@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { leadService } from "../../features/leads/services/leadService";
 import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLeads";
@@ -8,7 +8,7 @@ import bgBusinessPlan from "../../assets/bg-images/business-plan.svg";
 
 export const RecyclicBinPage = () => {
   // Use centralized leads hook for real-time bin data
-  const { binLeads, loading } = useCentralizedLeads();
+  const { binLeads, getLeadById, loading } = useCentralizedLeads();
   
   const [selectedLead, setSelectedLead] = useState<BinLead | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -25,6 +25,11 @@ export const RecyclicBinPage = () => {
     setSelectedLead(lead);
     setDetailsOpen(true);
   };
+
+  const detailedLead = useMemo(() => {
+    if (!selectedLead) return null;
+    return getLeadById(selectedLead.id) ?? null;
+  }, [selectedLead, getLeadById]);
 
   if (loading) {
     return (
@@ -118,10 +123,20 @@ export const RecyclicBinPage = () => {
                 </button>
               </div>
 
-              <div className="mt-4 space-y-2 text-sm text-content-secondary">
-                <p><span className="text-content">Email:</span> {selectedLead.email || "N/A"}</p>
+              <div className="mt-4 grid gap-2 text-sm text-content-secondary md:grid-cols-2">
+                <p><span className="text-content">Email:</span> {detailedLead?.email || selectedLead.email || "N/A"}</p>
+                <p><span className="text-content">Phone:</span> {detailedLead?.phone || "N/A"}</p>
+                <p><span className="text-content">Stage:</span> {detailedLead?.stage || "N/A"}</p>
+                <p><span className="text-content">Score:</span> {detailedLead?.score ?? "N/A"}</p>
+                <p><span className="text-content">Budget:</span> {detailedLead ? `$${detailedLead.budget_estimate.toLocaleString()}` : "N/A"}</p>
+                <p><span className="text-content">Source:</span> {detailedLead?.source || "N/A"}</p>
+                <p className="md:col-span-2"><span className="text-content">Address:</span> {detailedLead?.address || "N/A"}</p>
+                <p><span className="text-content">Created:</span> {detailedLead?.created_at ? new Date(detailedLead.created_at).toLocaleString() : "N/A"}</p>
                 <p><span className="text-content">Deleted:</span> {new Date(selectedLead.deleted_at).toLocaleString()}</p>
-                <p><span className="text-content">ID:</span> {selectedLead.id}</p>
+                <p className="md:col-span-2"><span className="text-content">ID:</span> {selectedLead.id}</p>
+                {detailedLead?.notes ? (
+                  <p className="md:col-span-2 whitespace-pre-wrap"><span className="text-content">Notes:</span> {detailedLead.notes}</p>
+                ) : null}
               </div>
 
               <div className="mt-5 flex justify-end gap-2">

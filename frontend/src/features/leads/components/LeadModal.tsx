@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 import type { ManageLead, ManageLeadStage } from "../types/manageLead";
 
@@ -57,12 +57,6 @@ export const LeadModal = ({
   const isHover = variant === "hover";
   const isLastStage = lead.stage === "RESPONDED";
 
-  // Draggable modal state
-  const modalRef = useRef<HTMLDivElement>(null);
-  const [isDraggingModal, setIsDraggingModal] = useState(false);
-  const [modalOffset, setModalOffset] = useState({ x: 0, y: 0 });
-  const dragStartPos = useRef({ x: 0, y: 0 });
-
   // Notes state
   const [notes, setNotes] = useState(lead.notes || "");
   const [isEditingNotes, setIsEditingNotes] = useState(false);
@@ -71,30 +65,6 @@ export const LeadModal = ({
   useEffect(() => {
     setNotes(lead.notes || "");
   }, [lead.notes, lead.id]);
-
-  // Handle drag start
-  const handleDragStart = (e: React.MouseEvent) => {
-    setIsDraggingModal(true);
-    dragStartPos.current = {
-      x: e.clientX - modalOffset.x,
-      y: e.clientY - modalOffset.y,
-    };
-  };
-
-  // Handle drag move
-  const handleDragMove = (e: React.MouseEvent) => {
-    if (!isDraggingModal) return;
-    e.preventDefault();
-    setModalOffset({
-      x: e.clientX - dragStartPos.current.x,
-      y: e.clientY - dragStartPos.current.y,
-    });
-  };
-
-  // Handle drag end
-  const handleDragEnd = () => {
-    setIsDraggingModal(false);
-  };
 
   // Save notes
   const handleSaveNotes = () => {
@@ -106,11 +76,6 @@ export const LeadModal = ({
   const hoverStyle = position
     ? { left: Math.min(position.x + 16, window.innerWidth - 340), top: Math.min(position.y, window.innerHeight - 400) }
     : { right: 24, top: 96 };
-
-  // Merge hover position with drag offset for draggable popups
-  const dialogStyle = isHover
-    ? { ...hoverStyle, transform: `translate(${modalOffset.x}px, ${modalOffset.y}px)` }
-    : { transform: `translate(${modalOffset.x}px, ${modalOffset.y}px)` };
 
   return (
     <AnimatePresence>
@@ -124,11 +89,11 @@ export const LeadModal = ({
           onClick={isHover ? undefined : onClose}
         >
           <motion.section
-            ref={modalRef}
             className={`glass-card-lg w-full p-4 ${
               isHover ? "max-w-sm" : "max-w-2xl"
-            } ${isDraggingModal ? "cursor-grabbing" : ""}`}
-            style={dialogStyle}
+            }`}
+            drag
+            dragMomentum={false}
             initial={{ opacity: 0, y: 10, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.985 }}
@@ -136,13 +101,10 @@ export const LeadModal = ({
             onClick={(event) => event.stopPropagation()}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
-            onMouseMove={handleDragMove}
-            onMouseUp={handleDragEnd}
           >
             {/* Draggable header area */}
             <div
               className={`flex items-start justify-between gap-3 cursor-grab active:cursor-grabbing`}
-              onMouseDown={handleDragStart}
             >
               <div className="flex-1">
                 <h3 className="text-xl font-semibold text-content">{lead.name}</h3>

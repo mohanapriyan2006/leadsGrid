@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { DndContext, type DragEndEvent, useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -242,6 +242,7 @@ export const ManageLeadsPage = () => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [modalPosition, setModalPosition] = useState<{ x: number; y: number } | null>(null);
   const [isModalHover, setIsModalHover] = useState(false);
+  const isModalHoverRef = useRef(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [disableDetailsPopup, setDisableDetailsPopup] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -416,10 +417,10 @@ export const ManageLeadsPage = () => {
 
   const handleHoverEnd = (leadId: string) => {
     window.setTimeout(() => {
-      if (!isModalHover) {
+      if (!isModalHoverRef.current) {
         setHoveredId((current) => (current === leadId ? null : current));
       }
-    }, 40);
+    }, 120);
   };
 
   const moveToNEGOTIATION = async (lead: ManageLead) => {
@@ -654,11 +655,18 @@ export const ManageLeadsPage = () => {
         onClose={() => {
           setHoveredId(null);
           setDetailsOpen(false);
+          isModalHoverRef.current = false;
         }}
-        onMouseEnter={() => setIsModalHover(true)}
+        onMouseEnter={() => {
+          setIsModalHover(true);
+          isModalHoverRef.current = true;
+        }}
         onMouseLeave={() => {
           setIsModalHover(false);
-          setHoveredId(null);
+          isModalHoverRef.current = false;
+          if (activeLead) {
+            handleHoverEnd(activeLead.id);
+          }
         }}
         onSendMessage={() => {
           if (!activeLead) return;

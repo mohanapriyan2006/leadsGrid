@@ -76,46 +76,12 @@ const DealModal = ({
   onMouseEnter,
   onMouseLeave,
 }: DealModalProps) => {
-  const modalRef = useRef<HTMLDivElement>(null);
-  const [isDraggingModal, setIsDraggingModal] = useState(false);
-  const [modalOffset, setModalOffset] = useState({ x: 0, y: 0 });
-  const dragStartPos = useRef({ x: 0, y: 0 });
-
   if (!deal) return null;
   const isHover = variant === "hover";
-
-  // Handle drag start
-  const handleDragStart = (e: React.MouseEvent) => {
-    setIsDraggingModal(true);
-    dragStartPos.current = {
-      x: e.clientX - modalOffset.x,
-      y: e.clientY - modalOffset.y,
-    };
-  };
-
-  // Handle drag move
-  const handleDragMove = (e: React.MouseEvent) => {
-    if (!isDraggingModal) return;
-    e.preventDefault();
-    setModalOffset({
-      x: e.clientX - dragStartPos.current.x,
-      y: e.clientY - dragStartPos.current.y,
-    });
-  };
-
-  // Handle drag end
-  const handleDragEnd = () => {
-    setIsDraggingModal(false);
-  };
 
   const hoverStyle = position
     ? { left: Math.min(position.x + 16, window.innerWidth - 380), top: Math.min(position.y, window.innerHeight - 400) }
     : { right: 24, top: 96 };
-
-  // Merge hover position with drag offset for draggable popups
-  const dialogStyle = isHover
-    ? { ...hoverStyle, transform: `translate(${modalOffset.x}px, ${modalOffset.y}px)` }
-    : { transform: `translate(${modalOffset.x}px, ${modalOffset.y}px)` };
 
   // Determine status color
   const getStatusColor = (status: DealStatus) => {
@@ -151,9 +117,9 @@ const DealModal = ({
           onClick={isHover ? undefined : onClose}
         >
           <motion.section
-            ref={modalRef}
-            className={`glass-card-lg w-full p-4 ${isHover ? "max-w-sm" : "max-w-md"} ${isDraggingModal ? "cursor-grabbing" : ""}`}
-            style={dialogStyle}
+            className={`glass-card-lg w-full p-4 ${isHover ? "max-w-sm" : "max-w-md"}`}
+            drag
+            dragMomentum={false}
             initial={{ opacity: 0, y: 10, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.985 }}
@@ -161,13 +127,10 @@ const DealModal = ({
             onClick={(event) => event.stopPropagation()}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
-            onMouseMove={handleDragMove}
-            onMouseUp={handleDragEnd}
           >
             {/* Draggable Header */}
             <div
               className={`flex items-start justify-between gap-3 cursor-grab active:cursor-grabbing`}
-              onMouseDown={handleDragStart}
             >
               <div className="flex-1">
                 <h3 className="text-xl font-semibold text-content">{deal.name}</h3>
@@ -251,6 +214,7 @@ export const CRMPage = () => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [modalPosition, setModalPosition] = useState<{ x: number; y: number } | null>(null);
   const [isModalHover, setIsModalHover] = useState(false);
+  const isModalHoverRef = useRef(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [disableDetailsPopup, setDisableDetailsPopup] = useState(false);
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
@@ -312,10 +276,10 @@ export const CRMPage = () => {
 
   const handleHoverEnd = (dealId: string) => {
     window.setTimeout(() => {
-      if (!isModalHover) {
+      if (!isModalHoverRef.current) {
         setHoveredId((current) => (current === dealId ? null : current));
       }
-    }, 40);
+    }, 120);
   };
 
   const openDetails = (dealId: string) => {
@@ -779,11 +743,18 @@ export const CRMPage = () => {
           onClose={() => {
             setHoveredId(null);
             setDetailsOpen(false);
+            isModalHoverRef.current = false;
           }}
-          onMouseEnter={() => setIsModalHover(true)}
+          onMouseEnter={() => {
+            setIsModalHover(true);
+            isModalHoverRef.current = true;
+          }}
           onMouseLeave={() => {
             setIsModalHover(false);
-            setHoveredId(null);
+            isModalHoverRef.current = false;
+            if (activeDeal) {
+              handleHoverEnd(activeDeal.id);
+            }
           }}
           onDelete={() => {
             if (!activeDeal) return;

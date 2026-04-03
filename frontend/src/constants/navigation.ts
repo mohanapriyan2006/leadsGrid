@@ -1,6 +1,6 @@
 export const navigationItems = [
   { label: "Dashboard", path: "/dashboard" },
-  { label: "Leads", path: "/leads-discovery" },
+  { label: "Leads Discovery", path: "/leads-discovery" },
   { label: "Manage Leads", path: "/manage-leads" },
   { label: "Messages", path: "/messages" },
   { label: "CRM", path: "/crm" },

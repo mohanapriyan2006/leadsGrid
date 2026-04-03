@@ -28,7 +28,7 @@ Handles lead ingestion display, intent visualization, and integration points to 
 
 ## Leads Page Architecture
 - `src/app/views/LeadsPage.tsx` now focuses on orchestration and rendering flow.
-- `src/features/leads/constants/leadsPageStyles.ts` contains the page style system.
+- `src/app/views/LeadsDiscoveryPage.tsx` uses Tailwind + glass utility classes directly (no injected stylesheet).
 - `src/features/leads/constants/leadsPageOptions.ts` contains source/industry UI options.
 - `src/features/leads/components/leadsPagePrimitives.tsx` contains reusable visual primitives and helper utilities.
 

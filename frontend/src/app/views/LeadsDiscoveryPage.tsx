@@ -1,53 +1,50 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import bgConnecting from "../../assets/bg-images/connecting-teams.svg";
+import { PageBackground } from "../../components/ui/PageBackground";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
-import { AIMessagePanel } from "../../features/leads/components/AIMessagePanel";
-import { LeadsStream } from "../../features/leads/components/LeadsStream";
+import {
+  LEAD_INDUSTRIES,
+  LEAD_SOURCES,
+} from "../../features/leads/constants/leadsPageOptions";
+import { AIIcon, SourceIcon, initials } from "../../features/leads/components/leadsPagePrimitives";
 import { useMessageGenerator } from "../../features/leads/hooks/useMessageGenerator";
 import { useLeads } from "../../features/leads/hooks/useLeads";
 import type { Lead } from "../../features/leads/types/lead";
-import bgConnecting from "../../assets/bg-images/connecting-teams.svg";
-import { LEAD_INDUSTRIES, LEAD_SOURCES } from "../../features/leads/constants/leadsPageOptions";
-import { leadsPageCss } from "../../features/leads/constants/leadsPageStyles";
-import { AIIcon, SkeletonCard, SourceIcon, initials, leadScoreStyle, useRipple } from "../../features/leads/components/leadsPagePrimitives";
-import { PageBackground } from "../../components/ui/PageBackground";
 
-/* ─────────── MAIN PAGE ─────────── */
+const scoreColor = (score: number) => {
+  if (score >= 90) return "#f59e0b";
+  if (score >= 80) return "#a78bfa";
+  return "#64748b";
+};
+
 export const LeadsDiscoveryPage = () => {
-  const [searchTerm, setSearchTerm]   = useState("need crm automation");
-  const [scoreMin, setScoreMin]       = useState(80);
-  const [industry, setIndustry]       = useState("Software & SaaS");
-  const [sources, setSources]         = useState<Lead["source"][]>(["linkedin", "twitter"]);
-  const [tone, setTone]               = useState<"professional" | "friendly" | "direct">("professional");
+  const [searchTerm, setSearchTerm] = useState("need crm automation");
+  const [scoreMin, setScoreMin] = useState(80);
+  const [industry, setIndustry] = useState("Software & SaaS");
+  const [sources, setSources] = useState<Lead["source"][]>(["linkedin", "twitter"]);
+  const [tone, setTone] = useState<"professional" | "friendly" | "direct">("professional");
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
 
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 550);
-  const ripple = useRipple();
-  const styleRef = useRef<HTMLStyleElement | null>(null);
-
-  // inject styles once
-  useEffect(() => {
-    const el = document.createElement("style");
-    el.textContent = leadsPageCss;
-    document.head.appendChild(el);
-    styleRef.current = el;
-    return () => { el.remove(); };
-  }, []);
 
   const { leads, isLoading, isFetching } = useLeads({
     query: debouncedSearchTerm,
     source: sources[0] ?? "reddit",
     limit: 12,
   });
+
   const { generateMessage, generatedMessage, isGenerating } = useMessageGenerator();
 
   const selectedLead = useMemo(
-    () => leads.find((l) => l.id === selectedLeadId) ?? null,
-    [leads, selectedLeadId]
+    () => leads.find((lead) => lead.id === selectedLeadId) ?? null,
+    [leads, selectedLeadId],
   );
 
   useEffect(() => {
-    if (!selectedLeadId && leads.length) setSelectedLeadId(leads[0].id);
+    if (!selectedLeadId && leads.length > 0) {
+      setSelectedLeadId(leads[0].id);
+    }
   }, [leads, selectedLeadId]);
 
   const handleGenerateDraft = async (lead: Lead) => {
@@ -59,8 +56,13 @@ export const LeadsDiscoveryPage = () => {
     });
   };
 
-  const toggleSource = (s: Lead["source"]) =>
-    setSources((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
+  const toggleSource = (source: Lead["source"]) => {
+    setSources((previous) =>
+      previous.includes(source)
+        ? previous.filter((item) => item !== source)
+        : [...previous, source],
+    );
+  };
 
   const filteredLeads = leads.filter((lead) => {
     const bySource = sources.includes(lead.source);
@@ -68,281 +70,360 @@ export const LeadsDiscoveryPage = () => {
     return bySource && byScore;
   });
 
+  const draftText = isGenerating
+    ? "Generating..."
+    : typeof generatedMessage === "string"
+      ? generatedMessage
+      : generatedMessage?.message ?? "";
+
+  const handleCopyDraft = async () => {
+    if (!draftText) return;
+    try {
+      await navigator.clipboard.writeText(draftText);
+    } catch {
+      // no-op
+    }
+  };
+
+  const handleSendDraft = () => {
+    if (!selectedLead?.email || !draftText) return;
+    const subject = encodeURIComponent(`Follow up from ${selectedLead.author}`);
+    const body = encodeURIComponent(draftText);
+    window.location.href = `mailto:${selectedLead.email}?subject=${subject}&body=${body}`;
+  };
+
   return (
-    <div className="leads-page">
-      <PageBackground image={bgConnecting} tint="rgba(74, 250, 20 , 0.80)" />
-      {/* ── Header ── */}
-      <div className="lp-header">
-        <div className="lp-header-left">
-          <h2>
-            Lead Discovery
-            <span className="lp-count-badge">
-              {isLoading ? "…" : `${filteredLeads.length} matches`}
-            </span>
-          </h2>
-          <p>Showing high-intent opportunities matched to your ICP.</p>
-        </div>
-        <div className="lp-header-actions">
-          <button className="btn btn-ghost ripple-wrap" onClick={ripple}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 6h18M6 12h12M10 18h4"/>
-            </svg>
-            Sort by Date
-          </button>
-          <button className="btn btn-primary ripple-wrap" onClick={ripple}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-            </svg>
-            Export List
-          </button>
-        </div>
-      </div>
+    <div className="page-with-bg">
+      <PageBackground image={bgConnecting} tint="rgba(56, 255, 185, 0.60)" />
 
-      {/* ── Filters ── */}
-      <div className="lp-filters">
-        <span className="filter-label">Signal Source</span>
-        {LEAD_SOURCES.map((s) => (
-          <button key={s} className={`filter-chip${sources.includes(s) ? " active" : ""}`} onClick={() => toggleSource(s)}>
-            <span className={`filter-chip-dot ${s}`} />
-            {s === "twitter" ? "X Threads" : s.charAt(0).toUpperCase() + s.slice(1) + (s === "linkedin" ? " Posts" : " Signals")}
-          </button>
-        ))}
+      <div className="h-[calc(100vh-100px)] overflow-auto space-y-4 p-6">
+        <header className="glass-card p-5">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-3xl font-semibold text-transparent">
+                Lead Discovery
+                <span className="ml-3 inline-block rounded-full border border-accent/20 bg-surface-secondary/80 px-3 py-1 align-middle text-xs text-content-secondary">
+                  {isLoading ? "..." : `${filteredLeads.length} matches`}
+                </span>
+              </h2>
+              <p className="mt-1 text-sm text-content-secondary">
+                Showing high-intent opportunities matched to your ICP.
+              </p>
+            </div>
 
-        <div className="filter-divider" />
-
-        <div className="score-range">
-          <span>Min Score</span>
-          <input type="range" min={0} max={100} value={scoreMin} onChange={(e) => setScoreMin(+e.target.value)} />
-          <span style={{ fontFamily: "var(--font-mono)", color: "var(--text-primary)", fontWeight: 600 }}>{scoreMin}</span>
-        </div>
-
-        <div className="filter-divider" />
-
-        <select className="industry-select" value={industry} onChange={(e) => setIndustry(e.target.value)}>
-          {LEAD_INDUSTRIES.map((i) => (
-            <option key={i} value={i}>{i}</option>
-          ))}
-        </select>
-
-        <button className="clear-btn" onClick={() => { setScoreMin(0); setSources([...LEAD_SOURCES]); }}>
-          Clear all
-        </button>
-      </div>
-
-      {/* ── Main grid ── */}
-      <div className="lp-grid">
-        {/* ── Leads stream ── */}
-        <div>
-          {/* Search */}
-          <div className="search-wrap">
-            <svg className="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-            </svg>
-            <input
-              className="search-input"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search signals or accounts…"
-            />
-            {isFetching && <div className="search-input-spinner" />}
+            <div className="flex items-center gap-2">
+              <button type="button" className="glass-btn px-3 py-2 text-xs uppercase tracking-[0.08em]">
+                Sort by Date
+              </button>
+              <button type="button" className="accent-btn px-3 py-2 text-xs uppercase tracking-[0.08em]">
+                Export List
+              </button>
+            </div>
           </div>
+        </header>
 
-          <div className="leads-list">
-            {isLoading
-              ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
-              : filteredLeads.length === 0
-              ? (
-                <div className="empty-state">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-                  <h3>No leads found</h3>
-                  <p>Try adjusting your search or filters.</p>
+        <section className="glass-card p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="mr-1 text-[11px] uppercase tracking-[0.12em] text-content-tertiary">
+              Signal Source
+            </span>
+
+            {LEAD_SOURCES.map((source) => {
+              const active = sources.includes(source);
+              return (
+                <button
+                  key={source}
+                  type="button"
+                  onClick={() => toggleSource(source)}
+                  className={`rounded-full border px-3 py-1.5 text-xs transition ${
+                    active
+                      ? "border-accent/40 bg-accent-soft text-content"
+                      : "border-accent/10 bg-surface-secondary/80 text-content-secondary hover:border-accent/30"
+                  }`}
+                >
+                  {source === "twitter"
+                    ? "X Threads"
+                    : `${source.charAt(0).toUpperCase()}${source.slice(1)}${source === "linkedin" ? " Posts" : " Signals"}`}
+                </button>
+              );
+            })}
+
+            <div className="mx-1 h-5 w-px bg-accent/20" />
+
+            <div className="flex items-center gap-2 rounded-full border border-accent/10 bg-surface-secondary/80 px-3 py-1">
+              <span className="text-xs text-content-secondary">Min Score</span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={scoreMin}
+                onChange={(event) => setScoreMin(Number(event.target.value))}
+                className="w-24 accent-accent"
+              />
+              <span className="text-xs font-semibold text-content">{scoreMin}</span>
+            </div>
+
+            <div className="mx-1 h-5 w-px bg-accent/20" />
+
+            <select
+              className="glass-input w-52 text-sm"
+              value={industry}
+              onChange={(event) => setIndustry(event.target.value)}
+            >
+              {LEAD_INDUSTRIES.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              onClick={() => {
+                setScoreMin(0);
+                setSources([...LEAD_SOURCES]);
+              }}
+              className="ml-auto text-xs text-content-tertiary transition hover:text-content-secondary"
+            >
+              Clear all
+            </button>
+          </div>
+        </section>
+
+        <div className="grid gap-4 xl:grid-cols-[1.25fr_1fr]">
+          <section className="space-y-3">
+            <div className="relative">
+              <input
+                className="glass-input w-full pl-10"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search signals or accounts..."
+              />
+              <svg
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-content-tertiary"
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.35-4.35" />
+              </svg>
+              {isFetching ? (
+                <div className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin rounded-full border-2 border-accent/20 border-t-accent" />
+              ) : null}
+            </div>
+
+            <div className="space-y-3">
+              {isLoading ? (
+                Array.from({ length: 3 }).map((_, index) => (
+                  <div key={index} className="glass-card animate-pulse p-4">
+                    <div className="mb-3 h-4 w-1/3 rounded bg-surface-secondary" />
+                    <div className="mb-2 h-3 w-2/3 rounded bg-surface-secondary" />
+                    <div className="h-16 rounded bg-surface-secondary" />
+                  </div>
+                ))
+              ) : filteredLeads.length === 0 ? (
+                <div className="glass-card p-8 text-center">
+                  <h3 className="text-base font-semibold text-content">No leads found</h3>
+                  <p className="mt-2 text-sm text-content-secondary">Try adjusting your search or filters.</p>
                 </div>
-              )
-              : filteredLeads.map((lead: Lead, idx: number) => {
-                  const score  = lead.score;
-                  const isHot  = score >= 90;
-                  const isSel  = selectedLeadId === lead.id;
-                  const source = lead.source;
+              ) : (
+                filteredLeads.map((lead, index) => {
+                  const isHot = lead.score >= 90;
+                  const isSelected = selectedLeadId === lead.id;
                   const displayName = lead.author || lead.id;
-                  const barW   = `${score}%`;
-                  const delay  = `${idx * 0.07}s`;
 
                   return (
-                    <div
+                    <article
                       key={lead.id}
-                      className={`lead-card${isSel ? " selected" : ""}${isHot ? " hot-card" : ""}`}
-                      style={{ animationDelay: delay }}
                       onClick={() => setSelectedLeadId(lead.id)}
+                      className={`relative cursor-pointer overflow-hidden rounded-2xl border p-4 transition hover:-translate-y-0.5 ${
+                        isSelected
+                          ? "border-accent/40 bg-surface-secondary/90 shadow-glow"
+                          : "border-accent/10 bg-surface-secondary/70 hover:border-accent/30"
+                      }`}
+                      style={{ animationDelay: `${index * 70}ms` }}
                     >
-                      {isHot && <div className="lead-card-hot-band" />}
+                      {isHot ? <span className="absolute inset-y-0 right-0 w-1 bg-warning/70" /> : null}
 
-                      {/* Top row */}
-                      <div className="lead-card-top">
-                        <div className="lead-avatar">{initials(displayName)}</div>
-                        <div className="lead-identity">
-                          <div className="lead-name">{displayName}</div>
-                          <div className="lead-title">{lead.title ?? "Unknown Role"}</div>
+                      <div className="mb-3 flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-accent/20 bg-accent/10 text-sm font-semibold text-content-secondary">
+                            {initials(displayName)}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-content">{displayName}</p>
+                            <p className="truncate text-xs text-content-secondary">{lead.title ?? "Unknown Role"}</p>
+                          </div>
                         </div>
-                        <div className="lead-score-block">
-                          {isHot && (
-                            <span className="hot-signal-badge">
-                              <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4.09 12.5H11L10 22l9.91-11.5H14L13 2z"/></svg>
+
+                        <div className="text-right">
+                          {isHot ? (
+                            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-warning">
                               Hot Signal
-                            </span>
-                          )}
-                          <span className="lead-score-num">{score}</span>
-                          <div className="lead-score-bar-wrap">
+                            </p>
+                          ) : null}
+                          <p className="text-xl font-bold text-content">{lead.score}</p>
+                          <div className="mt-1 h-1 w-20 rounded bg-surface">
                             <div
-                              className="lead-score-bar"
-                              style={leadScoreStyle(barW, score)}
+                              className="h-1 rounded"
+                              style={{ width: `${lead.score}%`, backgroundColor: scoreColor(lead.score) }}
                             />
                           </div>
                         </div>
                       </div>
 
-                      {/* Signals */}
-                      <div className="lead-signals">
-                        <div className="signal-box">
-                          <div className={`signal-source ${source}`}>
-                            <SourceIcon source={source} />
-                            {source === "twitter" ? "X Signal" : source.charAt(0).toUpperCase() + source.slice(1) + " Signal"}
-                          </div>
-                          <p className="signal-text">{lead.content}</p>
+                      <div className="mb-3 grid gap-2 md:grid-cols-2">
+                        <div className="rounded-xl border border-accent/10 bg-surface/60 p-3">
+                          <p className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-content-tertiary">
+                            <SourceIcon source={lead.source} />
+                            {lead.source === "twitter"
+                              ? "X Signal"
+                              : `${lead.source.charAt(0).toUpperCase()}${lead.source.slice(1)} Signal`}
+                          </p>
+                          <p className="line-clamp-3 text-xs text-content-secondary">{lead.content}</p>
                         </div>
-                        <div className="signal-box">
-                          <div className="signal-source ai">
+
+                        <div className="rounded-xl border border-accent/10 bg-surface/60 p-3">
+                          <p className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-accent">
                             <AIIcon />
                             AI Take
-                          </div>
-                          <p className="signal-text">{lead.summary}</p>
+                          </p>
+                          <p className="line-clamp-3 text-xs text-content-secondary">{lead.summary}</p>
                         </div>
                       </div>
 
-                      {/* Footer */}
-                      <div className="lead-card-footer">
-                        <div className="lead-meta">
-                          <span className="lead-meta-item">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                            {lead.timeAgo ?? "2h ago"}
-                          </span>
-                          {lead.location && (
-                            <span className="lead-meta-item">
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s-8-4.5-8-11.8a8 8 0 0116 0c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>
-                              {lead.location}
-                            </span>
-                          )}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-content-tertiary">
+                          <span>{lead.timeAgo ?? "2h ago"}</span>
+                          {lead.location ? <span>{lead.location}</span> : null}
                         </div>
-                        <div className="lead-card-actions">
-                          <button className="icon-btn" title="Save" onClick={(e) => e.stopPropagation()}>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-4-7 4V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            className="glass-btn px-2 py-1 text-[11px]"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                            }}
+                          >
+                            Save
                           </button>
                           <button
-                            className="btn btn-generate ripple-wrap"
-                            onClick={(e) => { e.stopPropagation(); ripple(e); handleGenerateDraft(lead); }}
+                            type="button"
+                            className="accent-btn px-2.5 py-1 text-[11px]"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void handleGenerateDraft(lead);
+                            }}
                           >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
                             Generate Draft
                           </button>
                         </div>
                       </div>
-                    </div>
+                    </article>
                   );
                 })
-            }
-          </div>
-        </div>
-
-        {/* ── AI Panel ── */}
-        <div className="ai-panel">
-          <div className="ai-panel-header">
-            <div className="ai-panel-title">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 010 2h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 010-2h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2z"/>
-              </svg>
-              AI Outreach
-              <span className="ai-badge">GPT-4o</span>
-            </div>
-            <div className="tone-selector">
-              {(["professional", "friendly", "direct"] as const).map((t) => (
-                <button key={t} className={`tone-btn${tone === t ? " active" : ""}`} onClick={() => setTone(t)}>
-                  {t.charAt(0).toUpperCase() + t.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Selected lead summary */}
-          {selectedLead ? (
-            <div className="selected-lead-summary">
-              <div className="lead-avatar" style={{ width: 36, height: 36, fontSize: 13 }}>
-                {initials(selectedLead.author || selectedLead.id)}
-              </div>
-              <div className="selected-lead-summary-info">
-                <h4>{selectedLead.author || selectedLead.id}</h4>
-                <p>{selectedLead.title ?? "Unknown Role"}</p>
-              </div>
-              <div className="selected-lead-summary-score">{selectedLead.score ?? "—"}</div>
-            </div>
-          ) : (
-            <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: "10px 0" }}>
-              Select a lead to generate a message
-            </div>
-          )}
-
-          {/* Message area */}
-          <div>
-            <div className="message-area-label">Draft Message</div>
-            <textarea
-              className={`message-textarea${isGenerating ? " generating" : ""}`}
-              value={isGenerating ? "Generating…" : (typeof generatedMessage === "string" ? generatedMessage : generatedMessage?.message ?? "")}
-              onChange={() => {}}
-              placeholder="Click 'Generate Draft' on a lead to create a personalized outreach message…"
-              readOnly={isGenerating}
-            />
-          </div>
-
-          {/* Actions */}
-          <div className="ai-panel-actions">
-            <button
-              className="btn btn-primary ripple-wrap"
-              onClick={(e) => { ripple(e); if (selectedLead) handleGenerateDraft(selectedLead); }}
-              disabled={!selectedLead || isGenerating}
-            >
-              {isGenerating ? (
-                <>
-                  <div style={{ width: 13, height: 13, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spinOnce 0.7s linear infinite" }} />
-                  Generating…
-                </>
-              ) : (
-                <>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
-                  Regenerate
-                </>
               )}
-            </button>
-            <button className="btn btn-ghost ripple-wrap" onClick={ripple} disabled={!generatedMessage}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-              </svg>
-              Copy
-            </button>
-            <button className="btn btn-ghost ripple-wrap" onClick={ripple} disabled={!generatedMessage}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
-              </svg>
-              Send
-            </button>
-          </div>
+            </div>
+          </section>
 
-          {/* Insight */}
-          <div className="insight-bar">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
-            </svg>
-            <p>
-              <strong>Insight:</strong> High-intent leads respond 3× faster to personalized outreach based on recent posts.
-            </p>
-          </div>
+          <aside className="glass-card h-fit space-y-4 p-5 xl:sticky xl:top-6">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-sm font-semibold text-content">
+                <AIIcon />
+                AI Outreach
+                <span className="rounded bg-gradient-to-r from-accent to-accent-secondary px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-inverse">
+                  GPT-4o
+                </span>
+              </div>
+
+              <div className="flex gap-1">
+                {(["professional", "friendly", "direct"] as const).map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => setTone(item)}
+                    className={`rounded-full border px-2.5 py-1 text-[11px] uppercase ${
+                      tone === item
+                        ? "border-accent/40 bg-accent-soft text-content"
+                        : "border-accent/10 text-content-secondary hover:border-accent/30"
+                    }`}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {selectedLead ? (
+              <div className="glass-card-sm flex items-center gap-3 p-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-accent/20 bg-accent/10 text-xs font-semibold text-content-secondary">
+                  {initials(selectedLead.author || selectedLead.id)}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-content">{selectedLead.author || selectedLead.id}</p>
+                  <p className="truncate text-xs text-content-secondary">{selectedLead.title ?? "Unknown Role"}</p>
+                </div>
+                <span className="ml-auto text-lg font-bold text-content">{selectedLead.score}</span>
+              </div>
+            ) : (
+              <p className="text-center text-xs text-content-tertiary">Select a lead to generate a message.</p>
+            )}
+
+            <div>
+              <p className="mb-2 text-xs uppercase tracking-[0.1em] text-content-tertiary">Draft Message</p>
+              <textarea
+                className={`glass-input min-h-[180px] w-full resize-y p-3 text-sm leading-6 ${isGenerating ? "opacity-80" : ""}`}
+                value={draftText}
+                onChange={() => {}}
+                placeholder="Click Generate Draft on a lead to create personalized outreach..."
+                readOnly
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                className="accent-btn px-2 py-2 text-xs"
+                onClick={() => {
+                  if (selectedLead) {
+                    void handleGenerateDraft(selectedLead);
+                  }
+                }}
+                disabled={!selectedLead || isGenerating}
+              >
+                {isGenerating ? "Generating..." : "Regenerate"}
+              </button>
+              <button
+                type="button"
+                className="glass-btn px-2 py-2 text-xs"
+                onClick={() => {
+                  void handleCopyDraft();
+                }}
+                disabled={!draftText}
+              >
+                Copy
+              </button>
+              <button
+                type="button"
+                className="glass-btn px-2 py-2 text-xs"
+                onClick={handleSendDraft}
+                disabled={!draftText || !selectedLead?.email}
+              >
+                Send
+              </button>
+            </div>
+
+            <div className="rounded-xl border border-accent/20 bg-accent-soft px-3 py-2 text-xs text-content-secondary">
+              <strong className="text-accent">Insight:</strong> High-intent leads respond faster to personalized outreach based on recent posts.
+            </div>
+          </aside>
         </div>
       </div>
     </div>

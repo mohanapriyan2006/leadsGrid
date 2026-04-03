@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 
 import { AIComposer } from "../../features/ai/components/AIComposer";
 import { AIHeader } from "../../features/ai/components/AIHeader";
 import { AIMessageFeed } from "../../features/ai/components/AIMessageFeed";
 import { AIQuickActions } from "../../features/ai/components/AIQuickActions";
+import { SmartChipGroup } from "../../features/ai/components/SmartChip";
 import {
   CHAT_HISTORY_LIMIT,
   FILE_ACCEPT,
@@ -22,6 +23,11 @@ import { useLeadStore } from "../../store/useLeadStore";
 import type { ToneType } from "../../features/common/types/ui";
 import { PageBackground } from "../../components/ui/PageBackground";
 import bgChatBot from "../../assets/bg-images/chat-bot.svg";
+import { useMode } from "../../features/ai/hooks/useMode";
+import { useSuggestions } from "../../features/ai/hooks/useSuggestions";
+import { useAgentExecution } from "../../features/ai/hooks/useAgentExecution";
+import type { AgentStep } from "../../features/ai/types/agent";
+import type { AgentActionResult } from "../../features/ai/services/agentService";
 
 export const AIPage = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -31,10 +37,24 @@ export const AIPage = () => {
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [lastAgentPrompt, setLastAgentPrompt] = useState("");
 
   const { leads } = useLeadStore();
   const { leads: manageLeads } = useCentralizedLeads();
   const { generateMessage } = useMessageGenerator();
+
+  const {
+    mode,
+    toggleMode,
+    switchToAgent,
+    aiStatus,
+    setAIStatus,
+    activeContext,
+    autoApproveLowRisk,
+    setAutoApproveLowRisk,
+  } = useMode();
+
+  const { typingSuggestions, smartChips, setInputValue } = useSuggestions();
 
   const endRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -45,13 +65,65 @@ export const AIPage = () => {
     return [...leadPool].sort((a, b) => b.score - a.score)[0] ?? MOCK_LEADS[0];
   }, [leadPool]);
 
+  const addMessage = useCallback((message: ChatMessage) => {
+    setMessages((prev) => [...prev, message]);
+  }, []);
+
+  const agentCallbacks = useMemo(
+    () => ({
+      onStepStart: (step: AgentStep, _index: number) => {
+        addMessage({
+          id: createId(),
+          role: "agent",
+          content: `⏳ Starting: ${step.label} — ${step.description}`,
+        });
+      },
+      onStepComplete: (step: AgentStep, _index: number, result: AgentActionResult) => {
+        addMessage({
+          id: createId(),
+          role: "agent",
+          content: `✅ ${step.label}: ${result.message}`,
+        });
+      },
+      onStepFail: (step: AgentStep, _index: number, error: string) => {
+        addMessage({
+          id: createId(),
+          role: "agent",
+          content: `❌ ${step.label} failed: ${error}`,
+        });
+      },
+      onPlanComplete: () => {
+        addMessage({
+          id: createId(),
+          role: "agent",
+          content: "🎉 All tasks completed. Results are saved to your CRM.",
+        });
+      },
+      onStatusChange: setAIStatus,
+    }),
+    [addMessage, setAIStatus],
+  );
+
+  const {
+    plan: agentPlan,
+    executionState,
+    createPlan,
+    approvePlan,
+    editPlanStep,
+    removeStep,
+    executePlan,
+    continueExecution,
+    abortExecution,
+    resetPlan,
+  } = useAgentExecution(agentCallbacks);
+
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, loading]);
+  }, [messages, loading, agentPlan, executionState]);
 
-  const addMessage = (message: ChatMessage) => {
-    setMessages((prev) => [...prev, message]);
-  };
+  useEffect(() => {
+    setInputValue(input);
+  }, [input, setInputValue]);
 
   const buildContext = (prompt: string) => {
     const leadSummary = leadPool
@@ -97,13 +169,14 @@ export const AIPage = () => {
     return text.includes("best") || text.includes("lead") || text.includes("next action") || text.includes("pipeline");
   };
 
-  const sendMessage = async (overridePrompt?: string) => {
+  const sendAskMessage = async (overridePrompt?: string) => {
     const prompt = (overridePrompt ?? input).trim();
     if (!prompt || loading) return;
 
     addMessage({ id: createId(), role: "user", content: prompt });
     setInput("");
     setLoading(true);
+    setAIStatus("thinking");
 
     try {
       const result = await generateMessage({
@@ -127,14 +200,104 @@ export const AIPage = () => {
       });
     } finally {
       setLoading(false);
+      setAIStatus("idle");
       setAttachedFile(null);
     }
+  };
+
+  const sendAgentMessage = (overridePrompt?: string) => {
+    const prompt = (overridePrompt ?? input).trim();
+    if (!prompt || loading) return;
+
+    addMessage({ id: createId(), role: "user", content: prompt });
+    setInput("");
+    setLastAgentPrompt(prompt);
+    setAIStatus("thinking");
+
+    resetPlan();
+
+    addMessage({
+      id: createId(),
+      role: "agent",
+      content: "🤖 Analyzing your request and building an execution plan...",
+    });
+
+    setTimeout(() => {
+      createPlan(prompt, leadPool);
+      setAIStatus("idle");
+    }, 800);
+  };
+
+  const sendMessage = async (overridePrompt?: string) => {
+    if (mode === "ask") {
+      await sendAskMessage(overridePrompt);
+    } else {
+      sendAgentMessage(overridePrompt);
+    }
+  };
+
+  const handleApproveAll = () => {
+    if (!agentPlan) return;
+    approvePlan("all");
+
+    addMessage({
+      id: createId(),
+      role: "agent",
+      content: "✅ Plan approved. Starting execution...",
+    });
+
+    const approvedPlan = { ...agentPlan, approved: true, approvalMode: "all" as const };
+    void executePlan(approvedPlan, leadPool, lastAgentPrompt, tone, autoApproveLowRisk);
+  };
+
+  const handleApproveStepByStep = () => {
+    if (!agentPlan) return;
+    approvePlan("step_by_step");
+
+    addMessage({
+      id: createId(),
+      role: "agent",
+      content: "✅ Step-by-step mode. I'll ask permission for each action.",
+    });
+
+    const approvedPlan = { ...agentPlan, approved: true, approvalMode: "step_by_step" as const };
+    void executePlan(approvedPlan, leadPool, lastAgentPrompt, tone, autoApproveLowRisk);
+  };
+
+  const handleContinueExecution = () => {
+    void continueExecution(leadPool, lastAgentPrompt, tone, autoApproveLowRisk);
+  };
+
+  const handleAbortExecution = () => {
+    abortExecution();
+    addMessage({
+      id: createId(),
+      role: "agent",
+      content: "⛔ Execution aborted by user.",
+    });
+  };
+
+  const handleConvertToAgent = (content: string) => {
+    switchToAgent();
+    setInput(content);
+    setTimeout(() => {
+      sendAgentMessage(content);
+    }, 100);
   };
 
   const handleQuickAction = (action: QuickAction) => {
     const prompt = QUICK_ACTION_PROMPT[action];
     setInput(prompt);
     void sendMessage(prompt);
+  };
+
+  const handleSuggestionClick = (prompt: string) => {
+    setInput(prompt);
+    void sendMessage(prompt);
+  };
+
+  const handleSuggestionSelect = (suggestion: string) => {
+    setInput(suggestion);
   };
 
   const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -221,6 +384,7 @@ export const AIPage = () => {
     setInput("");
     setAttachedFile(null);
     setHistoryOpen(false);
+    resetPlan();
   };
 
   const restoreChat = (session: ChatSession) => {
@@ -233,61 +397,91 @@ export const AIPage = () => {
   const visibleMessages = messages.filter((message) => !message.hidden);
 
   return (
-    <div>
-      <PageBackground image={bgChatBot} tint="rgba(6, 182, 212, 0.80)" />
-      <div className="h-[calc(100vh-100px)] overflow-auto relative flex flex-col space-y-4 p-6">
+    <div className="page-with-bg">
+      <PageBackground image={bgChatBot} tint={mode == 'agent' ? "rgba(6, 182, 212, 0.45)" : "rgba(167, 139, 250, 0.45)"} opacity={0.35} />
+
+      <div className="flex h-[calc(100vh-100px)] flex-col overflow-hidden p-4 md:p-6">
         <AIHeader
           historyOpen={historyOpen}
           chatHistory={chatHistory}
           messagesCount={messages.length}
+          mode={mode}
+          aiStatus={aiStatus}
+          activeContext={activeContext}
           onSaveCurrentChat={saveCurrentChat}
           onStartNewChat={startNewChat}
           onToggleHistory={() => setHistoryOpen((open) => !open)}
           onRestoreChat={restoreChat}
+          onToggleMode={toggleMode}
         />
 
-      <section className="mx-auto flex w-full max-w-6xl flex-1 min-h-0 flex-col gap-4">
-        <div className="glass-card flex min-h-0 flex-1 p-4 md:p-5">
-          <div className="mx-auto flex h-full w-full max-w-4xl flex-col gap-4">
-            <AIMessageFeed
-              messages={visibleMessages}
-              loading={loading}
-              endRef={endRef}
-              onUseMessage={useMessage}
-              onEditMessage={setInput}
-              onHideMessage={hideMessage}
-              onSendCardMessage={(content) => {
-                void sendCardMessage(content);
-              }}
-              onAddToPipeline={(leadName) => {
-                addMessage({
-                  id: createId(),
-                  role: "assistant",
-                  content: `${leadName} added to pipeline actions.`,
-                });
-              }}
-            />
+        <section className="mx-auto mt-4 flex w-full max-w-5xl flex-1 min-h-0 flex-col gap-3">
+          <div className="ai-chat-panel flex min-h-0 flex-1 flex-col rounded-2xl border border-accent/[0.08] p-4 md:p-5">
+            <div className="mx-auto flex h-full w-full max-w-3xl flex-col">
+              <AIMessageFeed
+                messages={visibleMessages}
+                loading={loading}
+                mode={mode}
+                endRef={endRef}
+                suggestions={smartChips}
+                agentPlan={agentPlan}
+                executionState={executionState}
+                onUseMessage={useMessage}
+                onEditMessage={setInput}
+                onHideMessage={hideMessage}
+                onSendCardMessage={(content) => {
+                  void sendCardMessage(content);
+                }}
+                onAddToPipeline={(leadName) => {
+                  addMessage({
+                    id: createId(),
+                    role: "assistant",
+                    content: `${leadName} added to pipeline actions.`,
+                  });
+                }}
+                onSuggestionClick={handleSuggestionClick}
+                onConvertToAgent={handleConvertToAgent}
+                onApproveAll={handleApproveAll}
+                onApproveStepByStep={handleApproveStepByStep}
+                onEditStep={editPlanStep}
+                onRemoveStep={removeStep}
+                onContinueExecution={handleContinueExecution}
+                onAbortExecution={handleAbortExecution}
+              />
+            </div>
           </div>
-        </div>
 
-        <AIQuickActions actions={QUICK_ACTIONS} onAction={handleQuickAction} />
+          {mode === "ask" ? (
+            <AIQuickActions actions={QUICK_ACTIONS} onAction={handleQuickAction} />
+          ) : (
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-accent/[0.06] bg-surface-secondary/40 px-4 py-2.5 backdrop-blur-sm">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-content-tertiary">
+                Suggestions
+              </span>
+              <div className="h-3 w-px bg-accent/10" />
+              <SmartChipGroup suggestions={smartChips} onChipClick={handleSuggestionClick} />
+            </div>
+          )}
 
-        <AIComposer
-          input={input}
-          loading={loading}
-          attachedFile={attachedFile}
-          fileAccept={FILE_ACCEPT}
-          tones={TONES}
-          tone={tone}
-          fileInputRef={fileInputRef}
-          onFileUpload={handleFileUpload}
-          onInputChange={setInput}
-          onToneChange={setTone}
-          onSend={() => {
-            void sendMessage();
-          }}
-        />
-      </section>
+          <AIComposer
+            input={input}
+            loading={loading}
+            attachedFile={attachedFile}
+            fileAccept={FILE_ACCEPT}
+            tones={TONES}
+            tone={tone}
+            mode={mode}
+            typingSuggestions={typingSuggestions}
+            fileInputRef={fileInputRef}
+            onFileUpload={handleFileUpload}
+            onInputChange={setInput}
+            onToneChange={setTone}
+            onSend={() => {
+              void sendMessage();
+            }}
+            onSuggestionSelect={handleSuggestionSelect}
+          />
+        </section>
       </div>
     </div>
   );

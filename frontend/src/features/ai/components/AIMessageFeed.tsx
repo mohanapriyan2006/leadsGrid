@@ -1,74 +1,131 @@
 import type { RefObject } from "react";
 
 import type { ChatMessage } from "../types/chat";
+import type { AIMode, AgentPlan, AgentExecutionState, SmartSuggestion } from "../types/agent";
+import { AgentPlanCard } from "./AgentPlanCard";
+import { AgentExecutionTimeline } from "./AgentExecutionTimeline";
+import { EmptyState } from "./EmptyState";
 
 type AIMessageFeedProps = {
   messages: ChatMessage[];
   loading: boolean;
+  mode: AIMode;
   endRef: RefObject<HTMLDivElement | null>;
+  suggestions: SmartSuggestion[];
+  agentPlan: AgentPlan | null;
+  executionState: AgentExecutionState | null;
   onUseMessage: (content: string) => void;
   onEditMessage: (content: string) => void;
   onHideMessage: (messageId: string) => void;
   onSendCardMessage: (content: string) => void;
   onAddToPipeline: (leadName: string) => void;
+  onSuggestionClick: (prompt: string) => void;
+  onConvertToAgent: (content: string) => void;
+  onApproveAll: () => void;
+  onApproveStepByStep: () => void;
+  onEditStep: (stepId: string, updates: Partial<{ label: string; description: string }>) => void;
+  onRemoveStep: (stepId: string) => void;
+  onContinueExecution: () => void;
+  onAbortExecution: () => void;
 };
 
 export const AIMessageFeed = ({
   messages,
   loading,
+  mode,
   endRef,
+  suggestions,
+  agentPlan,
+  executionState,
   onUseMessage,
   onEditMessage,
   onHideMessage,
   onSendCardMessage,
   onAddToPipeline,
+  onSuggestionClick,
+  onConvertToAgent,
+  onApproveAll,
+  onApproveStepByStep,
+  onEditStep,
+  onRemoveStep,
+  onContinueExecution,
+  onAbortExecution,
 }: AIMessageFeedProps) => {
   return (
-    <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-      {messages.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-accent/20 bg-surface-secondary/30 p-5 text-sm text-content-secondary">
-          <p className="text-base font-medium text-content">👋 Welcome to your AI Sales Engine</p>
-          <p className="mt-2">Try one of the quick actions below:</p>
-          <p>• Find new leads</p>
-          <p>• Get best lead to contact</p>
-          <p>• Generate outreach message</p>
-        </div>
+    <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1 scrollbar-thin">
+      {messages.length === 0 && !agentPlan ? (
+        <EmptyState
+          mode={mode}
+          suggestions={suggestions}
+          onSuggestionClick={onSuggestionClick}
+        />
       ) : null}
 
       {messages.map((message) => (
         <div
           key={message.id}
-          className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+          className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} animate-fadeIn`}
         >
+          {/* Avatar for non-user messages */}
+          {message.role !== "user" ? (
+            <div
+              className={`mr-2.5 mt-1 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-xs ${
+                message.role === "agent"
+                  ? "bg-info/15 text-info"
+                  : "bg-accent/15 text-accent"
+              }`}
+            >
+              {message.role === "agent" ? "⚡" : "✦"}
+            </div>
+          ) : null}
+
           <div
-            className={`max-w-[90%] rounded-2xl px-4 py-3 text-[15px] leading-7 transition-all animate-fadeIn ${
-              message.role === "assistant"
-                ? "border border-accent/25 bg-accent-soft text-content"
-                : "border border-accent/15 bg-surface-secondary/70 text-content"
+            className={`max-w-[82%] text-[14px] leading-relaxed ${
+              message.role === "user"
+                ? "rounded-2xl rounded-br-md border border-accent/10 bg-accent/[0.08] px-4 py-2.5 text-content"
+                : message.role === "agent"
+                  ? "rounded-2xl rounded-bl-md border border-info/[0.12] bg-info/[0.06] px-4 py-2.5 text-content"
+                  : "rounded-2xl rounded-bl-md border border-accent/[0.08] bg-surface-tertiary/40 px-4 py-2.5 text-content"
             }`}
           >
-            <p className="whitespace-pre-wrap">{message.content}</p>
+            {message.role === "agent" ? (
+              <div>
+                <span className="mb-1 inline-block rounded-sm bg-info/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-info/80">
+                  Agent
+                </span>
+                <p className="whitespace-pre-wrap">{message.content}</p>
+              </div>
+            ) : (
+              <p className="whitespace-pre-wrap">{message.content}</p>
+            )}
 
             {message.role === "assistant" ? (
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-2.5 flex flex-wrap gap-1.5">
                 <button
                   type="button"
                   onClick={() => onUseMessage(message.content)}
-                  className="glass-btn px-2.5 py-1 text-xs"
+                  className="rounded-md border border-accent/[0.08] bg-surface-secondary/50 px-2.5 py-1 text-[11px] font-medium text-content-secondary transition-all hover:border-accent/20 hover:text-content"
                 >
                   Use this
                 </button>
                 <button
                   type="button"
                   onClick={() => onEditMessage(message.content)}
-                  className="glass-btn px-2.5 py-1 text-xs"
+                  className="rounded-md border border-accent/[0.08] bg-surface-secondary/50 px-2.5 py-1 text-[11px] font-medium text-content-secondary transition-all hover:border-accent/20 hover:text-content"
                 >
                   Edit
                 </button>
                 <button
                   type="button"
+                  onClick={() => onConvertToAgent(message.content)}
+                  className="rounded-md border border-info/[0.12] bg-info/[0.06] px-2.5 py-1 text-[11px] font-medium text-info/80 transition-all hover:bg-info/[0.12] hover:text-info"
+                >
+                  Agent Task
+                </button>
+                <button
+                  type="button"
                   onClick={() => onHideMessage(message.id)}
-                  className="rounded border border-danger/30 bg-danger-soft px-2.5 py-1 text-xs text-danger transition hover:bg-danger/20"
+                  className="rounded-md border border-danger/[0.12] bg-danger/[0.05] px-2.5 py-1 text-[11px] font-medium text-danger/60 transition-all hover:bg-danger/[0.1] hover:text-danger"
                 >
                   Ignore
                 </button>
@@ -76,34 +133,52 @@ export const AIMessageFeed = ({
             ) : null}
 
             {message.card ? (
-              <div className="mt-3 rounded-xl border border-accent/15 bg-surface-secondary/50 p-3 text-sm">
-                <p className="text-[13px] font-semibold text-warning">
-                  🔥 Best Lead: {message.card.leadName}
-                </p>
-                <p className="mt-1 text-xs text-content-secondary">Score: {message.card.score}%</p>
-                <p className="text-xs text-content-secondary">Budget: {message.card.budget}</p>
-                <div className="mt-2 text-xs text-content-secondary">
-                  <p className="font-semibold text-content">Pain:</p>
-                  {message.card.pain.map((item) => (
-                    <p key={item}>- {item}</p>
-                  ))}
+              <div className="mt-3 overflow-hidden rounded-xl border border-warning/[0.12] bg-surface/60">
+                <div className="border-b border-warning/[0.08] bg-warning/[0.04] px-3.5 py-2">
+                  <p className="text-[13px] font-semibold text-warning">
+                    🔥 Best Lead: {message.card.leadName}
+                  </p>
                 </div>
-                <p className="mt-2 text-xs text-success">Suggestion: {message.card.suggestion}</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onSendCardMessage(message.content)}
-                    className="accent-btn px-2.5 py-1 text-xs"
-                  >
-                    Send Message
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onAddToPipeline(message.card?.leadName || "Lead")}
-                    className="glass-btn px-2.5 py-1 text-xs"
-                  >
-                    Add to Pipeline
-                  </button>
+                <div className="space-y-2 px-3.5 py-3">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-content-tertiary">Score</span>
+                      <span className="text-sm font-bold text-accent">{message.card.score}%</span>
+                    </div>
+                    <div className="h-3 w-px bg-accent/10" />
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-content-tertiary">Budget</span>
+                      <span className="text-sm font-medium text-content">{message.card.budget}</span>
+                    </div>
+                  </div>
+                  <div className="text-xs text-content-secondary">
+                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-content-tertiary">Pain Points</p>
+                    {message.card.pain.map((item) => (
+                      <p key={item} className="flex items-start gap-1.5 py-0.5">
+                        <span className="mt-0.5 h-1 w-1 flex-shrink-0 rounded-full bg-warning/50" />
+                        {item}
+                      </p>
+                    ))}
+                  </div>
+                  <p className="rounded-lg bg-success/[0.06] px-2.5 py-1.5 text-xs text-success">
+                    {message.card.suggestion}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => onSendCardMessage(message.content)}
+                      className="accent-btn px-3 py-1.5 text-[11px]"
+                    >
+                      Send Message
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onAddToPipeline(message.card?.leadName || "Lead")}
+                      className="rounded-md border border-accent/[0.08] bg-surface-secondary/50 px-3 py-1.5 text-[11px] font-medium text-content-secondary transition-all hover:border-accent/20 hover:text-content"
+                    >
+                      Add to Pipeline
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : null}
@@ -111,12 +186,34 @@ export const AIMessageFeed = ({
         </div>
       ))}
 
+      {agentPlan && !executionState ? (
+        <AgentPlanCard
+          plan={agentPlan}
+          onApproveAll={onApproveAll}
+          onApproveStepByStep={onApproveStepByStep}
+          onEditStep={onEditStep}
+          onRemoveStep={onRemoveStep}
+        />
+      ) : null}
+
+      {agentPlan && executionState ? (
+        <AgentExecutionTimeline
+          plan={agentPlan}
+          executionState={executionState}
+          onContinue={onContinueExecution}
+          onAbort={onAbortExecution}
+        />
+      ) : null}
+
       {loading ? (
-        <div className="flex justify-start">
-          <div className="inline-flex items-center gap-1 rounded-2xl border border-accent/25 bg-accent-soft px-4 py-3">
-            <span className="h-2 w-2 animate-bounce rounded-full bg-accent" />
-            <span className="h-2 w-2 animate-bounce rounded-full bg-accent [animation-delay:120ms]" />
-            <span className="h-2 w-2 animate-bounce rounded-full bg-accent [animation-delay:240ms]" />
+        <div className="flex items-start justify-start">
+          <div className="mr-2.5 mt-1 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-accent/15 text-xs text-accent">
+            ✦
+          </div>
+          <div className="inline-flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-accent/[0.08] bg-surface-tertiary/40 px-4 py-3">
+            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent/60" />
+            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent/60 [animation-delay:150ms]" />
+            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent/60 [animation-delay:300ms]" />
           </div>
         </div>
       ) : null}

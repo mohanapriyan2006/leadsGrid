@@ -210,6 +210,17 @@
     @apply h-px w-full bg-gradient-to-r from-transparent via-accent/20 to-transparent;
   }
 
+  /* AI Chat Panel — opaque glass for chat area, prevents BG bleed */
+  .ai-chat-panel {
+    background: rgba(10, 12, 20, 0.82);
+    backdrop-filter: blur(24px) saturate(1.2);
+    -webkit-backdrop-filter: blur(24px) saturate(1.2);
+    box-shadow:
+      0 8px 40px rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      inset 0 0 0 0.5px rgba(167, 139, 250, 0.05);
+  }
+
   /* Glow Effects */
   .glow-accent {
     box-shadow: 0 0 20px var(--accent-glow);

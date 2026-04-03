@@ -260,8 +260,9 @@ export const AIPage = () => {
   const visibleMessages = messages.filter((message) => !message.hidden);
 
   return (
-    <div className="relative flex min-h-[calc(100vh-140px)] flex-col gap-4 p-6">
+    <div>
       <PageBackground image={bgChatBot} tint="rgba(6, 182, 212, 0.80)" />
+      <div className="h-[calc(100vh-100px)] overflow-auto relative flex flex-col space-y-4 p-6">
       <header className="relative flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
           <h2 className="page-title">AI Sales Engine</h2>
@@ -499,6 +500,7 @@ export const AIPage = () => {
           </div>
         </div>
       </section>
+      </div>
     </div>
   );
 };

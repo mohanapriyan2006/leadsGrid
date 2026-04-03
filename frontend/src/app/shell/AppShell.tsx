@@ -9,7 +9,7 @@ export const AppShell = () => {
       <Sidebar />
       <div className="flex-1">
         <Topbar />
-        <main className="p-4 md:p-6">
+        <main>
           <Outlet />
         </main>
       </div>

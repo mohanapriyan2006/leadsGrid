@@ -460,8 +460,10 @@ export const ManageLeadsPage = () => {
   }
 
   return (
-    <div className="page-with-bg space-y-4">
+    <div className="page-with-bg  ">
       <PageBackground image={bgTeamCollab} tint="rgba(168, 85, 247, 0.80)" />
+
+      <div className="h-[calc(100vh-100px)] overflow-auto space-y-4 p-6">
       <header className="glass-card-lg p-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -721,6 +723,7 @@ export const ManageLeadsPage = () => {
           });
         }}
       />
+      </div>
     </div>
   );
 };

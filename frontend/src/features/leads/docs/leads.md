@@ -42,3 +42,6 @@ Handles lead ingestion display, intent visualization, and integration points to 
 ## Future Improvements
 - Pagination and cursor-based loading.
 - Realtime lead updates via websocket.
+
+## Related Docs
+- `src/features/leads/docs/manage-leads.md` for pre-CRM qualification workflow architecture.

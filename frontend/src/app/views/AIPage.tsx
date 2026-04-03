@@ -1,5 +1,19 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 
+import { AIComposer } from "../../features/ai/components/AIComposer";
+import { AIHeader } from "../../features/ai/components/AIHeader";
+import { AIMessageFeed } from "../../features/ai/components/AIMessageFeed";
+import { AIQuickActions } from "../../features/ai/components/AIQuickActions";
+import {
+  CHAT_HISTORY_LIMIT,
+  FILE_ACCEPT,
+  QUICK_ACTION_PROMPT,
+  QUICK_ACTIONS,
+  TONES,
+  createId,
+  type QuickAction,
+} from "../../features/ai/constants/aiPage";
+import type { ChatMessage, ChatSession, InsightCard } from "../../features/ai/types/chat";
 import { MOCK_LEADS } from "../../features/leads/constants/mockLeads";
 import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLeads";
 import { useMessageGenerator } from "../../features/leads/hooks/useMessageGenerator";
@@ -8,47 +22,6 @@ import { useLeadStore } from "../../store/useLeadStore";
 import type { ToneType } from "../../features/common/types/ui";
 import { PageBackground } from "../../components/ui/PageBackground";
 import bgChatBot from "../../assets/bg-images/chat-bot.svg";
-
-type ChatRole = "assistant" | "user";
-
-type InsightCard = {
-  leadName: string;
-  score: number;
-  budget: string;
-  pain: string[];
-  suggestion: string;
-};
-
-type ChatMessage = {
-  id: string;
-  role: ChatRole;
-  content: string;
-  card?: InsightCard;
-  hidden?: boolean;
-};
-
-type ChatSession = {
-  id: string;
-  title: string;
-  preview: string;
-  createdAt: string;
-  messages: ChatMessage[];
-};
-
-const QUICK_ACTIONS = ["Find leads", "Best lead", "Next action", "Draft message", "Analyze pipeline"] as const;
-
-const QUICK_ACTION_PROMPT: Record<(typeof QUICK_ACTIONS)[number], string> = {
-  "Find leads": "Find high-intent leads from my pipeline and explain why.",
-  "Best lead": "Who is the best lead to contact today?",
-  "Next action": "What is the next best action for my top lead?",
-  "Draft message": "Draft a personalized outreach message for my top lead.",
-  "Analyze pipeline": "Analyze current pipeline and suggest immediate moves.",
-};
-
-const createId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-
-const FILE_ACCEPT = "image/*,.pdf,.csv";
-const TONES: ToneType[] = ["professional", "friendly", "direct"];
 
 export const AIPage = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -158,7 +131,7 @@ export const AIPage = () => {
     }
   };
 
-  const handleQuickAction = (action: (typeof QUICK_ACTIONS)[number]) => {
+  const handleQuickAction = (action: QuickAction) => {
     const prompt = QUICK_ACTION_PROMPT[action];
     setInput(prompt);
     void sendMessage(prompt);
@@ -233,14 +206,14 @@ export const AIPage = () => {
     const session = createSessionFromMessages(messages);
     if (!session) return;
 
-    setChatHistory((prev) => [session, ...prev].slice(0, 10));
+    setChatHistory((prev) => [session, ...prev].slice(0, CHAT_HISTORY_LIMIT));
   };
 
   const startNewChat = () => {
     if (messages.length > 0) {
       const session = createSessionFromMessages(messages);
       if (session) {
-        setChatHistory((prev) => [session, ...prev].slice(0, 10));
+        setChatHistory((prev) => [session, ...prev].slice(0, CHAT_HISTORY_LIMIT));
       }
     }
 
@@ -263,242 +236,57 @@ export const AIPage = () => {
     <div>
       <PageBackground image={bgChatBot} tint="rgba(6, 182, 212, 0.80)" />
       <div className="h-[calc(100vh-100px)] overflow-auto relative flex flex-col space-y-4 p-6">
-      <header className="relative flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1">
-          <h2 className="page-title">AI Sales Engine</h2>
-          <p className="page-subtitle">Real-time insights for your pipeline</p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={saveCurrentChat}
-            disabled={messages.length === 0}
-            className="glass-btn h-9 w-9 items-center justify-center p-0 disabled:cursor-not-allowed disabled:opacity-50"
-            title="Save current chat"
-            aria-label="Save current chat"
-          >
-            💾
-          </button>
-          <button
-            type="button"
-            onClick={startNewChat}
-            className="glass-btn h-9 w-9 items-center justify-center p-0"
-            title="Start new chat"
-            aria-label="Start new chat"
-          >
-            ➕
-          </button>
-          <button
-            type="button"
-            onClick={() => setHistoryOpen((open) => !open)}
-            className="glass-btn h-9 w-9 items-center justify-center p-0"
-            title="Chat history"
-            aria-label="Toggle chat history"
-          >
-            🕘
-          </button>
-        </div>
-
-        {historyOpen ? (
-          <div className="absolute right-0 top-12 z-20 w-full max-w-sm glass-card p-3 md:w-96">
-            <p className="text-xs font-semibold uppercase tracking-wider text-content-secondary">Recent Chats</p>
-            <div className="mt-2 max-h-64 space-y-2 overflow-y-auto pr-1">
-              {chatHistory.length > 0 ? (
-                chatHistory.map((session) => (
-                  <button
-                    key={session.id}
-                    type="button"
-                    onClick={() => restoreChat(session)}
-                    className="w-full rounded-xl border border-accent/10 bg-surface-secondary/50 px-3 py-2 text-left transition hover:border-accent/30 hover:bg-surface-secondary/70"
-                  >
-                    <p className="text-sm font-medium text-content">{session.title}</p>
-                    <p className="mt-1 line-clamp-2 text-xs text-content-secondary">{session.preview}</p>
-                    <p className="mt-1 text-[11px] text-accent">{session.createdAt}</p>
-                  </button>
-                ))
-              ) : (
-                <p className="rounded-xl border border-dashed border-accent/20 bg-surface-secondary/30 px-3 py-4 text-xs text-content-secondary">
-                  No saved chats yet. Use the 💾 button to save your current conversation.
-                </p>
-              )}
-            </div>
-          </div>
-        ) : null}
-      </header>
+        <AIHeader
+          historyOpen={historyOpen}
+          chatHistory={chatHistory}
+          messagesCount={messages.length}
+          onSaveCurrentChat={saveCurrentChat}
+          onStartNewChat={startNewChat}
+          onToggleHistory={() => setHistoryOpen((open) => !open)}
+          onRestoreChat={restoreChat}
+        />
 
       <section className="mx-auto flex w-full max-w-6xl flex-1 min-h-0 flex-col gap-4">
         <div className="glass-card flex min-h-0 flex-1 p-4 md:p-5">
           <div className="mx-auto flex h-full w-full max-w-4xl flex-col gap-4">
-            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-              {visibleMessages.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-accent/20 bg-surface-secondary/30 p-5 text-sm text-content-secondary">
-                  <p className="text-base font-medium text-content">👋 Welcome to your AI Sales Engine</p>
-                  <p className="mt-2">Try one of the quick actions below:</p>
-                  <p>• Find new leads</p>
-                  <p>• Get best lead to contact</p>
-                  <p>• Generate outreach message</p>
-                </div>
-              ) : null}
-
-              {visibleMessages.map((message) => (
-                <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[90%] rounded-2xl px-4 py-3 text-[15px] leading-7 transition-all animate-fadeIn ${
-                      message.role === "assistant"
-                        ? "border border-accent/25 bg-accent-soft text-content"
-                        : "border border-accent/15 bg-surface-secondary/70 text-content"
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap">{message.content}</p>
-
-                    {message.role === "assistant" ? (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => useMessage(message.content)}
-                          className="glass-btn px-2.5 py-1 text-xs"
-                        >
-                          Use this
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setInput(message.content)}
-                          className="glass-btn px-2.5 py-1 text-xs"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => hideMessage(message.id)}
-                          className="rounded border border-danger/30 bg-danger-soft px-2.5 py-1 text-xs text-danger transition hover:bg-danger/20"
-                        >
-                          Ignore
-                        </button>
-                      </div>
-                    ) : null}
-
-                    {message.card ? (
-                      <div className="mt-3 rounded-xl border border-accent/15 bg-surface-secondary/50 p-3 text-sm">
-                        <p className="text-[13px] font-semibold text-warning">🔥 Best Lead: {message.card.leadName}</p>
-                        <p className="mt-1 text-xs text-content-secondary">Score: {message.card.score}%</p>
-                        <p className="text-xs text-content-secondary">Budget: {message.card.budget}</p>
-                        <div className="mt-2 text-xs text-content-secondary">
-                          <p className="font-semibold text-content">Pain:</p>
-                          {message.card.pain.map((item) => (
-                            <p key={item}>- {item}</p>
-                          ))}
-                        </div>
-                        <p className="mt-2 text-xs text-success">Suggestion: {message.card.suggestion}</p>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() => void sendCardMessage(message.content)}
-                            className="accent-btn px-2.5 py-1 text-xs"
-                          >
-                            Send Message
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => addMessage({ id: createId(), role: "assistant", content: `${message.card?.leadName} added to pipeline actions.` })}
-                            className="glass-btn px-2.5 py-1 text-xs"
-                          >
-                            Add to Pipeline
-                          </button>
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              ))}
-
-              {loading ? (
-                <div className="flex justify-start">
-                  <div className="inline-flex items-center gap-1 rounded-2xl border border-accent/25 bg-accent-soft px-4 py-3">
-                    <span className="h-2 w-2 animate-bounce rounded-full bg-accent" />
-                    <span className="h-2 w-2 animate-bounce rounded-full bg-accent [animation-delay:120ms]" />
-                    <span className="h-2 w-2 animate-bounce rounded-full bg-accent [animation-delay:240ms]" />
-                  </div>
-                </div>
-              ) : null}
-
-              <div ref={endRef} />
-            </div>
-          </div>
-        </div>
-
-        <div className="glass-card grid grid-cols-2 gap-2 p-3 sm:grid-cols-3 lg:grid-cols-5">
-          {QUICK_ACTIONS.map((action) => (
-            <button
-              key={action}
-              type="button"
-              onClick={() => handleQuickAction(action)}
-              className="glass-btn rounded-full px-3 py-1.5 text-xs text-content-secondary hover:text-content"
-            >
-              {action}
-            </button>
-          ))}
-        </div>
-
-        <div className="glass-card p-3">
-          <div className="flex items-end gap-2">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="glass-btn px-3 py-2 text-sm"
-            >
-              📎
-            </button>
-
-            <input ref={fileInputRef} type="file" accept={FILE_ACCEPT} onChange={handleFileUpload} className="hidden" />
-
-            <textarea
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && !event.shiftKey) {
-                  event.preventDefault();
-                  void sendMessage();
-                }
+            <AIMessageFeed
+              messages={visibleMessages}
+              loading={loading}
+              endRef={endRef}
+              onUseMessage={useMessage}
+              onEditMessage={setInput}
+              onHideMessage={hideMessage}
+              onSendCardMessage={(content) => {
+                void sendCardMessage(content);
               }}
-              rows={2}
-              placeholder="Ask something..."
-              className="glass-input min-h-[52px] flex-1 resize-none"
+              onAddToPipeline={(leadName) => {
+                addMessage({
+                  id: createId(),
+                  role: "assistant",
+                  content: `${leadName} added to pipeline actions.`,
+                });
+              }}
             />
-
-            <button
-              type="button"
-              onClick={() => void sendMessage()}
-              disabled={loading || !input.trim()}
-              className="accent-btn px-4 py-2 text-sm disabled:opacity-60"
-            >
-              Send
-            </button>
-          </div>
-
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            {attachedFile ? (
-              <span className="text-xs text-success">Attached: {attachedFile.name}</span>
-            ) : (
-              <span className="text-xs text-content-tertiary">Attach image, PDF, or CSV for deeper analysis.</span>
-            )}
-
-            <div className="ml-auto flex gap-2">
-              {TONES.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => setTone(option)}
-                  className={`rounded border px-2.5 py-1 text-[11px] uppercase tracking-wider ${
-                    tone === option ? "border-info/40 bg-info-soft text-info" : "border-accent/10 text-content-tertiary hover:border-accent/30"
-                  }`}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
+
+        <AIQuickActions actions={QUICK_ACTIONS} onAction={handleQuickAction} />
+
+        <AIComposer
+          input={input}
+          loading={loading}
+          attachedFile={attachedFile}
+          fileAccept={FILE_ACCEPT}
+          tones={TONES}
+          tone={tone}
+          fileInputRef={fileInputRef}
+          onFileUpload={handleFileUpload}
+          onInputChange={setInput}
+          onToneChange={setTone}
+          onSend={() => {
+            void sendMessage();
+          }}
+        />
       </section>
       </div>
     </div>

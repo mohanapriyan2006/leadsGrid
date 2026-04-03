@@ -12,8 +12,8 @@ const DashboardPage = lazy(() =>
 const LandingPage = lazy(() =>
   import("./views/LandingPage").then((module) => ({ default: module.LandingPage }))
 );
-const LeadsPage = lazy(() =>
-  import("./views/LeadsPage").then((module) => ({ default: module.LeadsPage }))
+const LeadsDiscoveryPage = lazy(() =>
+  import("./views/LeadsDiscoveryPage").then((module) => ({ default: module.LeadsDiscoveryPage }))
 );
 const ManageLeadsPage = lazy(() =>
   import("./views/ManageLeadsPage").then((module) => ({ default: module.ManageLeadsPage }))
@@ -60,8 +60,8 @@ export const router = createBrowserRouter([
         element: withSuspense(<DashboardPage />),
       },
       {
-        path: "leads",
-        element: withSuspense(<LeadsPage />),
+        path: "leads-discovery",
+        element: withSuspense(<LeadsDiscoveryPage />),
       },
       {
         path: "manage-leads",

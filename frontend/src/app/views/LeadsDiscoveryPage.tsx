@@ -10,9 +10,10 @@ import bgConnecting from "../../assets/bg-images/connecting-teams.svg";
 import { LEAD_INDUSTRIES, LEAD_SOURCES } from "../../features/leads/constants/leadsPageOptions";
 import { leadsPageCss } from "../../features/leads/constants/leadsPageStyles";
 import { AIIcon, SkeletonCard, SourceIcon, initials, leadScoreStyle, useRipple } from "../../features/leads/components/leadsPagePrimitives";
+import { PageBackground } from "../../components/ui/PageBackground";
 
 /* ─────────── MAIN PAGE ─────────── */
-export const LeadsPage = () => {
+export const LeadsDiscoveryPage = () => {
   const [searchTerm, setSearchTerm]   = useState("need crm automation");
   const [scoreMin, setScoreMin]       = useState(80);
   const [industry, setIndustry]       = useState("Software & SaaS");
@@ -69,11 +70,7 @@ export const LeadsPage = () => {
 
   return (
     <div className="leads-page">
-      <div className="leads-page-bg" aria-hidden="true">
-        <div className="bg-glow" />
-        <img src={bgConnecting} alt="" draggable={false} style={{ filter: 'drop-shadow(0 0 60px rgba(16, 185, 129, 0.80))' }} />
-        <div className="bg-fade" />
-      </div>
+      <PageBackground image={bgConnecting} tint="rgba(74, 250, 20 , 0.80)" />
       {/* ── Header ── */}
       <div className="lp-header">
         <div className="lp-header-left">

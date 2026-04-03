@@ -1,27 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { Avatar } from "../../components/ui/Avatar";
-import { SourceIcon } from "../../components/ui/SourceIcon";
 import { PageBackground } from "../../components/ui/PageBackground";
 import bgRemotely from "../../assets/bg-images/remotely.svg";
 import { useMessageGenerator } from "../../features/leads/hooks/useMessageGenerator";
 import { messageService } from "../../features/leads/services/messageService";
 import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLeads";
+import { MessageComposerPanel } from "../../features/messages/components/MessageComposerPanel";
+import { MessageLeadDetailsModal } from "../../features/messages/components/MessageLeadDetailsModal";
+import { MessageLeadPanel } from "../../features/messages/components/MessageLeadPanel";
+import {
+  CONTEXT_PREVIEW_LIMIT,
+} from "../../features/messages/constants/messages";
 import { MOCK_MESSAGES } from "../../features/messages/constants/mockMessages";
 import type { ToneType } from "../../features/common/types/ui";
 
-const TONES: ToneType[] = ["professional", "friendly", "direct"];
-
-const toUiSource = (source: string): "linkedin" | "twitter" | "reddit" => {
-  if (source === "linkedin" || source === "twitter" || source === "reddit") {
-    return source;
-  }
-  return "linkedin";
-};
-
 export const MessagesPage = () => {
-  const CONTEXT_PREVIEW_LIMIT = 140;
-
   // Use centralized leads for message generation
   const { leads: manageLeads, loading } = useCentralizedLeads();
 
@@ -136,189 +129,53 @@ export const MessagesPage = () => {
         </header>
 
         <div className="grid gap-4 xl:grid-cols-[1fr_1.4fr]">
-          <aside className="glass-card space-y-3 p-4">
-            <label className="text-xs tracking-[0.1em] text-content-tertiary" htmlFor="lead-select">SELECT LEAD</label>
-            <select
-              id="lead-select"
-              value={selectedLeadId || ''}
-              onChange={(event) => setSelectedLeadId(event.target.value)}
-              className="glass-input"
-              disabled={loading}
-            >
-              {loading ? (
-                <option className="bg-surface-tertiary text-content">Loading leads...</option>
-              ) : manageLeads.length === 0 ? (
-                <option className="bg-surface-tertiary text-content">No leads available</option>
-              ) : (
-                manageLeads.map((lead) => (
-                  <option key={lead.id} value={lead.id} className="bg-surface-tertiary text-content">
-                    {lead.name} - {lead.company}
-                  </option>
-                ))
-              )}
-            </select>
+          <MessageLeadPanel
+            contextPreviewLimit={CONTEXT_PREVIEW_LIMIT}
+            loading={loading}
+            leads={manageLeads}
+            selectedLeadId={selectedLeadId}
+            selectedLead={selectedLead}
+            leadContext={leadContext}
+            trimmedContent={trimmedContent}
+            contextExpanded={contextExpanded}
+            isGenerating={isGenerating}
+            onLeadChange={setSelectedLeadId}
+            onToggleContext={() => setContextExpanded((value) => !value)}
+            onOpenDetails={() => setDetailsOpen(true)}
+            onGenerate={() => {
+              void handleGenerate();
+            }}
+          />
 
-            {selectedLead ? (
-              <div className="glass-card-sm p-3">
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="text-xs tracking-[0.1em] text-content-tertiary">CLIENT CONTEXT</p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setDetailsOpen(true)}
-                      className="glass-btn px-2 py-1 text-[10px] uppercase tracking-[0.08em]"
-                    >
-                      Details
-                    </button>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <Avatar initials={selectedLead.name.slice(0, 2).toUpperCase()} size={40} />
-                  <div>
-                    <p className="text-sm font-semibold text-content">{selectedLead.name}</p>
-                    <p className="text-xs text-content-tertiary">{selectedLead.company}</p>
-                  </div>
-                </div>
-                <p className="mt-2 text-sm text-content-secondary">{contextExpanded ? leadContext : trimmedContent}</p>
-                {leadContext.length > CONTEXT_PREVIEW_LIMIT ? (
-                  <button
-                    type="button"
-                    onClick={() => setContextExpanded((value) => !value)}
-                    className="mt-1 text-xs font-semibold text-accent hover:text-accent-secondary"
-                  >
-                    {contextExpanded ? "View less" : "View more"}
-                  </button>
-                ) : null}
-                <div className="mt-2 space-y-1 text-xs">
-                  <p className="text-accent">Stage: {selectedLead.stage}</p>
-                  <p className="text-content-tertiary">Score: {selectedLead.score}/100</p>
-                </div>
-              </div>
-            ) : (
-              <div className="glass-card-sm p-3 text-center text-content-secondary">
-                No lead selected
-              </div>
-            )}
-
-            <button onClick={handleGenerate} disabled={isGenerating} className="accent-btn w-full text-xs font-bold tracking-[0.1em] disabled:opacity-60">
-              {isGenerating ? "GENERATING..." : "GENERATE DRAFT"}
-            </button>
-          </aside>
-
-          <section className="glass-card p-4">
-            <div className="mb-3 flex items-center gap-2">
-              {TONES.map((option) => (
-                <button
-                  key={option}
-                  onClick={() => setTone(option)}
-                  className={`rounded-glass-sm border px-3 py-1 text-xs uppercase tracking-[0.1em] transition-all duration-200 ${tone === option ? "border-accent/50 bg-accent-soft text-accent shadow-glow" : "border-accent/10 text-content-tertiary hover:border-accent/30 hover:text-content-secondary"}`}
-                >
-                  {option}
-                </button>
-              ))}
-              <div className="ml-auto text-xs text-content-tertiary">{generatedMessage ? <span className="badge-accent">Confidence {generatedMessage.confidence}%</span> : "Draft not generated"}</div>
-            </div>
-
-            <div className="mb-3 space-y-2">
-              <label className="text-xs tracking-[0.1em] text-content-tertiary" htmlFor="email-to">SEND TO</label>
-              <input
-                id="email-to"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="Enter client email"
-                className="glass-input"
-              />
-              <label className="text-xs tracking-[0.1em] text-content-tertiary" htmlFor="email-subject">SUBJECT</label>
-              <input
-                id="email-subject"
-                value={subject}
-                onChange={(event) => setSubject(event.target.value)}
-                placeholder="Subject"
-                className="glass-input"
-              />
-              {!email ? (
-                <p className="text-xs text-warning">No email found for this lead.</p>
-              ) : null}
-            </div>
-
-            <textarea
-              value={localDraft}
-              onChange={(event) => setLocalDraft(event.target.value)}
-              className="glass-input min-h-[360px] resize-y p-3 text-sm leading-7"
-            />
-
-            <div className="mt-3 flex items-center justify-between">
-              <p className="text-xs text-content-tertiary">Optimized for {selectedLead?.name.toUpperCase() || 'LEAD'}</p>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleSendEmail}
-                  disabled={sending || !email || !localDraft.trim()}
-                  className="rounded-glass-sm bg-success px-4 py-1.5 text-xs font-semibold tracking-[0.08em] text-content-inverse shadow-[0_0_16px_rgba(16,185,129,0.3)] transition hover:shadow-[0_0_24px_rgba(16,185,129,0.5)] disabled:opacity-60"
-                >
-                  {sending ? "SENDING..." : sent ? "SENT" : "SEND EMAIL"}
-                </button>
-                <button onClick={handleCopy} className="rounded-glass-sm border border-success/30 bg-success-soft px-4 py-1.5 text-xs font-semibold tracking-[0.08em] text-success transition hover:border-success/50 hover:shadow-[0_0_16px_rgba(16,185,129,0.2)]">
-                  {copied ? "COPIED" : "COPY"}
-                </button>
-              </div>
-            </div>
-            {sendError ? <p className="mt-2 text-xs text-danger">{sendError}</p> : null}
-          </section>
+          <MessageComposerPanel
+            tone={tone}
+            confidence={generatedMessage?.confidence ?? null}
+            email={email}
+            subject={subject}
+            localDraft={localDraft}
+            sending={sending}
+            sent={sent}
+            copied={copied}
+            sendError={sendError}
+            selectedLeadName={selectedLead?.name}
+            onToneChange={setTone}
+            onEmailChange={setEmail}
+            onSubjectChange={setSubject}
+            onDraftChange={setLocalDraft}
+            onSend={() => {
+              void handleSendEmail();
+            }}
+            onCopy={() => {
+              void handleCopy();
+            }}
+          />
         </div>
 
-        {detailsOpen && selectedLead ? (
-          <div
-            className="fixed inset-0 z-[110] flex items-center justify-center bg-surface/80 backdrop-blur-sm px-4"
-            onClick={() => setDetailsOpen(false)}
-          >
-            <div
-              className="glass-card-lg max-h-[80vh] w-full max-w-lg overflow-y-auto p-5"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-lg font-semibold text-content">{selectedLead.name}</h3>
-                  <p className="text-sm text-content-secondary">{selectedLead.company}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setDetailsOpen(false)}
-                  className="glass-btn px-2 py-1 text-xs"
-                >
-                  Close
-                </button>
-              </div>
-
-              <div className="space-y-2 text-sm text-content-secondary">
-                <p>
-                  <span className="text-content">Email:</span> {selectedLead.email ?? "N/A"}
-                </p>
-                <p>
-                  <span className="text-content">Phone:</span> {selectedLead.phone ?? "N/A"}
-                </p>
-                <p>
-                  <span className="text-content">Source:</span> {selectedLead.source}
-                </p>
-                <p>
-                  <span className="text-content">Stage:</span> {selectedLead.stage}
-                </p>
-                <p>
-                  <span className="text-content">Score:</span> {selectedLead.score}/100
-                </p>
-                <p>
-                  <span className="text-content">Budget:</span> ${selectedLead.budget_estimate.toLocaleString()}
-                </p>
-              </div>
-
-              {selectedLead.notes && (
-                <div className="glass-card-sm mt-4 p-3">
-                  <p className="text-xs uppercase tracking-[0.08em] text-content-tertiary">Notes</p>
-                  <p className="mt-2 text-sm leading-6 text-content">{selectedLead.notes}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        ) : null}
+        <MessageLeadDetailsModal
+          open={detailsOpen}
+          lead={selectedLead}
+          onClose={() => setDetailsOpen(false)}
+        />
       </div>
     </div>
   );

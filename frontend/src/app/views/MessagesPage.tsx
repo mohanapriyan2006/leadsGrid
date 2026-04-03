@@ -2,20 +2,30 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Avatar } from "../../components/ui/Avatar";
 import { SourceIcon } from "../../components/ui/SourceIcon";
-import { MOCK_LEADS } from "../../features/leads/constants/mockLeads";
 import { PageBackground } from "../../components/ui/PageBackground";
 import bgRemotely from "../../assets/bg-images/remotely.svg";
 import { useMessageGenerator } from "../../features/leads/hooks/useMessageGenerator";
 import { messageService } from "../../features/leads/services/messageService";
-import { useLeadStore } from "../../store/useLeadStore";
+import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLeads";
 import { MOCK_MESSAGES } from "../../features/messages/constants/mockMessages";
 import type { ToneType } from "../../features/common/types/ui";
 
 const TONES: ToneType[] = ["professional", "friendly", "direct"];
 
+const toUiSource = (source: string): "linkedin" | "twitter" | "reddit" => {
+  if (source === "linkedin" || source === "twitter" || source === "reddit") {
+    return source;
+  }
+  return "linkedin";
+};
+
 export const MessagesPage = () => {
   const CONTEXT_PREVIEW_LIMIT = 140;
-  const [selectedLeadId, setSelectedLeadId] = useState<string>(MOCK_LEADS[0].id);
+  
+  // Use centralized leads for message generation
+  const { leads: manageLeads, loading } = useCentralizedLeads();
+  
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [tone, setTone] = useState<ToneType>("professional");
   const [localDraft, setLocalDraft] = useState(MOCK_MESSAGES[0].content);
   const [email, setEmail] = useState("");
@@ -27,20 +37,25 @@ export const MessagesPage = () => {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [contextExpanded, setContextExpanded] = useState(false);
 
-  const { leads } = useLeadStore();
   const { generateMessage, generatedMessage, isGenerating } = useMessageGenerator();
 
-  const leadPool = leads.length ? leads : MOCK_LEADS;
+  // Auto-select first lead if none selected
+  useEffect(() => {
+    if (!selectedLeadId && manageLeads.length > 0) {
+      setSelectedLeadId(manageLeads[0].id);
+    }
+  }, [selectedLeadId, manageLeads]);
+
   const selectedLead = useMemo(
-    () => leadPool.find((lead) => lead.id === selectedLeadId) ?? leadPool[0],
-    [leadPool, selectedLeadId]
+    () => manageLeads.find((lead) => lead.id === selectedLeadId) ?? null,
+    [manageLeads, selectedLeadId]
   );
 
   const generateSubject = () => {
     if (!selectedLead) {
       return "Regarding your project";
     }
-    return `Regarding your ${selectedLead.title || "project"}`;
+    return `Regarding ${selectedLead.company} - Partnership Opportunity`;
   };
 
   useEffect(() => {
@@ -55,10 +70,11 @@ export const MessagesPage = () => {
     setDetailsOpen(false);
   }, [selectedLead]);
 
+  const leadContext = selectedLead?.notes || `Lead from ${selectedLead?.company || 'Unknown'}`;
   const trimmedContent =
-    selectedLead.content.length > CONTEXT_PREVIEW_LIMIT
-      ? `${selectedLead.content.slice(0, CONTEXT_PREVIEW_LIMIT).trim()}...`
-      : selectedLead.content;
+    leadContext.length > CONTEXT_PREVIEW_LIMIT
+      ? `${leadContext.slice(0, CONTEXT_PREVIEW_LIMIT).trim()}...`
+      : leadContext;
 
   const handleGenerate = async () => {
     if (!selectedLead) {
@@ -66,14 +82,15 @@ export const MessagesPage = () => {
     }
     try {
       const result = await generateMessage({
-        lead_context: `${selectedLead.summary}\n${selectedLead.content}`,
+        lead_context: `Company: ${selectedLead.company}\nContact: ${selectedLead.name}\nNotes: ${selectedLead.notes || 'N/A'}`,
         tone,
         max_words: 130,
       });
       setLocalDraft(result.message);
       setSubject(generateSubject());
     } catch {
-      setLocalDraft(`Hi ${selectedLead.author.split(" ")[0]},\n\nI noticed your recent signal about ${selectedLead.content.toLowerCase()}\n\nPitchPilot helps teams move from stale outreach to live intent-led execution.\n\nOpen to a quick 10-minute walkthrough this week?\n\nBest,\nAlex`);
+      const firstName = selectedLead.name.split(" ")[0];
+      setLocalDraft(`Hi ${firstName},\n\nI wanted to reach out regarding ${selectedLead.company}.\n\nPitchPilot helps teams move from stale outreach to live intent-led execution.\n\nOpen to a quick 10-minute walkthrough this week?\n\nBest,\nAlex`);
       setSubject(generateSubject());
     }
   };
@@ -122,50 +139,66 @@ export const MessagesPage = () => {
           <label className="text-xs tracking-[0.1em] text-content-tertiary" htmlFor="lead-select">SELECT LEAD</label>
           <select
             id="lead-select"
-            value={selectedLead.id}
+            value={selectedLeadId || ''}
             onChange={(event) => setSelectedLeadId(event.target.value)}
             className="glass-input"
+            disabled={loading}
           >
-            {leadPool.map((lead) => (
-              <option key={lead.id} value={lead.id} className="bg-surface-tertiary text-content">
-                {lead.author}
-              </option>
-            ))}
+            {loading ? (
+              <option className="bg-surface-tertiary text-content">Loading leads...</option>
+            ) : manageLeads.length === 0 ? (
+              <option className="bg-surface-tertiary text-content">No leads available</option>
+            ) : (
+              manageLeads.map((lead) => (
+                <option key={lead.id} value={lead.id} className="bg-surface-tertiary text-content">
+                  {lead.name} - {lead.company}
+                </option>
+              ))
+            )}
           </select>
 
-          <div className="glass-card-sm p-3">
-            <div className="mb-2 flex items-center justify-between">
-              <p className="text-xs tracking-[0.1em] text-content-tertiary">CLIENT CONTEXT</p>
-              <div className="flex items-center gap-2">
-                <SourceIcon source={selectedLead.source} />
+          {selectedLead ? (
+            <div className="glass-card-sm p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-xs tracking-[0.1em] text-content-tertiary">CLIENT CONTEXT</p>
+                <div className="flex items-center gap-2">
+                  <SourceIcon source={toUiSource(selectedLead.source)} />
+                  <button
+                    type="button"
+                    onClick={() => setDetailsOpen(true)}
+                    className="glass-btn px-2 py-1 text-[10px] uppercase tracking-[0.08em]"
+                  >
+                    Details
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Avatar initials={selectedLead.name.slice(0, 2).toUpperCase()} size={40} />
+                <div>
+                  <p className="text-sm font-semibold text-content">{selectedLead.name}</p>
+                  <p className="text-xs text-content-tertiary">{selectedLead.company}</p>
+                </div>
+              </div>
+              <p className="mt-2 text-sm text-content-secondary">{contextExpanded ? leadContext : trimmedContent}</p>
+              {leadContext.length > CONTEXT_PREVIEW_LIMIT ? (
                 <button
                   type="button"
-                  onClick={() => setDetailsOpen(true)}
-                  className="glass-btn px-2 py-1 text-[10px] uppercase tracking-[0.08em]"
+                  onClick={() => setContextExpanded((value) => !value)}
+                  className="mt-1 text-xs font-semibold text-accent hover:text-accent-secondary"
                 >
-                  Details
+                  {contextExpanded ? "View less" : "View more"}
                 </button>
+              ) : null}
+              <div className="mt-2 space-y-1 text-xs">
+                <p className="text-accent">Stage: {selectedLead.stage}</p>
+                <p className="text-content-tertiary">Score: {selectedLead.score}/100</p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <Avatar initials={selectedLead.avatar ?? selectedLead.author.slice(0, 2).toUpperCase()} size={40} />
-              <div>
-                <p className="text-sm font-semibold text-content">{selectedLead.author}</p>
-                <p className="text-xs text-content-tertiary">{selectedLead.title ?? "Lead"}</p>
-              </div>
+          ) : (
+            <div className="glass-card-sm p-3 text-center text-content-secondary">
+              No lead selected
             </div>
-            <p className="mt-2 text-sm text-content-secondary">{contextExpanded ? selectedLead.content : trimmedContent}</p>
-            {selectedLead.content.length > CONTEXT_PREVIEW_LIMIT ? (
-              <button
-                type="button"
-                onClick={() => setContextExpanded((value) => !value)}
-                className="mt-1 text-xs font-semibold text-accent hover:text-accent-secondary"
-              >
-                {contextExpanded ? "View less" : "View more"}
-              </button>
-            ) : null}
-            <p className="mt-2 text-xs text-accent">{selectedLead.summary}</p>
-          </div>
+          )}
 
           <button onClick={handleGenerate} disabled={isGenerating} className="accent-btn w-full text-xs font-bold tracking-[0.1em] disabled:opacity-60">
             {isGenerating ? "GENERATING..." : "GENERATE DRAFT"}
@@ -215,7 +248,7 @@ export const MessagesPage = () => {
           />
 
           <div className="mt-3 flex items-center justify-between">
-            <p className="text-xs text-content-tertiary">Optimized for {selectedLead.author.toUpperCase()}</p>
+            <p className="text-xs text-content-tertiary">Optimized for {selectedLead?.name.toUpperCase() || 'LEAD'}</p>
             <div className="flex items-center gap-2">
               <button
                 onClick={handleSendEmail}
@@ -233,7 +266,7 @@ export const MessagesPage = () => {
         </section>
       </div>
 
-      {detailsOpen ? (
+      {detailsOpen && selectedLead ? (
         <div
           className="fixed inset-0 z-[110] flex items-center justify-center bg-surface/80 backdrop-blur-sm px-4"
           onClick={() => setDetailsOpen(false)}
@@ -244,8 +277,8 @@ export const MessagesPage = () => {
           >
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-lg font-semibold text-content">{selectedLead.author}</h3>
-                <p className="text-sm text-content-secondary">{selectedLead.title ?? "Lead"}</p>
+                <h3 className="text-lg font-semibold text-content">{selectedLead.name}</h3>
+                <p className="text-sm text-content-secondary">{selectedLead.company}</p>
               </div>
               <button
                 type="button"
@@ -261,17 +294,28 @@ export const MessagesPage = () => {
                 <span className="text-content">Email:</span> {selectedLead.email ?? "N/A"}
               </p>
               <p>
+                <span className="text-content">Phone:</span> {selectedLead.phone ?? "N/A"}
+              </p>
+              <p>
                 <span className="text-content">Source:</span> {selectedLead.source}
               </p>
               <p>
-                <span className="text-content">Summary:</span> {selectedLead.summary}
+                <span className="text-content">Stage:</span> {selectedLead.stage}
+              </p>
+              <p>
+                <span className="text-content">Score:</span> {selectedLead.score}/100
+              </p>
+              <p>
+                <span className="text-content">Budget:</span> ${selectedLead.budget_estimate.toLocaleString()}
               </p>
             </div>
 
-            <div className="glass-card-sm mt-4 p-3">
-              <p className="text-xs uppercase tracking-[0.08em] text-content-tertiary">Full Context</p>
-              <p className="mt-2 text-sm leading-6 text-content">{selectedLead.content}</p>
-            </div>
+            {selectedLead.notes && (
+              <div className="glass-card-sm mt-4 p-3">
+                <p className="text-xs uppercase tracking-[0.08em] text-content-tertiary">Notes</p>
+                <p className="mt-2 text-sm leading-6 text-content">{selectedLead.notes}</p>
+              </div>
+            )}
           </div>
         </div>
       ) : null}

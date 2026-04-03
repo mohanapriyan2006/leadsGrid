@@ -1,23 +1,57 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
 import { AnimatePresence, motion } from "framer-motion";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
-  arrayMove,
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useDroppable } from "@dnd-kit/core";
 import { ScoreBadge } from "../../components/ui/ScoreBadge";
 import { StatusBadge } from "../../components/ui/StatusBadge";
-import { MOCK_DEALS } from "../../features/crm/constants/mockDeals";
 import { ConfirmDialog } from "../../features/leads/components/ConfirmDialog";
+import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLeads";
+import { leadService } from "../../features/leads/services/leadService";
 import { PageBackground } from "../../components/ui/PageBackground";
 import bgConnecting from "../../assets/bg-images/connecting-teams.svg";
 import type { DealStatus } from "../../features/common/types/ui";
+import type { ManageLeadStage } from "../../features/leads/types/manageLead";
 
-type Deal = (typeof MOCK_DEALS)[number];
+type CRMStage = Extract<ManageLeadStage, "NEGOTIATION" | "CONTRACTED" | "IN_PROGRESS" | "CLOSED">;
+
+type Deal = {
+  id: string;
+  name: string;
+  company: string;
+  status: DealStatus;
+  score: number;
+  lastAction: string;
+  daysInStage: number;
+  value: string;
+  email?: string | null;
+  phone?: string | null;
+};
+
+const CRM_STAGES: CRMStage[] = ["NEGOTIATION", "CONTRACTED", "IN_PROGRESS", "CLOSED"];
+
+const STAGE_TO_STATUS: Record<CRMStage, DealStatus> = {
+  NEGOTIATION: "negotiation",
+  CONTRACTED: "contracted",
+  IN_PROGRESS: "in-progress",
+  CLOSED: "closed",
+};
+
+const STATUS_TO_STAGE: Record<DealStatus, CRMStage> = {
+  negotiation: "NEGOTIATION",
+  contracted: "CONTRACTED",
+  "in-progress": "IN_PROGRESS",
+  closed: "CLOSED",
+};
+
+const parseCurrency = (value: string) => Number(value.replace(/[$,]/g, "") || "0");
+const formatCurrency = (value: number) => `$${value.toLocaleString()}`;
 
 type DealModalProps = {
   deal: Deal | null;
@@ -117,9 +151,10 @@ const DealModal = ({
 
 export const CRMPage = () => {
   const [view, setView] = useState<"table" | "kanban">("table");
-  const [deals, setDeals] = useState<Deal[]>(MOCK_DEALS);
+  const { leads: centralizedLeads, loading } = useCentralizedLeads();
+  const [deals, setDeals] = useState<Deal[]>([]);
   const [isAdding, setIsAdding] = useState(false);
-  
+
   // Modal states
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [modalPosition, setModalPosition] = useState<{ x: number; y: number } | null>(null);
@@ -130,7 +165,7 @@ export const CRMPage = () => {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  
+
   const [newDeal, setNewDeal] = useState<Omit<Deal, "id">>({
     name: "",
     company: "",
@@ -140,6 +175,30 @@ export const CRMPage = () => {
     daysInStage: 0,
     value: "$0",
   });
+
+  useEffect(() => {
+    const nextDeals = centralizedLeads
+      .filter((lead) => CRM_STAGES.includes(lead.stage as CRMStage))
+      .map((lead) => {
+        const updatedAt = new Date(lead.updated_at || lead.created_at || Date.now());
+        const daysInStage = Math.max(0, Math.floor((Date.now() - updatedAt.getTime()) / (1000 * 60 * 60 * 24)));
+
+        return {
+          id: lead.id,
+          name: lead.name,
+          company: lead.company,
+          status: STAGE_TO_STATUS[lead.stage as CRMStage],
+          score: lead.score,
+          lastAction: lead.last_activity_at ? new Date(lead.last_activity_at).toLocaleDateString() : "No recent activity",
+          daysInStage,
+          value: formatCurrency(lead.budget_estimate),
+          email: lead.email,
+          phone: lead.phone,
+        } satisfies Deal;
+      });
+
+    setDeals(nextDeals);
+  }, [centralizedLeads]);
 
   const activeDeal = useMemo(() => {
     if (hoveredId) {
@@ -175,22 +234,24 @@ export const CRMPage = () => {
     setEditOpen(true);
   };
 
-  const handleDelete = (dealId: string) => {
-    setDeals((prev) => prev.filter((d) => d.id !== dealId));
+  const handleDelete = async (dealId: string) => {
+    await leadService.softDeleteManageLead(dealId);
     setConfirmDeleteId(null);
     setFeedback("Deal deleted and moved to recycle bin");
   };
 
-  const handleSaveEdit = (updated: Omit<Deal, "id">) => {
+  const handleSaveEdit = async (updated: Omit<Deal, "id">) => {
     if (!selectedDealId) return;
     if (!window.confirm("Are you sure you want to update this deal?")) return;
-    setDeals((prev) =>
-      prev.map((deal) =>
-        deal.id === selectedDealId
-          ? { ...deal, ...updated, id: deal.id }
-          : deal
-      )
-    );
+
+    await leadService.updateManageLead(selectedDealId, {
+      name: updated.name,
+      company: updated.company,
+      stage: STATUS_TO_STAGE[updated.status],
+      score: updated.score,
+      budget_estimate: parseCurrency(updated.value),
+    });
+
     setEditOpen(false);
     setFeedback("Deal updated successfully");
   };
@@ -217,13 +278,17 @@ export const CRMPage = () => {
     [deals],
   );
 
-  const updateStatus = (id: string, status: DealStatus) => {
+  const updateStatus = async (id: string, status: DealStatus) => {
     setDeals((current) =>
       current.map((deal) => (deal.id === id ? { ...deal, status } : deal)),
     );
+
+    await leadService.updateManageLead(id, {
+      stage: STATUS_TO_STAGE[status],
+    });
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     setIsDragging(false);
     const { active, over } = event;
     if (!over) return;
@@ -232,58 +297,30 @@ export const CRMPage = () => {
     const overId = over.id as string;
     if (activeId === overId) return;
 
-    setDeals((prev) => {
-      const statuses: DealStatus[] = ["negotiation", "contracted", "in-progress", "closed"];
-      const activeIndex = prev.findIndex((deal) => deal.id === activeId);
-      if (activeIndex === -1) return prev;
+    const statuses: DealStatus[] = ["negotiation", "contracted", "in-progress", "closed"];
 
-      const activeDeal = prev[activeIndex];
+    if (statuses.includes(overId as DealStatus)) {
+      await updateStatus(activeId, overId as DealStatus);
+      return;
+    }
 
-      if (statuses.includes(overId as DealStatus)) {
-        const targetStatus = overId as DealStatus;
-        return prev.map((deal) =>
-          deal.id === activeId ? { ...deal, status: targetStatus } : deal,
-        );
-      }
+    const overDeal = deals.find((deal) => deal.id === overId);
+    if (!overDeal) return;
 
-      const overIndex = prev.findIndex((deal) => deal.id === overId);
-      if (overIndex === -1) return prev;
-      const overDeal = prev[overIndex];
-
-      if (activeDeal.status === overDeal.status) {
-        return arrayMove(prev, activeIndex, overIndex);
-      }
-
-      const next = [...prev];
-      const [moved] = next.splice(activeIndex, 1);
-      const targetIndex = next.findIndex((deal) => deal.id === overId);
-      const updatedMoved = { ...moved, status: overDeal.status };
-      if (targetIndex === -1) {
-        next.push(updatedMoved);
-      } else {
-        next.splice(targetIndex, 0, updatedMoved);
-      }
-      return next;
-    });
+    await updateStatus(activeId, overDeal.status);
   };
 
-  const handleAddDeal = () => {
+  const handleAddDeal = async () => {
     if (!newDeal.name.trim() || !newDeal.company.trim()) return;
 
-    const id = `deal-${Date.now()}`;
-    const valueNumber = Number(
-      String(newDeal.value).replace(/[$,]/g, "") || "0",
-    );
-    const formattedValue = `$${valueNumber.toLocaleString()}`;
-
-    setDeals((prev) => [
-      {
-        id,
-        ...newDeal,
-        value: formattedValue,
-      },
-      ...prev,
-    ]);
+    await leadService.createManageLead({
+      name: newDeal.name,
+      company: newDeal.company,
+      email: undefined,
+      phone: undefined,
+      stage: STATUS_TO_STAGE[newDeal.status],
+      budget_estimate: parseCurrency(newDeal.value),
+    });
 
     setNewDeal({
       name: "",
@@ -395,10 +432,10 @@ export const CRMPage = () => {
                 }
                 className="glass-input px-3 py-2 text-xs"
               >
-                <option value="contacted" className="bg-surface-tertiary">contacted</option>
-                <option value="replied" className="bg-surface-tertiary">replied</option>
-                <option value="negotiation" className="bg-surface-tertiary">negotiation</option>
-                <option value="closed" className="bg-surface-tertiary">closed</option>
+                <option value="negotiation">negotiation</option>
+                <option value="contracted">contracted</option>
+                <option value="in-progress">in-progress</option>
+                <option value="closed">closed</option>
               </select>
               <div className="flex items-center gap-2">
                 <input
@@ -528,7 +565,9 @@ export const CRMPage = () => {
       ) : null}
 
       {/* main content */}
-      {view === "table" ? (
+      {loading ? (
+        <div className="glass-card p-8 text-center text-content-secondary">Loading CRM deals...</div>
+      ) : view === "table" ? (
         <div className="glass-card overflow-hidden">
           <div className="grid grid-cols-[2fr_1.5fr_1fr_90px_1fr_220px] border-b border-accent/10 bg-gradient-to-r from-accent/5 via-transparent to-transparent px-4 py-3 text-[10px] uppercase tracking-[0.18em] text-content-tertiary">
             <span>Client</span>
@@ -553,7 +592,7 @@ export const CRMPage = () => {
                   <select
                     value={deal.status}
                     onChange={(event) =>
-                      updateStatus(
+                      void updateStatus(
                         deal.id,
                         event.target.value as DealStatus,
                       )
@@ -584,7 +623,9 @@ export const CRMPage = () => {
         <DndContext 
           onDragStart={() => setIsDragging(true)}
           onDragCancel={() => setIsDragging(false)}
-          onDragEnd={handleDragEnd}
+          onDragEnd={(event) => {
+            void handleDragEnd(event);
+          }}
         >
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             {statusColumns.map((status) => {
@@ -742,7 +783,7 @@ export const CRMPage = () => {
         onCancel={() => setConfirmDeleteId(null)}
         onConfirm={() => {
           if (!confirmDeleteId) return;
-          handleDelete(confirmDeleteId);
+          void handleDelete(confirmDeleteId);
         }}
       />
 

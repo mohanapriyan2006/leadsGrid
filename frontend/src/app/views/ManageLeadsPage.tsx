@@ -9,6 +9,7 @@ import { ConfirmDialog } from "../../features/leads/components/ConfirmDialog";
 import { EditLeadModal } from "../../features/leads/components/EditLeadModal";
 import { LeadModal } from "../../features/leads/components/LeadModal";
 import { leadService } from "../../features/leads/services/leadService";
+import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLeads";
 import type {
   CSVImportResult,
   ManageLead,
@@ -40,6 +41,9 @@ const NEXT_STAGE: Record<ManageLeadStage, ManageLeadStage | null> = {
   CONTACTED: "RESPONDED",
   RESPONDED: null,
   NEGOTIATION: null,
+  CONTRACTED: null,
+  IN_PROGRESS: null,
+  CLOSED: null,
 };
 
 const APP_IMPORT_FIELDS = [
@@ -53,6 +57,14 @@ const APP_IMPORT_FIELDS = [
   "urgency",
   "source",
   "last_activity_at",
+  // CSV fields
+  "category",
+  "rating",
+  "review_count",
+  "address",
+  "website_url",
+  "open_now",
+  "google_maps_url",
 ] as const;
 
 const guessMapping = (header: string): string => {
@@ -61,7 +73,7 @@ const guessMapping = (header: string): string => {
     name: "name",
     lead_name: "name",
     client_name: "name",
-    business_name: "company",
+    business_name: "name",
     company: "company",
     company_name: "company",
     mail: "email",
@@ -82,6 +94,20 @@ const guessMapping = (header: string): string => {
     source: "source",
     last_activity: "last_activity_at",
     last_activity_at: "last_activity_at",
+    // CSV fields
+    category: "category",
+    rating: "rating",
+    review_count: "review_count",
+    reviews: "review_count",
+    address: "address",
+    website_url: "website_url",
+    website: "website_url",
+    url: "website_url",
+    open_now: "open_now",
+    open: "open_now",
+    google_maps_url: "google_maps_url",
+    maps_url: "google_maps_url",
+    google_maps: "google_maps_url",
   };
   return aliases[normalized] ?? "";
 };
@@ -191,19 +217,18 @@ const StageColumn = ({ stage, leads, onHoverStart, onHoverEnd, onAddLead, upload
 export const ManageLeadsPage = () => {
   const navigate = useNavigate();
   const {
-    manageLeads,
     selectedManageLeadId,
     manageLeadView,
-    setManageLeads,
     setSelectedManageLeadId,
     setManageLeadView,
   } = useLeadStore();
 
+  // Use centralized leads hook for real-time data
+  const { leads: manageLeads, loading, error: hookError } = useCentralizedLeads();
+
   const [search, setSearch] = useState("");
   const [onlyHot, setOnlyHot] = useState(false);
   const [insights, setInsights] = useState<ManageLeadInsights | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -233,53 +258,36 @@ export const ManageLeadsPage = () => {
 
   const debouncedSearch = useDebouncedValue(search, 300);
 
-  const loadLeads = async (query: string, hotOnly: boolean) => {
-    const list = await leadService.listManageLeads({
-      query: query || undefined,
-      only_hot: hotOnly,
-    });
-    setManageLeads(list);
-    if (!selectedManageLeadId && list.length > 0) {
-      setSelectedManageLeadId(list[0].id);
+  const loadInsights = async () => {
+    try {
+      const insightsPayload = await leadService.getManageLeadInsights();
+      setInsights(insightsPayload);
+    } catch (err) {
+      console.error("Failed to load insights:", err);
     }
   };
 
-  const loadInsights = async () => {
-    const insightsPayload = await leadService.getManageLeadInsights();
-    setInsights(insightsPayload);
-  };
-
+  // Load insights on mount and when leads change
   useEffect(() => {
-    const run = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        setErrorDetails(null);
-        await Promise.all([loadLeads("", onlyHot), loadInsights()]);
-        setInitialized(true);
-      } catch (err) {
-        console.error("ManageLeads load error:", err);
-        setError("Unable to load manage leads right now.");
-        setErrorDetails(err instanceof Error ? err.message : String(err));
-      } finally {
-        setLoading(false);
-      }
-    };
-    void run();
-  }, []);
+    if (!loading && manageLeads.length > 0) {
+      void loadInsights();
+    }
+  }, [loading, manageLeads.length]);
 
+  // Set error from hook
   useEffect(() => {
-    if (!initialized) return;
-    const run = async () => {
-      try {
-        setError(null);
-        await loadLeads(debouncedSearch, onlyHot);
-      } catch {
-        setError("Unable to refresh leads right now.");
-      }
-    };
-    void run();
-  }, [debouncedSearch, onlyHot, initialized]);
+    if (hookError) {
+      setError("Unable to load manage leads right now.");
+      setErrorDetails(hookError.message);
+    }
+  }, [hookError]);
+
+  // Auto-select first lead if none selected
+  useEffect(() => {
+    if (!selectedManageLeadId && manageLeads.length > 0) {
+      setSelectedManageLeadId(manageLeads[0].id);
+    }
+  }, [manageLeads, selectedManageLeadId, setSelectedManageLeadId]);
 
   useEffect(() => {
     setHoveredId(null);
@@ -289,18 +297,28 @@ export const ManageLeadsPage = () => {
   }, [manageLeadView]);
 
   const filteredLeads = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return manageLeads;
+    let filtered = manageLeads;
 
-    return manageLeads.filter((lead) => {
-      return (
-        lead.name.toLowerCase().includes(q) ||
-        lead.company.toLowerCase().includes(q) ||
-        lead.email?.toLowerCase().includes(q) ||
-        lead.phone?.toLowerCase().includes(q)
-      );
-    });
-  }, [manageLeads, search]);
+    // Apply search filter
+    const q = search.trim().toLowerCase();
+    if (q) {
+      filtered = filtered.filter((lead) => {
+        return (
+          lead.name.toLowerCase().includes(q) ||
+          lead.company.toLowerCase().includes(q) ||
+          lead.email?.toLowerCase().includes(q) ||
+          lead.phone?.toLowerCase().includes(q)
+        );
+      });
+    }
+
+    // Apply hot filter
+    if (onlyHot) {
+      filtered = filtered.filter(lead => lead.score >= 80);
+    }
+
+    return filtered;
+  }, [manageLeads, search, onlyHot]);
 
   const grouped = useMemo(
     () =>
@@ -327,7 +345,7 @@ export const ManageLeadsPage = () => {
     await leadService.createManageLead(newLead);
     setNewLead({ name: "", company: "", email: "", phone: "", stage: "NEW", budget_estimate: 0 });
     setShowAddRow(false);
-    await Promise.all([loadLeads(debouncedSearch, onlyHot), loadInsights()]);
+    await loadInsights();
   };
 
   const handleFilePick = async (file: File) => {
@@ -347,7 +365,7 @@ export const ManageLeadsPage = () => {
     if (!csvFile) return;
     const result = await leadService.importManageLeadCSV(csvFile, csvMapping);
     setCsvResult(result);
-    await Promise.all([loadLeads(debouncedSearch, onlyHot), loadInsights()]);
+    await loadInsights();
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -362,19 +380,19 @@ export const ManageLeadsPage = () => {
     if (!targetStage || !source || source.stage === targetStage) return;
 
     await leadService.updateManageLead(source.id, { stage: targetStage });
-    await Promise.all([loadLeads(debouncedSearch, onlyHot), loadInsights()]);
+    await loadInsights();
   };
 
   const runAction = async (leadId: string, actionType: ManageLeadActionType, targetStage?: ManageLeadStage) => {
     await leadService.manageLeadAction(leadId, { action_type: actionType, target_stage: targetStage });
-    await Promise.all([loadLeads(debouncedSearch, onlyHot), loadInsights()]);
+    await loadInsights();
   };
 
   const moveNext = async (lead: ManageLead) => {
     const nextStage = NEXT_STAGE[lead.stage];
     if (!nextStage) return;
     await leadService.updateManageLead(lead.id, { stage: nextStage });
-    await Promise.all([loadLeads(debouncedSearch, onlyHot), loadInsights()]);
+    await loadInsights();
     setFeedback(`Moved ${lead.name} to ${nextStage}`);
   };
 
@@ -404,7 +422,7 @@ export const ManageLeadsPage = () => {
 
   const moveToNEGOTIATION = async (lead: ManageLead) => {
     await leadService.updateManageLead(lead.id, { stage: "NEGOTIATION" });
-    await Promise.all([loadLeads(debouncedSearch, onlyHot), loadInsights()]);
+    await loadInsights();
     setFeedback(`Moved ${lead.name} to NEGOTIATION and sent to CRM`);
     navigate("/crm", { state: { lead } });
   };
@@ -668,9 +686,17 @@ export const ManageLeadsPage = () => {
               stage: updated.stage,
               budget_estimate: updated.budget_estimate,
               notes: updated.notes || undefined,
+              // CSV fields
+              category: updated.category,
+              rating: updated.rating,
+              review_count: updated.review_count,
+              address: updated.address,
+              website_url: updated.website_url,
+              open_now: updated.open_now,
+              google_maps_url: updated.google_maps_url,
             })
             .then(async () => {
-              await Promise.all([loadLeads(debouncedSearch, onlyHot), loadInsights()]);
+              await loadInsights();
               setEditOpen(false);
               setFeedback(`Updated ${updated.name}`);
             });
@@ -680,7 +706,7 @@ export const ManageLeadsPage = () => {
       <ConfirmDialog
         open={Boolean(confirmDeleteId)}
         title="Delete Lead"
-        description="Delete this lead permanently?"
+        description="Delete this lead? It will be moved to the recycle bin."
         confirmLabel="Delete"
         danger
         onCancel={() => setConfirmDeleteId(null)}
@@ -690,7 +716,7 @@ export const ManageLeadsPage = () => {
             setConfirmDeleteId(null);
             setHoveredId(null);
             setDetailsOpen(false);
-            await Promise.all([loadLeads(debouncedSearch, onlyHot), loadInsights()]);
+            await loadInsights();
             setFeedback("Lead deleted");
           });
         }}

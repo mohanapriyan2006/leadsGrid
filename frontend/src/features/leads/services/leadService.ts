@@ -229,7 +229,105 @@ export const leadService = {
     file: File,
     fieldMapping: Record<string, string>,
   ): Promise<CSVImportResult> => {
-    console.warn("importManageLeadCSV needs papaparse integration in frontend to push to Firestore");
-    return { accepted: 0, skipped: 0, invalid: 0, warnings: [], errors: [] };
+    const user = getCurrentUser();
+    const results: CSVImportResult = {
+      accepted: 0,
+      skipped: 0,
+      invalid: 0,
+      warnings: [],
+      errors: [],
+    };
+
+    // Dynamically import papaparse
+    const Papa = (await import("papaparse" as any)).default;
+
+    return new Promise((resolve) => {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async (parseResult: any) => {
+          const rows = parseResult.data as Record<string, string>[];
+
+          for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+
+            // Map CSV fields to lead fields based on fieldMapping
+            const mappedData: Record<string, string | number | boolean | null> = {};
+            
+            for (const [csvField, appField] of Object.entries(fieldMapping)) {
+              if (appField && row[csvField] !== undefined) {
+                let value: string | number | boolean | null = row[csvField].trim();
+                
+                // Convert types based on field
+                if (appField === "rating" || appField === "review_count" || appField === "score") {
+                  const num = parseFloat(value as string);
+                  value = isNaN(num) ? null : num;
+                } else if (appField === "budget_estimate") {
+                  const num = parseFloat(value as string);
+                  value = isNaN(num) ? 0 : num;
+                } else if (appField === "open_now") {
+                  value = value?.toLowerCase() === "true" || value === "TRUE" || value === "1";
+                } else if (value === "" || value === null) {
+                  value = null;
+                }
+                
+                mappedData[appField] = value;
+              }
+            }
+
+            // Skip if no business name
+            const businessName = (mappedData["name"] as string) || "";
+            if (!businessName) {
+              results.skipped++;
+              results.warnings.push(`Row ${i + 1}: Skipped - no business name`);
+              continue;
+            }
+
+            try {
+              // Create lead data matching Firestore schema
+              const leadData = {
+                name: businessName,
+                company: (mappedData["company"] as string) || businessName,
+                email: (mappedData["email"] as string) || null,
+                phone: (mappedData["phone"] as string) || null,
+                status: "new",
+                pipelineStage: "NEW",
+                isDeleted: false,
+                deletedAt: null,
+                source: "csv" as const,
+                notes: null,
+                tags: [],
+                budgetEstimate: (mappedData["budget_estimate"] as number) || 0,
+                score: (mappedData["score"] as number) || 50,
+                urgency: "medium" as const,
+                createdAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
+                lastActivityAt: Timestamp.now(),
+                // CSV fields
+                category: (mappedData["category"] as string) || null,
+                rating: (mappedData["rating"] as number) || null,
+                reviewCount: (mappedData["review_count"] as number) || null,
+                address: (mappedData["address"] as string) || null,
+                websiteUrl: (mappedData["website_url"] as string) || null,
+                openNow: mappedData["open_now"] as boolean | null,
+                googleMapsUrl: (mappedData["google_maps_url"] as string) || null,
+              };
+
+              await addDoc(getUserLeadsCollection(user.uid), leadData);
+              results.accepted++;
+            } catch (error) {
+              results.invalid++;
+              results.errors.push(`Row ${i + 1}: ${error instanceof Error ? error.message : String(error)}`);
+            }
+          }
+
+          resolve(results);
+        },
+        error: (error: { message: string }) => {
+          results.errors.push(`CSV parse error: ${error.message}`);
+          resolve(results);
+        },
+      });
+    });
   },
 };

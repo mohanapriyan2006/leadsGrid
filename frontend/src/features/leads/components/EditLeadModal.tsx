@@ -15,6 +15,14 @@ type EditLeadModalProps = {
     stage: ManageLeadStage;
     budget_estimate: number;
     notes: string;
+    // CSV fields
+    category: string | null;
+    rating: number | null;
+    review_count: number | null;
+    address: string | null;
+    website_url: string | null;
+    open_now: boolean | null;
+    google_maps_url: string | null;
   }) => void;
 };
 
@@ -29,6 +37,14 @@ export const EditLeadModal = ({ lead, open, onClose, onSave }: EditLeadModalProp
     stage: "NEW" as ManageLeadStage,
     budget_estimate: 0,
     notes: "",
+    // CSV fields
+    category: null as string | null,
+    rating: null as number | null,
+    review_count: null as number | null,
+    address: null as string | null,
+    website_url: null as string | null,
+    open_now: null as boolean | null,
+    google_maps_url: null as string | null,
   });
 
   useEffect(() => {
@@ -41,6 +57,14 @@ export const EditLeadModal = ({ lead, open, onClose, onSave }: EditLeadModalProp
       stage: lead.stage,
       budget_estimate: lead.budget_estimate,
       notes: lead.notes ?? "",
+      // CSV fields
+      category: lead.category,
+      rating: lead.rating,
+      review_count: lead.review_count,
+      address: lead.address,
+      website_url: lead.website_url,
+      open_now: lead.open_now,
+      google_maps_url: lead.google_maps_url,
     });
   }, [lead, open]);
 
@@ -55,7 +79,7 @@ export const EditLeadModal = ({ lead, open, onClose, onSave }: EditLeadModalProp
           onClick={onClose}
         >
           <motion.form
-            className="glass-card-lg w-full max-w-xl space-y-3 p-5"
+            className="glass-card-lg overflow-y-auto max-h-[80vh] w-full max-w-xl space-y-3 p-5"
             initial={{ opacity: 0, y: 10, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.985 }}
@@ -123,6 +147,83 @@ export const EditLeadModal = ({ lead, open, onClose, onSave }: EditLeadModalProp
                   onChange={(event) => setForm((prev) => ({ ...prev, budget_estimate: Number(event.target.value) || 0 }))}
                   className="glass-input mt-1"
                 />
+              </label>
+              {/* CSV Fields */}
+              <label className="text-xs text-content-secondary">
+                Category
+                <input
+                  value={form.category ?? ""}
+                  onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value || null }))}
+                  className="glass-input mt-1"
+                  placeholder="e.g. establishment, restaurant"
+                />
+              </label>
+              <label className="text-xs text-content-secondary">
+                Rating
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="5"
+                  value={form.rating ?? ""}
+                  onChange={(event) => {
+                    const val = event.target.value;
+                    setForm((prev) => ({ ...prev, rating: val ? parseFloat(val) : null }));
+                  }}
+                  className="glass-input mt-1"
+                  placeholder="0-5"
+                />
+              </label>
+              <label className="text-xs text-content-secondary">
+                Review Count
+                <input
+                  type="number"
+                  value={form.review_count ?? ""}
+                  onChange={(event) => {
+                    const val = event.target.value;
+                    setForm((prev) => ({ ...prev, review_count: val ? parseInt(val, 10) : null }));
+                  }}
+                  className="glass-input mt-1"
+                />
+              </label>
+            </div>
+
+            {/* Address & Links */}
+            <div className="grid gap-3 md:grid-cols-2">
+              <label className="text-xs text-content-secondary">
+                Address
+                <input
+                  value={form.address ?? ""}
+                  onChange={(event) => setForm((prev) => ({ ...prev, address: event.target.value || null }))}
+                  className="glass-input mt-1"
+                />
+              </label>
+              <label className="text-xs text-content-secondary">
+                Website URL
+                <input
+                  value={form.website_url ?? ""}
+                  onChange={(event) => setForm((prev) => ({ ...prev, website_url: event.target.value || null }))}
+                  className="glass-input mt-1"
+                  placeholder="https://..."
+                />
+              </label>
+              <label className="text-xs text-content-secondary">
+                Google Maps URL
+                <input
+                  value={form.google_maps_url ?? ""}
+                  onChange={(event) => setForm((prev) => ({ ...prev, google_maps_url: event.target.value || null }))}
+                  className="glass-input mt-1"
+                  placeholder="https://maps.google.com/..."
+                />
+              </label>
+              <label className="flex items-center gap-2 text-xs text-content-secondary mt-4">
+                <input
+                  type="checkbox"
+                  checked={form.open_now ?? false}
+                  onChange={(event) => setForm((prev) => ({ ...prev, open_now: event.target.checked }))}
+                  className="accent-checkbox"
+                />
+                Open Now
               </label>
             </div>
 

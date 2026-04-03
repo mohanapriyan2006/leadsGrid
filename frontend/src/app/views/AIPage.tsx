@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 
 import { MOCK_LEADS } from "../../features/leads/constants/mockLeads";
+import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLeads";
 import { useMessageGenerator } from "../../features/leads/hooks/useMessageGenerator";
 import { messageService } from "../../features/leads/services/messageService";
 import { useLeadStore } from "../../store/useLeadStore";
@@ -58,7 +59,8 @@ export const AIPage = () => {
   const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
 
-  const { leads, manageLeads } = useLeadStore();
+  const { leads } = useLeadStore();
+  const { leads: manageLeads } = useCentralizedLeads();
   const { generateMessage } = useMessageGenerator();
 
   const endRef = useRef<HTMLDivElement | null>(null);

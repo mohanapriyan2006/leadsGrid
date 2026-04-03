@@ -1,43 +1,24 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-
+import { leadService } from "../../features/leads/services/leadService";
+import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLeads";
+import type { BinLead } from "../../features/leads/types/manageLead";
 import { PageBackground } from "../../components/ui/PageBackground";
 import bgBusinessPlan from "../../assets/bg-images/business-plan.svg";
 
-import { leadService } from "../../features/leads/services/leadService";
-import type { BinLead } from "../../features/leads/types/manageLead";
-
 export const RecyclicBinPage = () => {
-  const [binLeads, setBinLeads] = useState<BinLead[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Use centralized leads hook for real-time bin data
+  const { binLeads, loading } = useCentralizedLeads();
+  
   const [selectedLead, setSelectedLead] = useState<BinLead | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
-  const loadBin = async () => {
-    const rows = await leadService.listManageLeadBin();
-    setBinLeads(rows);
-  };
-
-  useEffect(() => {
-    const run = async () => {
-      try {
-        setLoading(true);
-        await loadBin();
-      } finally {
-        setLoading(false);
-      }
-    };
-    void run();
-  }, []);
-
   const handleDeleteForever = async (leadId: string) => {
     await leadService.deleteManageLeadForever(leadId);
-    await loadBin();
   };
 
   const handleRestore = async (leadId: string) => {
     await leadService.restoreManageLead(leadId);
-    await loadBin();
   };
 
   const openDetails = (lead: BinLead) => {

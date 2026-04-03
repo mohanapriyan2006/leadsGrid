@@ -22,6 +22,14 @@ export type FirestoreLead = {
   createdAt?: Timestamp | string;
   updatedAt?: Timestamp | string;
   lastActivityAt?: Timestamp | string;
+  // CSV fields
+  category?: string | null;
+  rating?: number | null;
+  reviewCount?: number | null;
+  address?: string | null;
+  websiteUrl?: string | null;
+  openNow?: boolean | null;
+  googleMapsUrl?: string | null;
 };
 
 const STATUS_TO_STAGE: Record<LeadStatus, ManageLeadStage> = {
@@ -38,6 +46,9 @@ const STAGE_TO_STATUS: Record<ManageLeadStage, LeadStatus> = {
   CONTACTED: "contacted",
   RESPONDED: "proposal",
   NEGOTIATION: "proposal",
+  CONTRACTED: "won",
+  IN_PROGRESS: "proposal",
+  CLOSED: "won",
 };
 
 const SOURCE_TO_MANAGE: Record<NonNullable<FirestoreLead["source"]>, ManageLeadSource> = {
@@ -63,7 +74,7 @@ const toISO = (value: Timestamp | string | null | undefined) => {
 export const toManageLead = (id: string, data: DocumentData): ManageLead => {
   const lead = data as FirestoreLead;
   const stageFromPipeline = (lead.pipelineStage || "").toUpperCase() as ManageLeadStage;
-  const stage = ["NEW", "QUALIFIED", "CONTACTED", "RESPONDED", "NEGOTIATION"].includes(stageFromPipeline)
+  const stage = ["NEW", "QUALIFIED", "CONTACTED", "RESPONDED", "NEGOTIATION", "CONTRACTED", "IN_PROGRESS", "CLOSED"].includes(stageFromPipeline)
     ? stageFromPipeline
     : STATUS_TO_STAGE[lead.status ?? "new"];
 
@@ -71,6 +82,15 @@ export const toManageLead = (id: string, data: DocumentData): ManageLead => {
     id,
     name: lead.name ?? "Unknown",
     company: lead.company ?? "Unknown",
+    // CSV fields
+    category: lead.category ?? null,
+    rating: lead.rating ?? null,
+    review_count: lead.reviewCount ?? null,
+    address: lead.address ?? null,
+    website_url: lead.websiteUrl ?? null,
+    open_now: lead.openNow ?? null,
+    google_maps_url: lead.googleMapsUrl ?? null,
+    // Existing fields
     source: SOURCE_TO_MANAGE[lead.source ?? "manual"],
     stage,
     email: lead.email ?? null,
@@ -115,6 +135,14 @@ export const toFirestoreLeadPatch = (
   if (payload.budget_estimate !== undefined) patch.budgetEstimate = payload.budget_estimate;
   if (payload.score !== undefined) patch.score = payload.score;
   if (payload.urgency !== undefined) patch.urgency = payload.urgency;
+  // CSV fields
+  if (payload.category !== undefined) patch.category = payload.category;
+  if (payload.rating !== undefined) patch.rating = payload.rating;
+  if (payload.review_count !== undefined) patch.reviewCount = payload.review_count;
+  if (payload.address !== undefined) patch.address = payload.address;
+  if (payload.website_url !== undefined) patch.websiteUrl = payload.website_url;
+  if (payload.open_now !== undefined) patch.openNow = payload.open_now;
+  if (payload.google_maps_url !== undefined) patch.googleMapsUrl = payload.google_maps_url;
   if (payload.stage !== undefined) {
     patch.pipelineStage = payload.stage;
     patch.status = STAGE_TO_STATUS[payload.stage];
@@ -131,6 +159,13 @@ export const createFirestoreLead = (
     phone?: string;
     stage?: ManageLeadStage;
     budget_estimate?: number;
+    category?: string | null;
+    rating?: number | null;
+    review_count?: number | null;
+    address?: string | null;
+    website_url?: string | null;
+    open_now?: boolean | null;
+    google_maps_url?: string | null;
   },
 ): FirestoreLead => {
   const stage = payload.stage ?? "NEW";
@@ -154,5 +189,13 @@ export const createFirestoreLead = (
     createdAt: now,
     updatedAt: now,
     lastActivityAt: now,
+    // CSV fields
+    category: payload.category ?? null,
+    rating: payload.rating ?? null,
+    reviewCount: payload.review_count ?? null,
+    address: payload.address ?? null,
+    websiteUrl: payload.website_url ?? null,
+    openNow: payload.open_now ?? null,
+    googleMapsUrl: payload.google_maps_url ?? null,
   };
 };

@@ -3,7 +3,10 @@ export type ManageLeadStage =
   | "QUALIFIED"
   | "CONTACTED"
   | "RESPONDED"
-  | "NEGOTIATION";
+  | "NEGOTIATION"
+  | "CONTRACTED"
+  | "IN_PROGRESS"
+  | "CLOSED";
 
 export type ManageLeadSource = "reddit" | "linkedin" | "website";
 export type ManageLeadUrgency = "low" | "medium" | "high";
@@ -22,12 +25,22 @@ export type ManageLeadAnalysis = {
 
 export type ManageLead = {
   id: string;
+  // Core fields (mapped from CSV business_name)
   name: string;
   company: string;
+  // CSV fields
+  category: string | null;
+  rating: number | null;
+  review_count: number | null;
+  phone: string | null;  // maps to phone_number
+  email: string | null;
+  address: string | null;
+  website_url: string | null;
+  open_now: boolean | null;
+  google_maps_url: string | null;
+  // Existing business fields
   source: ManageLeadSource;
   stage: ManageLeadStage;
-  email: string | null;
-  phone: string | null;
   budget_estimate: number;
   urgency: ManageLeadUrgency;
   score: number;

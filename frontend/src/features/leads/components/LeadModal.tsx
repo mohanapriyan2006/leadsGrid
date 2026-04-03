@@ -26,6 +26,9 @@ const stageNextMap: Record<ManageLeadStage, ManageLeadStage | null> = {
   CONTACTED: "RESPONDED",
   RESPONDED: null,
   NEGOTIATION: null,
+  CONTRACTED: null,
+  IN_PROGRESS: null,
+  CLOSED: null,
 };
 
 export const LeadModal = ({
@@ -94,6 +97,30 @@ export const LeadModal = ({
             <div className="mt-3 grid gap-2 text-xs text-content-secondary md:grid-cols-2">
               <p>📧 {lead.email || "N/A"}</p>
               <p>📱 {lead.phone || "N/A"}</p>
+              {lead.category && <p>🏷️ Category: {lead.category}</p>}
+              {lead.rating && <p>⭐ Rating: {lead.rating} ({lead.review_count ?? 0} reviews)</p>}
+              {lead.address && <p className="md:col-span-2">📍 {lead.address}</p>}
+              {lead.website_url && (
+                <p>
+                  🌐{" "}
+                  <a href={lead.website_url} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+                    Website
+                  </a>
+                </p>
+              )}
+              {lead.google_maps_url && (
+                <p>
+                  🗺️{" "}
+                  <a href={lead.google_maps_url} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+                    Google Maps
+                  </a>
+                </p>
+              )}
+              {lead.open_now !== null && (
+                <p className="md:col-span-2">
+                  {lead.open_now ? "🟢 Open Now" : "🔴 Closed"}
+                </p>
+              )}
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">

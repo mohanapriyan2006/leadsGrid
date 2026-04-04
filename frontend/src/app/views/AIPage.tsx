@@ -191,13 +191,14 @@ export const AIPage = () => {
         mode: "ask",
         offerAgent: shouldOfferAgent(prompt, result.message, result.requires_agent),
       });
-    } catch {
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "Unknown AI error";
       addMessage({
         id: createId(),
         role: "assistant",
-        content: `I found strong intent from ${topLead.author}. Best to contact now (${Math.max(topLead.score, 82)}% close probability).`,
+        content: `AI request failed: ${reason}`,
         mode: "ask",
-        offerAgent: true,
+        offerAgent: false,
       });
     } finally {
       setLoading(false);

@@ -14,6 +14,10 @@ const getEnv = (name: string): string => {
   return value.trim();
 };
 
+const hasEnv = (name: string): boolean => {
+  return getEnv(name).length > 0;
+};
+
 const withTimeout = async <T>(promiseFactory: (signal: AbortSignal) => Promise<T>) => {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -172,13 +176,25 @@ const callOpenRouter = async (prompt: string): Promise<string> => {
 export const askAiService = {
   generateText: async (input: { prompt: string; tone: string; maxWords: number }): Promise<AskAiResult> => {
     const prompt = buildAskPrompt(input);
-    const providers: Array<{ name: AskProvider; run: () => Promise<string> }> = [
-      { name: "gemini", run: () => callGemini(prompt) },
-      { name: "groq", run: () => callGroq(prompt) },
-      { name: "openrouter", run: () => callOpenRouter(prompt) },
-    ];
+    const providers: Array<{ name: AskProvider; run: () => Promise<string> }> = [];
 
-    let lastError: unknown = null;
+    if (hasEnv("VITE_GEMINI_API_KEY")) {
+      providers.push({ name: "gemini", run: () => callGemini(prompt) });
+    }
+    if (hasEnv("VITE_GROQ_API_KEY")) {
+      providers.push({ name: "groq", run: () => callGroq(prompt) });
+    }
+    if (hasEnv("VITE_OPENROUTER_API_KEY")) {
+      providers.push({ name: "openrouter", run: () => callOpenRouter(prompt) });
+    }
+
+    if (providers.length === 0) {
+      throw new Error(
+        "No AI provider keys configured. Set at least one of VITE_GEMINI_API_KEY, VITE_GROQ_API_KEY, or VITE_OPENROUTER_API_KEY in frontend/.env and restart Vite.",
+      );
+    }
+
+    const providerErrors: string[] = [];
     for (const provider of providers) {
       try {
         const text = await provider.run();
@@ -189,10 +205,11 @@ export const askAiService = {
           requiresAgent: shouldSuggestAgentMode(input.prompt, text),
         };
       } catch (error) {
-        lastError = error;
+        const reason = error instanceof Error ? error.message : "Unknown provider error";
+        providerErrors.push(`${provider.name}: ${reason}`);
       }
     }
 
-    throw lastError instanceof Error ? lastError : new Error("All Ask providers failed");
+    throw new Error(`All configured AI providers failed. ${providerErrors.join(" | ")}`);
   },
 };

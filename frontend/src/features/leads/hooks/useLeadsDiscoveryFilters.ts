@@ -5,7 +5,7 @@ import type { Lead } from "../types/lead";
 
 export const useLeadsDiscoveryFilters = () => {
   const [searchTerm, setSearchTerm] = useState("need crm automation");
-  const [scoreMin, setScoreMin] = useState(70);
+  const [scoreMin, setScoreMin] = useState(0);
   const [industry, setIndustry] = useState("Software & SaaS");
   const [sources, setSources] = useState<Lead["source"][]>([...LEAD_SOURCES]);
 

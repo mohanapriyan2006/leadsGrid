@@ -29,9 +29,9 @@ export const LeadsDiscoveryFilters = ({
   onClear,
 }: LeadsDiscoveryFiltersProps) => {
   return (
-    <section className="glass-card p-4">
+    <section className="rounded-2xl border border-accent/[0.12] bg-surface-secondary/80 p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="mr-1 text-[11px] uppercase tracking-[0.12em] text-content-tertiary">Signal Source</span>
+        <span className="mr-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-content-tertiary">Signal Source</span>
 
         {LEAD_SOURCES.map((source) => {
           const active = sources.includes(source);
@@ -42,8 +42,8 @@ export const LeadsDiscoveryFilters = ({
               onClick={() => onToggleSource(source)}
               className={`rounded-full border px-3 py-1.5 text-xs transition ${
                 active
-                  ? "border-accent/40 bg-accent-soft text-content"
-                  : "border-accent/10 bg-surface-secondary/80 text-content-secondary hover:border-accent/30"
+                  ? "border-accent/50 bg-accent/15 text-content"
+                  : "border-accent/10 bg-surface/55 text-content-secondary hover:border-accent/30"
               }`}
             >
               {sourceLabel(source)}
@@ -53,7 +53,7 @@ export const LeadsDiscoveryFilters = ({
 
         <div className="mx-1 h-5 w-px bg-accent/20" />
 
-        <div className="flex items-center gap-2 rounded-full border border-accent/10 bg-surface-secondary/80 px-3 py-1">
+        <div className="flex items-center gap-2 rounded-full border border-accent/15 bg-surface/55 px-3 py-1">
           <span className="text-xs text-content-secondary">Min Score</span>
           <input
             type="range"
@@ -69,7 +69,7 @@ export const LeadsDiscoveryFilters = ({
         <div className="mx-1 h-5 w-px bg-accent/20" />
 
         <select
-          className="glass-input w-52 text-sm"
+          className="w-52 rounded-xl border border-accent/15 bg-surface/55 px-3 py-2 text-sm text-content outline-none focus:border-accent/40"
           value={industry}
           onChange={(event) => onIndustryChange(event.target.value)}
         >
@@ -83,7 +83,7 @@ export const LeadsDiscoveryFilters = ({
         <button
           type="button"
           onClick={onClear}
-          className="ml-auto text-xs text-content-tertiary transition hover:text-content-secondary"
+          className="ml-auto rounded-lg border border-accent/15 bg-surface/55 px-2.5 py-1 text-xs text-content-secondary transition hover:border-accent/35 hover:text-content"
         >
           Clear all
         </button>

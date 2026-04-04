@@ -11,7 +11,6 @@ import { MessageLeadPanel } from "../../features/messages/components/MessageLead
 import {
   CONTEXT_PREVIEW_LIMIT,
 } from "../../features/messages/constants/messages";
-import { MOCK_MESSAGES } from "../../features/messages/constants/mockMessages";
 import type { ToneType } from "../../features/common/types/ui";
 
 export const MessagesPage = () => {
@@ -20,7 +19,7 @@ export const MessagesPage = () => {
 
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [tone, setTone] = useState<ToneType>("professional");
-  const [localDraft, setLocalDraft] = useState(MOCK_MESSAGES[0].content);
+  const [localDraft, setLocalDraft] = useState("");
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
   const [sending, setSending] = useState(false);
@@ -73,6 +72,8 @@ export const MessagesPage = () => {
     if (!selectedLead) {
       return;
     }
+    setSendError(null);
+    setSent(false);
     try {
       const result = await generateMessage({
         lead_context: `Company: ${selectedLead.company}\nContact: ${selectedLead.name}\nNotes: ${selectedLead.notes || 'N/A'}`,
@@ -81,10 +82,9 @@ export const MessagesPage = () => {
       });
       setLocalDraft(result.message);
       setSubject(generateSubject());
-    } catch {
-      const firstName = selectedLead.name.split(" ")[0];
-      setLocalDraft(`Hi ${firstName},\n\nI wanted to reach out regarding ${selectedLead.company}.\n\nPitchPilot helps teams move from stale outreach to live intent-led execution.\n\nOpen to a quick 10-minute walkthrough this week?\n\nBest,\nAlex`);
-      setSubject(generateSubject());
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "Unknown AI error";
+      setSendError(`AI draft generation failed: ${reason}`);
     }
   };
 

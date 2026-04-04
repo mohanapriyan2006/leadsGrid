@@ -30,10 +30,10 @@ export const LeadsDiscoveryResultCard = ({
   return (
     <article
       onClick={() => onSelect(lead.id)}
-      className={`relative cursor-pointer overflow-hidden rounded-2xl border p-4 transition hover:-translate-y-0.5 ${
+      className={`relative cursor-pointer overflow-hidden rounded-2xl border p-4 transition-all hover:-translate-y-0.5 ${
         isSelected
-          ? "border-accent/40 bg-surface-secondary/90 shadow-glow"
-          : "border-accent/10 bg-surface-secondary/70 hover:border-accent/30"
+          ? "border-accent/45 bg-surface-secondary/95 shadow-[0_8px_28px_rgba(6,182,212,0.15)]"
+          : "border-accent/12 bg-surface-secondary/75 hover:border-accent/30"
       }`}
       style={{ animationDelay: `${index * 70}ms` }}
     >
@@ -70,7 +70,9 @@ export const LeadsDiscoveryResultCard = ({
             <SourceIcon source={lead.source} />
             {sourceLabel(lead.source)}
           </p>
-          <p className="line-clamp-3 text-xs text-content-secondary">{lead.content}</p>
+          <p className="overflow-hidden break-words text-xs text-content-secondary [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]">
+            {lead.content}
+          </p>
         </div>
 
         <div className="rounded-xl border border-accent/10 bg-surface/60 p-3">
@@ -78,7 +80,9 @@ export const LeadsDiscoveryResultCard = ({
             <AIIcon />
             AI Take
           </p>
-          <p className="line-clamp-3 text-xs text-content-secondary">{lead.summary}</p>
+          <p className="overflow-hidden break-words text-xs text-content-secondary [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]">
+            {lead.summary}
+          </p>
         </div>
       </div>
 
@@ -86,9 +90,13 @@ export const LeadsDiscoveryResultCard = ({
         <div className="flex flex-wrap items-center gap-2 text-xs text-content-tertiary">
           <span>{lead.timeAgo ?? "just now"}</span>
           <span>•</span>
-          <span>{lead.intent_label}</span>
-          <span>•</span>
-          <span>{lead.tags.slice(0, 2).join(" · ")}</span>
+          <span className="capitalize">{lead.intent_label}</span>
+          {lead.tags.length > 0 ? (
+            <>
+              <span>•</span>
+              <span className="break-words">{lead.tags.slice(0, 2).join(" · ")}</span>
+            </>
+          ) : null}
         </div>
 
         <div className="flex items-center gap-2">

@@ -24,7 +24,7 @@ export const LeadsDiscoveryDraftPanel = ({
   onSend,
 }: LeadsDiscoveryDraftPanelProps) => {
   return (
-    <aside className="glass-card h-fit space-y-4 p-5 xl:sticky xl:top-6">
+    <aside className="glass-card h-fit min-w-0 space-y-4 p-5 xl:sticky xl:top-6">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-sm font-semibold text-content">
           <AIIcon />
@@ -78,7 +78,7 @@ export const LeadsDiscoveryDraftPanel = ({
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <button
           type="button"
           className="accent-btn px-2 py-2 text-xs"

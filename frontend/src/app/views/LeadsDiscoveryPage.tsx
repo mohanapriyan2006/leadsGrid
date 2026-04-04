@@ -11,6 +11,7 @@ import { LeadsDiscoverySearchBar } from "../../features/leads/components/LeadsDi
 import { useLeadsDiscoveryFilters } from "../../features/leads/hooks/useLeadsDiscoveryFilters";
 import { useMessageGenerator } from "../../features/leads/hooks/useMessageGenerator";
 import { useLeads } from "../../features/leads/hooks/useLeads";
+import { leadService } from "../../features/leads/services/leadService";
 import type { Lead } from "../../features/leads/types/lead";
 import type { ToneType } from "../../features/common/types/ui";
 
@@ -31,6 +32,8 @@ export const LeadsDiscoveryPage = () => {
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"score" | "recent">("score");
   const [draftError, setDraftError] = useState<string | null>(null);
+  const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
+  const [savingLeadId, setSavingLeadId] = useState<string | null>(null);
 
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 550);
 
@@ -146,6 +149,20 @@ export const LeadsDiscoveryPage = () => {
     URL.revokeObjectURL(url);
   };
 
+  const handleSaveLead = async (lead: Lead) => {
+    setSavingLeadId(lead.id);
+    setSaveFeedback(null);
+    try {
+      const saved = await leadService.saveDiscoveryLeadAsManageLead(lead);
+      setSaveFeedback(`Saved ${saved.name} to Manage Leads.`);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "Unknown save error";
+      setSaveFeedback(`Save failed: ${reason}`);
+    } finally {
+      setSavingLeadId(null);
+    }
+  };
+
   return (
     <div className="page-with-bg">
       <PageBackground image={bgConnecting} tint="rgba(6, 182, 212, 0.28)" />
@@ -224,6 +241,12 @@ export const LeadsDiscoveryPage = () => {
               </div>
             ) : null}
 
+            {saveFeedback ? (
+              <div className="rounded-xl border border-accent/20 bg-accent/10 p-3 text-sm text-content-secondary">
+                {saveFeedback}
+              </div>
+            ) : null}
+
             <div className="space-y-3">
               {isLoading ? (
                 Array.from({ length: 3 }).map((_, index) => (
@@ -262,6 +285,10 @@ export const LeadsDiscoveryPage = () => {
                     isSelected={selectedLeadId === lead.id}
                     onSelect={setSelectedLeadId}
                     onGenerateDraft={handleGenerateDraft}
+                    onSaveLead={(selected) => {
+                      if (savingLeadId === selected.id) return;
+                      void handleSaveLead(selected);
+                    }}
                   />
                 ))
               )}

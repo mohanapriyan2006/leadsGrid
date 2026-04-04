@@ -1,5 +1,6 @@
 import { Timestamp, type DocumentData } from "firebase/firestore";
 
+import type { Lead } from "../types/lead";
 import type { ManageLead, ManageLeadSource, ManageLeadStage } from "../types/manageLead";
 
 export type LeadStatus = "new" | "contacted" | "proposal" | "won" | "lost";
@@ -40,6 +41,25 @@ export type FirestoreLead = {
   address?: string | null;
   websiteUrl?: string | null;
   googleMapsUrl?: string | null;
+};
+
+export type CreateManageLeadInput = {
+  name: string;
+  company: string;
+  email?: string;
+  phone?: string;
+  stage?: ManageLeadStage;
+  budget_estimate?: number;
+  category?: string | null;
+  rating?: number | null;
+  review_count?: number | null;
+  address?: string | null;
+  website_url?: string | null;
+  google_maps_url?: string | null;
+  source?: ManageLeadSource;
+  notes?: string | null;
+  score?: number;
+  urgency?: "low" | "medium" | "high";
 };
 
 const STATUS_TO_STAGE: Record<LeadStatus, ManageLeadStage> = {
@@ -198,23 +218,11 @@ export const toFirestoreLeadPatch = (
 };
 
 export const createFirestoreLead = (
-  payload: {
-    name: string;
-    company: string;
-    email?: string;
-    phone?: string;
-    stage?: ManageLeadStage;
-    budget_estimate?: number;
-    category?: string | null;
-    rating?: number | null;
-    review_count?: number | null;
-    address?: string | null;
-    website_url?: string | null;
-    google_maps_url?: string | null;
-  },
+  payload: CreateManageLeadInput,
 ): FirestoreLead => {
   const stage = payload.stage ?? "NEW";
   const now = Timestamp.now();
+  const firestoreSource = payload.source === "website" ? "manual" : payload.source;
 
   return {
     name: payload.name,
@@ -225,12 +233,12 @@ export const createFirestoreLead = (
     pipelineStage: stage,
     isDeleted: false,
     deletedAt: null,
-    source: "manual",
-    notes: null,
+    source: firestoreSource ?? "manual",
+    notes: payload.notes ?? null,
     tags: [],
     budgetEstimate: payload.budget_estimate ?? 0,
-    score: 50,
-    urgency: "medium",
+    score: payload.score ?? 50,
+    urgency: payload.urgency ?? "medium",
     createdAt: now,
     updatedAt: now,
     lastActivityAt: now,
@@ -241,5 +249,38 @@ export const createFirestoreLead = (
     address: payload.address ?? null,
     websiteUrl: payload.website_url ?? null,
     googleMapsUrl: payload.google_maps_url ?? null,
+  };
+};
+
+const toUrgencyFromScore = (score: number): "low" | "medium" | "high" => {
+  if (score >= 85) return "high";
+  if (score >= 65) return "medium";
+  return "low";
+};
+
+export const mapDiscoveryLeadToManageInput = (lead: Lead): CreateManageLeadInput => {
+  const score = Math.max(1, Math.min(Math.round(lead.score), 100));
+  const company = lead.title?.trim() || lead.author || "Unknown Company";
+  const notes = [lead.summary, lead.content, lead.permalink ? `Source: ${lead.permalink}` : null]
+    .filter(Boolean)
+    .join("\n\n");
+
+  return {
+    name: lead.author || "Unknown Lead",
+    company,
+    email: lead.email ?? undefined,
+    phone: undefined,
+    stage: "NEW",
+    budget_estimate: lead.budget ? 5000 : 0,
+    category: null,
+    rating: null,
+    review_count: null,
+    address: null,
+    website_url: null,
+    google_maps_url: null,
+    source: lead.source,
+    notes: notes || null,
+    score,
+    urgency: toUrgencyFromScore(score),
   };
 };

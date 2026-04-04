@@ -7,6 +7,7 @@ type LeadsDiscoveryResultCardProps = {
   isSelected: boolean;
   onSelect: (leadId: string) => void;
   onGenerateDraft: (lead: Lead) => void;
+  onSaveLead: (lead: Lead) => void;
 };
 
 const sourceLabel = (source: Lead["source"]) => {
@@ -23,6 +24,7 @@ export const LeadsDiscoveryResultCard = ({
   isSelected,
   onSelect,
   onGenerateDraft,
+  onSaveLead,
 }: LeadsDiscoveryResultCardProps) => {
   const isHot = lead.score >= 90;
   const displayName = lead.author || lead.id;
@@ -105,6 +107,7 @@ export const LeadsDiscoveryResultCard = ({
             className="glass-btn px-2 py-1 text-[11px]"
             onClick={(event) => {
               event.stopPropagation();
+              onSaveLead(lead);
             }}
           >
             Save

@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = None
     openai_api_key: str | None = None
     openrouter_api_key: str | None = None
+    serper_api_key: str | None = None
+    hunter_api_key: str | None = None
+    clearbit_api_key: str | None = None
 
     firebase_project_id: str | None = None
     firebase_service_account_path: str | None = None
@@ -29,6 +32,8 @@ class Settings(BaseSettings):
     smtp_sender: str | None = None
     smtp_app_password: str | None = None
     smtp_rate_limit_per_min: int = 20
+
+    max_lead_age_days: int = 5
 
     model_config = SettingsConfigDict(
         env_file=".env",

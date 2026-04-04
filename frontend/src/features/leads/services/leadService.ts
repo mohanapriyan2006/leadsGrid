@@ -15,7 +15,7 @@ import type {
   ManageLeadStage,
   ManageLeadUrgency,
 } from "../types/manageLead";
-import { createFirestoreLead, toFirestoreLeadPatch, toManageLead } from "./leadModel";
+import { createFirestoreLead, mapDiscoveryLeadToManageInput, toFirestoreLeadPatch, toManageLead } from "./leadModel";
 import type { DiscoveryLeadDto, DiscoveryParams } from "../types/discovery";
 import { adaptDiscoveryLead } from "./discoveryAdapter";
 
@@ -182,11 +182,50 @@ export const leadService = {
     phone?: string;
     stage?: ManageLeadStage;
     budget_estimate?: number;
+    category?: string | null;
+    rating?: number | null;
+    review_count?: number | null;
+    address?: string | null;
+    website_url?: string | null;
+    google_maps_url?: string | null;
+    source?: ManageLeadSource;
+    notes?: string | null;
+    score?: number;
+    urgency?: ManageLeadUrgency;
   }): Promise<ManageLead> => {
     const user = getCurrentUser();
 
     const newLead = createFirestoreLead(payload);
 
+    const docRef = await addDoc(getUserLeadsCollection(user.uid), newLead);
+    return toManageLead(docRef.id, newLead);
+  },
+
+  saveDiscoveryLeadAsManageLead: async (lead: Lead): Promise<ManageLead> => {
+    const user = getCurrentUser();
+    const candidate = mapDiscoveryLeadToManageInput(lead);
+
+    // Lightweight duplicate guard by matching canonical name+company+source.
+    const existingSnap = await getDocs(
+      query(
+        getUserLeadsCollection(user.uid),
+        where("isDeleted", "==", false),
+      ),
+    );
+    const existing = existingSnap.docs
+      .map((row) => toManageLead(row.id, row.data()))
+      .find(
+        (row) =>
+          row.name.toLowerCase() === candidate.name.toLowerCase()
+          && row.company.toLowerCase() === candidate.company.toLowerCase()
+          && row.source === candidate.source,
+      );
+
+    if (existing) {
+      return existing;
+    }
+
+    const newLead = createFirestoreLead(candidate);
     const docRef = await addDoc(getUserLeadsCollection(user.uid), newLead);
     return toManageLead(docRef.id, newLead);
   },

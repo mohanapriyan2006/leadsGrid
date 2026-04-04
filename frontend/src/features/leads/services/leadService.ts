@@ -289,8 +289,6 @@ export const leadService = {
                 } else if (appField === "budget_estimate") {
                   const num = parseFloat(value as string);
                   value = isNaN(num) ? 0 : num;
-                } else if (appField === "open_now") {
-                  value = value?.toLowerCase() === "true" || value === "TRUE" || value === "1";
                 } else if (value === "" || value === null) {
                   value = null;
                 }
@@ -333,7 +331,6 @@ export const leadService = {
                 reviewCount: (mappedData["review_count"] as number) || null,
                 address: (mappedData["address"] as string) || null,
                 websiteUrl: (mappedData["website_url"] as string) || null,
-                openNow: mappedData["open_now"] as boolean | null,
                 googleMapsUrl: (mappedData["google_maps_url"] as string) || null,
               };
 

@@ -39,7 +39,6 @@ export type FirestoreLead = {
   reviewCount?: number | null;
   address?: string | null;
   websiteUrl?: string | null;
-  openNow?: boolean | null;
   googleMapsUrl?: string | null;
 };
 
@@ -137,7 +136,6 @@ export const toManageLead = (id: string, data: DocumentData): ManageLead => {
     review_count: lead.reviewCount ?? null,
     address: lead.address ?? null,
     website_url: lead.websiteUrl ?? null,
-    open_now: lead.openNow ?? null,
     google_maps_url: lead.googleMapsUrl ?? null,
     // Existing fields
     source: toSource(lead),
@@ -190,7 +188,6 @@ export const toFirestoreLeadPatch = (
   if (payload.review_count !== undefined) patch.reviewCount = payload.review_count;
   if (payload.address !== undefined) patch.address = payload.address;
   if (payload.website_url !== undefined) patch.websiteUrl = payload.website_url;
-  if (payload.open_now !== undefined) patch.openNow = payload.open_now;
   if (payload.google_maps_url !== undefined) patch.googleMapsUrl = payload.google_maps_url;
   if (payload.stage !== undefined) {
     patch.pipelineStage = payload.stage;
@@ -213,7 +210,6 @@ export const createFirestoreLead = (
     review_count?: number | null;
     address?: string | null;
     website_url?: string | null;
-    open_now?: boolean | null;
     google_maps_url?: string | null;
   },
 ): FirestoreLead => {
@@ -244,7 +240,6 @@ export const createFirestoreLead = (
     reviewCount: payload.review_count ?? null,
     address: payload.address ?? null,
     websiteUrl: payload.website_url ?? null,
-    openNow: payload.open_now ?? null,
     googleMapsUrl: payload.google_maps_url ?? null,
   };
 };

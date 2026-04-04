@@ -21,7 +21,6 @@ type EditLeadModalProps = {
     review_count: number | null;
     address: string | null;
     website_url: string | null;
-    open_now: boolean | null;
     google_maps_url: string | null;
   }) => void;
 };
@@ -43,7 +42,6 @@ export const EditLeadModal = ({ lead, open, onClose, onSave }: EditLeadModalProp
     review_count: null as number | null,
     address: null as string | null,
     website_url: null as string | null,
-    open_now: null as boolean | null,
     google_maps_url: null as string | null,
   });
 
@@ -63,7 +61,6 @@ export const EditLeadModal = ({ lead, open, onClose, onSave }: EditLeadModalProp
       review_count: lead.review_count,
       address: lead.address,
       website_url: lead.website_url,
-      open_now: lead.open_now,
       google_maps_url: lead.google_maps_url,
     });
   }, [lead, open]);
@@ -216,15 +213,7 @@ export const EditLeadModal = ({ lead, open, onClose, onSave }: EditLeadModalProp
                   placeholder="https://maps.google.com/..."
                 />
               </label>
-              <label className="flex items-center gap-2 text-xs text-content-secondary mt-4">
-                <input
-                  type="checkbox"
-                  checked={form.open_now ?? false}
-                  onChange={(event) => setForm((prev) => ({ ...prev, open_now: event.target.checked }))}
-                  className="accent-checkbox"
-                />
-                Open Now
-              </label>
+            
             </div>
 
             <label className="block text-xs text-content-secondary">
@@ -249,6 +238,7 @@ export const EditLeadModal = ({ lead, open, onClose, onSave }: EditLeadModalProp
                 Update Lead
               </button>
             </div>
+        
           </motion.form>
         </motion.div>
       ) : null}

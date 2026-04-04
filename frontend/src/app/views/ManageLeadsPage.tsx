@@ -430,7 +430,6 @@ export const ManageLeadsPage = () => {
                 review_count: updated.review_count,
                 address: updated.address,
                 website_url: updated.website_url,
-                open_now: updated.open_now,
                 google_maps_url: updated.google_maps_url,
               })
               .then(async () => {

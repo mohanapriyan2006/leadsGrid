@@ -39,7 +39,6 @@ export const APP_IMPORT_FIELDS = [
   "review_count",
   "address",
   "website_url",
-  "open_now",
   "google_maps_url",
 ] as const;
 
@@ -82,8 +81,6 @@ export const guessMapping = (header: string): string => {
     website_url: "website_url",
     website: "website_url",
     url: "website_url",
-    open_now: "open_now",
-    open: "open_now",
     google_maps_url: "google_maps_url",
     maps_url: "google_maps_url",
     google_maps: "google_maps_url",

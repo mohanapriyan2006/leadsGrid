@@ -13,10 +13,10 @@ export const Topbar = () => {
     const unsubscribe = onSnapshot(
       testDocRef,
       () => {
-        setIsBackendOnline(true);
+        setIsBackendOnline(false);
       },
       () => {
-        setIsBackendOnline(false);
+        setIsBackendOnline(true);
       },
     );
 

@@ -144,11 +144,6 @@ export const LeadModal = ({
                   </a>
                 </p>
               )}
-              {lead.open_now !== null && (
-                <p className="md:col-span-2">
-                  {lead.open_now ? "🟢 Open Now" : "🔴 Closed"}
-                </p>
-              )}
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">

@@ -42,7 +42,6 @@ export type ManageLead = {
   email: string | null;
   address: string | null;
   website_url: string | null;
-  open_now: boolean | null;
   google_maps_url: string | null;
   // Existing business fields
   source: ManageLeadSource;

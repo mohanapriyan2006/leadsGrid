@@ -1,37 +1,42 @@
 import { useState, useCallback, useMemo } from "react";
 
-import { TYPING_SUGGESTIONS, SMART_SUGGESTIONS } from "../constants/agentActions";
-import type { SmartSuggestion } from "../types/agent";
+import { getSmartSuggestions, getTypingSuggestions } from "../services/suggestionEngine";
+import type { AIMode, SmartSuggestion } from "../types/agent";
 
-export const useSuggestions = () => {
+type UseSuggestionsOptions = {
+  mode: AIMode;
+  leadCount: number;
+  manageLeadCount: number;
+  topLeadName?: string;
+};
+
+export const useSuggestions = ({ mode, leadCount, manageLeadCount, topLeadName }: UseSuggestionsOptions) => {
   const [inputValue, setInputValue] = useState("");
 
+  const context = useMemo(
+    () => ({
+      mode,
+      leadCount,
+      manageLeadCount,
+      topLeadName,
+    }),
+    [mode, leadCount, manageLeadCount, topLeadName],
+  );
+
   const typingSuggestions = useMemo((): string[] => {
-    const trimmed = inputValue.trim().toLowerCase();
-    if (trimmed.length < 2) return [];
-
-    const firstWord = trimmed.split(" ")[0];
-    const matches = TYPING_SUGGESTIONS[firstWord];
-    if (matches) {
-      return matches.filter((s) => s.toLowerCase().includes(trimmed));
-    }
-
-    const allSuggestions = Object.values(TYPING_SUGGESTIONS).flat();
-    return allSuggestions
-      .filter((s) => s.toLowerCase().includes(trimmed))
-      .slice(0, 4);
-  }, [inputValue]);
+    return getTypingSuggestions(context, inputValue);
+  }, [context, inputValue]);
 
   const smartChips = useMemo((): SmartSuggestion[] => {
-    return SMART_SUGGESTIONS.slice(0, 6);
-  }, []);
+    return getSmartSuggestions(context);
+  }, [context]);
 
   const contextualChips = useCallback(
     (category?: SmartSuggestion["category"]): SmartSuggestion[] => {
-      if (!category) return SMART_SUGGESTIONS.slice(0, 4);
-      return SMART_SUGGESTIONS.filter((s) => s.category === category).slice(0, 4);
+      if (!category) return smartChips;
+      return smartChips.filter((s) => s.category === category);
     },
-    [],
+    [smartChips],
   );
 
   return {

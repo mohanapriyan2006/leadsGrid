@@ -80,26 +80,13 @@ export const AIMessageFeed = ({
           key={message.id}
           className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} animate-fadeIn`}
         >
-          {/* Avatar for non-user messages */}
-          {message.role !== "user" ? (
-            <div
-              className={`mr-2.5 mt-1 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-xs ${
-                message.role === "agent"
-                  ? "bg-info/15 text-info"
-                  : "bg-accent/15 text-accent"
-              }`}
-            >
-              {message.role === "agent" ? "⚡" : "✦"}
-            </div>
-          ) : null}
-
           <div
             className={`max-w-[82%] text-[14px] leading-relaxed ${
               message.role === "user"
-                ? "rounded-2xl rounded-br-md border border-accent/10 bg-accent/[0.08] px-4 py-2.5 text-content"
+                ? "rounded-2xl rounded-br-md border border-accent/15 bg-accent/[0.08] px-4 py-2.5 text-content"
                 : message.role === "agent"
-                  ? "rounded-2xl rounded-bl-md border border-info/[0.12] bg-info/[0.06] px-4 py-2.5 text-content"
-                  : "rounded-2xl rounded-bl-md border border-accent/[0.08] bg-surface-tertiary/40 px-4 py-2.5 text-content"
+                  ? "rounded-2xl rounded-bl-md border-l-2 border-l-info/70 bg-surface-tertiary/50 px-4 py-2.5 text-content"
+                  : "rounded-2xl rounded-bl-md border-l-2 border-l-accent/60 bg-surface-tertiary/50 px-4 py-2.5 text-content"
             }`}
           >
             {message.role === "agent" ? (
@@ -120,43 +107,12 @@ export const AIMessageFeed = ({
                     <button
                       type="button"
                       onClick={() => onConvertToAgent(message.content)}
-                      className="rounded-md border border-info/[0.12] bg-info/[0.06] px-2.5 py-1 text-[11px] font-medium text-info/80 transition-all hover:bg-info/[0.12] hover:text-info"
+                      className="rounded-md border border-info/[0.2] bg-info/[0.06] px-2.5 py-1 text-[11px] font-medium text-info/85 transition-all hover:bg-info/[0.12]"
                     >
                       Run in Agent mode
                     </button>
                   ) : null
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => onUseMessage(message.content)}
-                      className="rounded-md border border-accent/[0.08] bg-surface-secondary/50 px-2.5 py-1 text-[11px] font-medium text-content-secondary transition-all hover:border-accent/20 hover:text-content"
-                    >
-                      Use this
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onEditMessage(message.content)}
-                      className="rounded-md border border-accent/[0.08] bg-surface-secondary/50 px-2.5 py-1 text-[11px] font-medium text-content-secondary transition-all hover:border-accent/20 hover:text-content"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onConvertToAgent(message.content)}
-                      className="rounded-md border border-info/[0.12] bg-info/[0.06] px-2.5 py-1 text-[11px] font-medium text-info/80 transition-all hover:bg-info/[0.12] hover:text-info"
-                    >
-                      Agent Task
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onHideMessage(message.id)}
-                      className="rounded-md border border-danger/[0.12] bg-danger/[0.05] px-2.5 py-1 text-[11px] font-medium text-danger/60 transition-all hover:bg-danger/[0.1] hover:text-danger"
-                    >
-                      Ignore
-                    </button>
-                  </>
-                )}
+                ) : null}
               </div>
             ) : null}
 
@@ -247,10 +203,7 @@ export const AIMessageFeed = ({
 
       {loading ? (
         <div className="flex items-start justify-start">
-          <div className="mr-2.5 mt-1 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-accent/15 text-xs text-accent">
-            ✦
-          </div>
-          <div className="inline-flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-accent/[0.08] bg-surface-tertiary/40 px-4 py-3">
+          <div className="inline-flex items-center gap-1.5 rounded-2xl rounded-bl-md border-l-2 border-l-accent/60 bg-surface-tertiary/50 px-4 py-3">
             <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent/60" />
             <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent/60 [animation-delay:150ms]" />
             <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent/60 [animation-delay:300ms]" />

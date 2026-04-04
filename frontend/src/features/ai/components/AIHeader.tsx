@@ -1,8 +1,6 @@
 import type { ChatSession } from "../types/chat";
 import type { AIMode, AIStatus, ActiveContext } from "../types/agent";
 import { ModeToggle } from "./ModeToggle";
-import { ContextBar } from "./ContextBar";
-import { StatusIndicator } from "./StatusIndicator";
 
 type AIHeaderProps = {
   historyOpen: boolean;
@@ -31,16 +29,21 @@ export const AIHeader = ({
   onRestoreChat,
   onToggleMode,
 }: AIHeaderProps) => {
+  const contextLabel =
+    activeContext.type === "none" ? "No context" : activeContext.label;
+
   return (
     <header className="relative flex-shrink-0">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-4">
           <div>
-            <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-2xl font-bold tracking-tight text-transparent">
+            <h2 className="text-2xl font-bold tracking-tight text-content">
               AI Sales Engine
             </h2>
             <p className="mt-0.5 text-xs text-content-tertiary">
-              {mode === "ask" ? "Ask questions & get insights" : "Agent executes actions for you"}
+              {mode === "ask"
+                ? "Ask anything about leads, pipeline, or outreach"
+                : "Tell the agent what to do. It will plan and execute."}
             </p>
           </div>
 
@@ -49,26 +52,18 @@ export const AIHeader = ({
           <ModeToggle mode={mode} onToggle={onToggleMode} />
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <ContextBar context={activeContext} />
-          <StatusIndicator status={aiStatus} />
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 rounded-md border border-accent/[0.08] bg-surface-secondary/30 px-2.5 py-1 text-[11px] text-content-secondary">
+            <span>📎</span>
+            <span>{contextLabel}</span>
+            <span className="text-content-tertiary">•</span>
+            <span className="capitalize">{aiStatus}</span>
+          </div>
 
-          <div className="ml-1 h-5 w-px bg-accent/10" />
-
-          <button
-            type="button"
-            onClick={onSaveCurrentChat}
-            disabled={messagesCount === 0}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-accent/[0.08] bg-surface-secondary/40 text-sm transition-all hover:border-accent/20 hover:bg-surface-secondary/70 disabled:cursor-not-allowed disabled:opacity-40"
-            title="Save current chat"
-            aria-label="Save current chat"
-          >
-            💾
-          </button>
           <button
             type="button"
             onClick={onStartNewChat}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-accent/[0.08] bg-surface-secondary/40 text-sm transition-all hover:border-accent/20 hover:bg-surface-secondary/70"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-secondary/40 text-sm text-content-secondary transition-all hover:bg-surface-secondary/70 hover:text-content"
             title="Start new chat"
             aria-label="Start new chat"
           >
@@ -77,7 +72,7 @@ export const AIHeader = ({
           <button
             type="button"
             onClick={onToggleHistory}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-accent/[0.08] bg-surface-secondary/40 text-sm transition-all hover:border-accent/20 hover:bg-surface-secondary/70"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-secondary/40 text-sm text-content-secondary transition-all hover:bg-surface-secondary/70 hover:text-content"
             title="Chat history"
             aria-label="Toggle chat history"
           >
@@ -87,7 +82,7 @@ export const AIHeader = ({
       </div>
 
       {historyOpen ? (
-        <div className="absolute right-0 top-14 z-30 w-full max-w-sm rounded-xl border border-accent/10 bg-surface-secondary/95 p-3 shadow-glass-lg backdrop-blur-xl md:w-96">
+        <div className="absolute right-0 top-14 z-30 w-full max-w-sm rounded-xl border border-accent/10 bg-surface-secondary/95 p-3 shadow-glass md:w-96">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-content-tertiary">
             Recent Chats
           </p>

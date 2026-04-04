@@ -1,24 +1,20 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { AIComposer } from "../../features/ai/components/AIComposer";
+import { AttachLeadsModal } from "../../features/ai/components/AttachLeadsModal";
 import { AIHeader } from "../../features/ai/components/AIHeader";
 import { AIMessageFeed } from "../../features/ai/components/AIMessageFeed";
-import { AIQuickActions } from "../../features/ai/components/AIQuickActions";
-import { SmartChipGroup } from "../../features/ai/components/SmartChip";
 import {
   CHAT_HISTORY_LIMIT,
-  FILE_ACCEPT,
-  QUICK_ACTION_PROMPT,
-  QUICK_ACTIONS,
   TONES,
   createId,
-  type QuickAction,
 } from "../../features/ai/constants/aiPage";
 import type { ChatMessage, ChatSession } from "../../features/ai/types/chat";
 import { MOCK_LEADS } from "../../features/leads/constants/mockLeads";
 import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLeads";
 import { useMessageGenerator } from "../../features/leads/hooks/useMessageGenerator";
 import { messageService } from "../../features/leads/services/messageService";
+import type { Lead } from "../../features/leads/types/lead";
 import { useLeadStore } from "../../store/useLeadStore";
 import type { ToneType } from "../../features/common/types/ui";
 import { PageBackground } from "../../components/ui/PageBackground";
@@ -34,7 +30,8 @@ export const AIPage = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [tone, setTone] = useState<ToneType>("professional");
-  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [attachedLeadIds, setAttachedLeadIds] = useState<string[]>([]);
+  const [attachLeadsOpen, setAttachLeadsOpen] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [lastAgentPrompt, setLastAgentPrompt] = useState("");
@@ -54,16 +51,36 @@ export const AIPage = () => {
     setAutoApproveLowRisk,
   } = useMode();
 
-  const { typingSuggestions, smartChips, setInputValue } = useSuggestions();
-
   const endRef = useRef<HTMLDivElement | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
   const leadPool = leads.length ? leads : MOCK_LEADS;
+
+  const getLeadChipTitle = useCallback((lead: Lead) => {
+    const base = (lead.title || lead.author || lead.summary || "Untitled lead").trim();
+    if (base.length <= 30) return base;
+    return `${base.slice(0, 27)}...`;
+  }, []);
 
   const topLead = useMemo(() => {
     return [...leadPool].sort((a, b) => b.score - a.score)[0] ?? MOCK_LEADS[0];
   }, [leadPool]);
+
+  const attachedLeads = useMemo(() => {
+    if (attachedLeadIds.length === 0) return [];
+    const selected = new Set(attachedLeadIds);
+    return leadPool.filter((lead) => selected.has(lead.id));
+  }, [attachedLeadIds, leadPool]);
+
+  const attachedLeadChips = useMemo(
+    () => attachedLeads.map((lead) => ({ id: lead.id, title: getLeadChipTitle(lead) })),
+    [attachedLeads, getLeadChipTitle],
+  );
+
+  const { typingSuggestions, smartChips, setInputValue } = useSuggestions({
+    mode,
+    leadCount: leadPool.length,
+    manageLeadCount: manageLeads.length,
+    topLeadName: topLead.author,
+  });
 
   const addMessage = useCallback((message: ChatMessage) => {
     setMessages((prev) => [...prev, message]);
@@ -78,20 +95,8 @@ export const AIPage = () => {
 
   const agentCallbacks = useMemo(
     () => ({
-      onStepStart: (step: AgentStep, _index: number) => {
-        addMessage({
-          id: createId(),
-          role: "agent",
-          content: `⏳ Starting: ${step.label} — ${step.description}`,
-        });
-      },
-      onStepComplete: (step: AgentStep, _index: number, result: AgentActionResult) => {
-        addMessage({
-          id: createId(),
-          role: "agent",
-          content: `✅ ${step.label}: ${result.message}`,
-        });
-      },
+      onStepStart: (_step: AgentStep, _index: number) => {},
+      onStepComplete: (_step: AgentStep, _index: number, _result: AgentActionResult) => {},
       onStepFail: (step: AgentStep, _index: number, error: string) => {
         addMessage({
           id: createId(),
@@ -144,9 +149,10 @@ export const AIPage = () => {
       .map((lead) => `${lead.name} (${lead.stage}) score=${lead.score}`)
       .join("\n");
 
-    const fileContext = attachedFile
-      ? `Attached file: ${attachedFile.name} (${attachedFile.type || "unknown"}, ${Math.max(1, Math.round(attachedFile.size / 1024))}KB)`
-      : "";
+    const attachedLeadsSummary = attachedLeads
+      .slice(0, 8)
+      .map((lead, index) => `${index + 1}. ${lead.title || lead.author} | score=${lead.score} | summary=${lead.summary}`)
+      .join("\n");
 
     return [
       "You are AI Sales Engine assistant.",
@@ -156,7 +162,7 @@ export const AIPage = () => {
       "Leads:",
       leadSummary,
       pipelineSummary ? `Pipeline:\n${pipelineSummary}` : "",
-      fileContext,
+      attachedLeadsSummary ? `Attached leads:\n${attachedLeadsSummary}` : "",
     ]
       .filter(Boolean)
       .join("\n");
@@ -196,7 +202,6 @@ export const AIPage = () => {
     } finally {
       setLoading(false);
       setAIStatus("idle");
-      setAttachedFile(null);
     }
   };
 
@@ -294,12 +299,6 @@ export const AIPage = () => {
     }, 100);
   };
 
-  const handleQuickAction = (action: QuickAction) => {
-    const prompt = QUICK_ACTION_PROMPT[action];
-    setInput(prompt);
-    void sendMessage(prompt);
-  };
-
   const handleSuggestionClick = (prompt: string) => {
     setInput(prompt);
     void sendMessage(prompt);
@@ -309,26 +308,12 @@ export const AIPage = () => {
     setInput(suggestion);
   };
 
-  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleAttachLeads = (leadIds: string[]) => {
+    setAttachedLeadIds(leadIds);
+  };
 
-    setAttachedFile(file);
-    addMessage({
-      id: createId(),
-      role: "assistant",
-      content: `Attached ${file.name}. I can analyze this ${file.type || "file"} and suggest next sales actions.`,
-    });
-
-    if (file.type.includes("csv") || file.name.toLowerCase().endsWith(".csv")) {
-      setInput("Import leads + summarize high-intent opportunities from this CSV.");
-    } else if (file.type.includes("pdf") || file.name.toLowerCase().endsWith(".pdf")) {
-      setInput("Improve this pitch deck/proposal and suggest stronger positioning.");
-    } else if (file.type.includes("image")) {
-      setInput("Analyze this screenshot and suggest the next best sales action.");
-    }
-
-    event.target.value = "";
+  const handleRemoveAttachedLead = (leadId: string) => {
+    setAttachedLeadIds((prev) => prev.filter((id) => id !== leadId));
   };
 
   const hideMessage = (messageId: string) => {
@@ -391,7 +376,7 @@ export const AIPage = () => {
 
     setMessages([]);
     setInput("");
-    setAttachedFile(null);
+    setAttachedLeadIds([]);
     setHistoryOpen(false);
     resetPlan();
   };
@@ -399,7 +384,7 @@ export const AIPage = () => {
   const restoreChat = (session: ChatSession) => {
     setMessages(session.messages);
     setInput("");
-    setAttachedFile(null);
+    setAttachedLeadIds([]);
     setHistoryOpen(false);
   };
 
@@ -407,7 +392,7 @@ export const AIPage = () => {
 
   return (
     <div className="page-with-bg">
-      <PageBackground image={bgChatBot} tint={mode == 'agent' ? "rgba(6, 182, 212, 0.45)" : "rgba(167, 139, 250, 0.45)"} opacity={0.35} />
+      <PageBackground image={bgChatBot} tint={mode == "agent" ? "rgba(6, 182, 212, 0.28)" : "rgba(99, 102, 241, 0.25)"} opacity={0.22} />
 
       <div className="flex h-[calc(100vh-100px)] flex-col overflow-hidden p-4 md:p-6">
         <AIHeader
@@ -425,7 +410,7 @@ export const AIPage = () => {
         />
 
         <section className="mx-auto mt-4 flex w-full max-w-5xl flex-1 min-h-0 flex-col gap-3">
-          <div className="ai-chat-panel flex min-h-0 flex-1 flex-col rounded-2xl border border-accent/[0.08] p-4 md:p-5">
+          <div className="ai-chat-panel flex min-h-0 flex-1 flex-col rounded-2xl border border-accent/[0.12] p-4 md:p-5">
             <div className="mx-auto flex h-full w-full max-w-3xl flex-col">
               <AIMessageFeed
                 messages={visibleMessages}
@@ -463,29 +448,16 @@ export const AIPage = () => {
             </div>
           </div>
 
-          {mode === "ask" ? (
-            <AIQuickActions actions={QUICK_ACTIONS} onAction={handleQuickAction} />
-          ) : (
-            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-accent/[0.06] bg-surface-secondary/40 px-4 py-2.5 backdrop-blur-sm">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-content-tertiary">
-                Suggestions
-              </span>
-              <div className="h-3 w-px bg-accent/10" />
-              <SmartChipGroup suggestions={smartChips} onChipClick={handleSuggestionClick} />
-            </div>
-          )}
-
           <AIComposer
             input={input}
             loading={loading}
-            attachedFile={attachedFile}
-            fileAccept={FILE_ACCEPT}
+            attachedLeads={attachedLeadChips}
             tones={TONES}
             tone={tone}
             mode={mode}
             typingSuggestions={typingSuggestions}
-            fileInputRef={fileInputRef}
-            onFileUpload={handleFileUpload}
+            onOpenAttachLeads={() => setAttachLeadsOpen(true)}
+            onRemoveAttachedLead={handleRemoveAttachedLead}
             onInputChange={setInput}
             onToneChange={setTone}
             onSend={() => {
@@ -494,6 +466,14 @@ export const AIPage = () => {
             onSuggestionSelect={handleSuggestionSelect}
           />
         </section>
+
+        <AttachLeadsModal
+          open={attachLeadsOpen}
+          leads={leadPool}
+          selectedLeadIds={attachedLeadIds}
+          onClose={() => setAttachLeadsOpen(false)}
+          onApply={handleAttachLeads}
+        />
       </div>
     </div>
   );

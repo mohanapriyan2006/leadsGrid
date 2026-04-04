@@ -27,6 +27,7 @@ import type {
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { useLeadStore } from "../../store/useLeadStore";
 import { PageBackground } from "../../components/ui/PageBackground";
+import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButton";
 import bgTeamCollab from "../../assets/bg-images/team-collaboration.svg";
 
 export const ManageLeadsPage = () => {
@@ -281,13 +282,14 @@ export const ManageLeadsPage = () => {
     <div className="page-with-bg">
       <PageBackground image={bgTeamCollab} tint="rgba(168, 85, 247, 0.80)" />
 
-      <div className="h-[calc(100vh-100px)] overflow-auto space-y-4 p-6">
+      <div className="focus-fill-height h-[calc(100vh-100px)] overflow-auto space-y-4 p-6">
         <ManageLeadsHeader
           manageLeadView={manageLeadView}
           insights={insights}
           search={search}
           onlyHot={onlyHot}
           disableDetailsPopup={disableDetailsPopup}
+          utilityControl={<FullscreenToggleButton />}
           uploadControl={uploadButton}
           onViewChange={setManageLeadView}
           onSearchChange={setSearch}

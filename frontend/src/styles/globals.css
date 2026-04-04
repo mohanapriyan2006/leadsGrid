@@ -193,6 +193,14 @@
     @apply relative min-h-[calc(100vh-100px)];
   }
 
+  .focus-shell {
+    min-height: 100vh;
+  }
+
+  .focus-shell .focus-fill-height {
+    height: 100vh;
+  }
+
   .page-header {
     @apply mb-6 flex items-center justify-between;
   }

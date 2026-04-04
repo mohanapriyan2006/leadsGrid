@@ -8,45 +8,20 @@ export const Topbar = () => {
   const [isBackendOnline, setIsBackendOnline] = useState(true);
 
   useEffect(() => {
-    // Listen to a test document to check Firestore connectivity
-    // We use metadata changes to detect connection state
     const testDocRef = doc(db, "_system", "status");
-    
+
     const unsubscribe = onSnapshot(
       testDocRef,
-      { includeMetadataChanges: true },
-      (snapshot) => {
-        // If we receive any snapshot (even from cache initially), backend is reachable
-        // If metadata has fromCache: false, we're definitely connected
-        setIsBackendOnline(!snapshot.metadata.fromCache || true);
+      () => {
+        setIsBackendOnline(true);
       },
-      (error) => {
-        // Error means we can't reach backend
+      () => {
         setIsBackendOnline(false);
-      }
+      },
     );
-
-    // Also check periodically by attempting to fetch
-    const intervalId = setInterval(() => {
-      // Try to get a fresh snapshot - if it succeeds, we're connected
-      unsubscribe();
-      const newUnsubscribe = onSnapshot(
-        testDocRef,
-        { includeMetadataChanges: true },
-        (snapshot) => {
-          setIsBackendOnline(!snapshot.metadata.fromCache || true);
-        },
-        () => {
-          setIsBackendOnline(false);
-        }
-      );
-      // Update the unsubscribe function reference
-      (window as unknown as { _unsub: () => void })._unsub = newUnsubscribe;
-    }, 30000); // Check every 30 seconds
 
     return () => {
       unsubscribe();
-      clearInterval(intervalId);
     };
   }, []);
 

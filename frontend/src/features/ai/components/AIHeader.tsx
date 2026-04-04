@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import type { ChatSession } from "../types/chat";
 import type { AIMode, AIStatus, ActiveContext } from "../types/agent";
 import { ModeToggle } from "./ModeToggle";
@@ -14,6 +16,7 @@ type AIHeaderProps = {
   onToggleHistory: () => void;
   onRestoreChat: (session: ChatSession) => void;
   onToggleMode: () => void;
+  utilityControl?: ReactNode;
 };
 
 export const AIHeader = ({
@@ -28,6 +31,7 @@ export const AIHeader = ({
   onToggleHistory,
   onRestoreChat,
   onToggleMode,
+  utilityControl,
 }: AIHeaderProps) => {
   const contextLabel =
     activeContext.type === "none" ? "No context" : activeContext.label;
@@ -53,6 +57,8 @@ export const AIHeader = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {utilityControl}
+
           <div className="flex items-center gap-2 rounded-md border border-accent/[0.08] bg-surface-secondary/30 px-2.5 py-1 text-[11px] text-content-secondary">
             <span>📎</span>
             <span>{contextLabel}</span>

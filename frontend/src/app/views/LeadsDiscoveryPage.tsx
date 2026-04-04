@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import bgConnecting from "../../assets/bg-images/connecting-teams.svg";
+import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButton";
 import { PageBackground } from "../../components/ui/PageBackground";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { LeadsDiscoveryDraftPanel } from "../../features/leads/components/LeadsDiscoveryDraftPanel";
@@ -149,7 +150,7 @@ export const LeadsDiscoveryPage = () => {
     <div className="page-with-bg">
       <PageBackground image={bgConnecting} tint="rgba(6, 182, 212, 0.28)" />
 
-      <div className="h-[calc(100vh-100px)] w-full min-w-0 overflow-y-auto overflow-x-hidden space-y-4 p-6">
+      <div className="focus-fill-height h-[calc(100vh-100px)] w-full min-w-0 overflow-y-auto overflow-x-hidden space-y-4 p-6">
         <header className="rounded-2xl border border-accent/[0.12] bg-surface-secondary/85 p-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -177,6 +178,8 @@ export const LeadsDiscoveryPage = () => {
             </div>
 
             <div className="flex items-center gap-2 rounded-xl border border-accent/[0.1] bg-surface/50 p-2">
+              <FullscreenToggleButton />
+
               <select
                 value={sortBy}
                 onChange={(event) => setSortBy(event.target.value as "score" | "recent")}

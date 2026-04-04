@@ -9,6 +9,7 @@ import {
 import { ConfirmDialog } from "../../features/leads/components/ConfirmDialog";
 import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLeads";
 import { leadService } from "../../features/leads/services/leadService";
+import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButton";
 import { PageBackground } from "../../components/ui/PageBackground";
 import bgConnecting from "../../assets/bg-images/connecting-teams.svg";
 import type { DealStatus } from "../../features/common/types/ui";
@@ -226,7 +227,7 @@ export const CRMPage = () => {
   return (
     <div className="page-with-bg">
       <PageBackground image={bgConnecting} tint="rgba(109, 111, 252, 0.58)" />
-      <div className="h-[calc(100vh-100px)] overflow-auto space-y-4 p-6">
+      <div className="focus-fill-height h-[calc(100vh-100px)] overflow-auto space-y-4 p-6">
         <header className="glass-card-lg flex flex-col justify-between gap-3 px-5 py-5 md:flex-row md:items-center md:px-6">
           <div>
             <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-3xl font-semibold text-transparent">
@@ -241,6 +242,7 @@ export const CRMPage = () => {
               <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-success" />
               Realtime scoring enabled
             </div>
+            <FullscreenToggleButton />
             <button
               onClick={() => setDisableDetailsPopup((v) => !v)}
               className={`glass-btn text-xs ${disableDetailsPopup ? "text-danger" : "text-success"}`}

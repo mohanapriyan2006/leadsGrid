@@ -10,6 +10,7 @@ type ManageLeadsHeaderProps = {
   search: string;
   onlyHot: boolean;
   disableDetailsPopup: boolean;
+  utilityControl?: ReactNode;
   uploadControl: ReactNode;
   onViewChange: (view: ManageLeadView) => void;
   onSearchChange: (value: string) => void;
@@ -24,6 +25,7 @@ export const ManageLeadsHeader = ({
   search,
   onlyHot,
   disableDetailsPopup,
+  utilityControl,
   uploadControl,
   onViewChange,
   onSearchChange,
@@ -43,6 +45,8 @@ export const ManageLeadsHeader = ({
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {utilityControl}
+
           {VIEW_OPTIONS.map((view) => (
             <button
               key={view.value}

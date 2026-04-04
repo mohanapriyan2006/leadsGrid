@@ -105,30 +105,27 @@ export const AgentExecutionTimeline = ({
           <span className="text-[12px] text-warning/80 font-medium">
             ⏸ Waiting for approval on step {executionState.currentStepIndex + 1}
           </span>
-          <div className="ml-auto flex gap-1.5">
-            <button
-              type="button"
-              onClick={onContinue}
-              className="rounded-lg bg-gradient-to-r from-info to-info/80 px-3 py-1.5 text-[11px] font-semibold text-surface shadow-[0_2px_8px_rgba(6,182,212,0.15)] transition-all hover:shadow-[0_2px_16px_rgba(6,182,212,0.25)]"
-            >
-              Approve
-            </button>
-            <button
-              type="button"
-              onClick={onAbort}
-              className="rounded-lg border border-danger/[0.1] bg-danger/[0.05] px-3 py-1.5 text-[11px] font-medium text-danger/70 transition hover:bg-danger/[0.1] hover:text-danger"
-            >
-              Abort
-            </button>
-          </div>
+          <span className="ml-auto text-[11px] text-content-tertiary">Review the permission modal to continue.</span>
         </div>
       ) : null}
 
-      {!executionState.isRunning && executionState.completedAt ? (
+      {executionState.status === "completed" && executionState.completedAt ? (
         <div className="mt-3 rounded-xl border border-success/[0.1] bg-success/[0.04] px-3.5 py-2.5">
           <p className="text-[12px] font-medium text-success/80">
             ✓ All steps completed successfully
           </p>
+        </div>
+      ) : null}
+
+      {executionState.status === "failed" ? (
+        <div className="mt-3 rounded-xl border border-danger/[0.1] bg-danger/[0.04] px-3.5 py-2.5">
+          <p className="text-[12px] font-medium text-danger/80">✕ Execution stopped due to a failed step</p>
+        </div>
+      ) : null}
+
+      {executionState.status === "aborted" ? (
+        <div className="mt-3 rounded-xl border border-warning/[0.1] bg-warning/[0.04] px-3.5 py-2.5">
+          <p className="text-[12px] font-medium text-warning/80">⛔ Execution aborted</p>
         </div>
       ) : null}
 

@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 
 import httpx
 
@@ -25,6 +26,11 @@ async def fetch_hackernews(query: str, limit: int = 20, timeout: int = 15) -> li
             continue
 
         summary = (hit.get("comment_text") or "").strip()[:280]
+        created_at_i = hit.get("created_at_i")
+        created_at = None
+        if isinstance(created_at_i, (int, float)):
+            created_at = datetime.fromtimestamp(created_at_i, tz=timezone.utc).isoformat()
+
         records.append(
             {
                 "id": hit.get("objectID"),
@@ -35,6 +41,7 @@ async def fetch_hackernews(query: str, limit: int = 20, timeout: int = 15) -> li
                 "upvotes": int(hit.get("points", 0) or 0),
                 "url": hit.get("url"),
                 "author": hit.get("author"),
+                "created_at": created_at,
             }
         )
 

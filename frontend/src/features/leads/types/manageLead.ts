@@ -8,7 +8,13 @@ export type ManageLeadStage =
   | "IN_PROGRESS"
   | "CLOSED";
 
-export type ManageLeadSource = "reddit" | "linkedin" | "website";
+export type ManageLeadSource =
+  | "reddit"
+  | "linkedin"
+  | "twitter"
+  | "hackernews"
+  | "search"
+  | "website";
 export type ManageLeadUrgency = "low" | "medium" | "high";
 
 export type ManageLeadAnalysis = {
@@ -36,7 +42,6 @@ export type ManageLead = {
   email: string | null;
   address: string | null;
   website_url: string | null;
-  open_now: boolean | null;
   google_maps_url: string | null;
   // Existing business fields
   source: ManageLeadSource;

@@ -1,6 +1,6 @@
 export type Lead = {
   id: string;
-  source: "reddit" | "twitter" | "linkedin";
+  source: "reddit" | "twitter" | "linkedin" | "hackernews" | "search";
   author: string;
   title?: string;
   email?: string | null;

@@ -57,6 +57,24 @@ export const SourceIcon = ({ source }: { source: string }) => {
     );
   }
 
+  if (source === "hackernews") {
+    return (
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+        <rect x="3" y="3" width="18" height="18" rx="3" />
+        <path fill="var(--bg-card)" d="M8 7h2.2l1.8 3.5L13.8 7H16l-2.8 5.1V17h-2.3v-4.9z" />
+      </svg>
+    );
+  }
+
+  if (source === "search") {
+    return (
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="11" cy="11" r="7" />
+        <path d="M20 20l-3.5-3.5" />
+      </svg>
+    );
+  }
+
   return (
     <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.912-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z" />

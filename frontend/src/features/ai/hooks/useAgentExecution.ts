@@ -1,10 +1,9 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 
 import type { Lead } from "../../leads/types/lead";
 import type { AgentPlan, AgentStep, AgentExecutionState, AIStatus } from "../types/agent";
-import { agentService } from "../services/agentService";
-import type { AgentActionResult } from "../services/agentService";
-import { createId } from "../constants/aiPage";
+import { agentApiService } from "../services/agentApiService";
+import type { AgentActionResult, AgentRunState } from "../services/agentApiService";
 
 type ExecutionCallbacks = {
   onStepStart: (step: AgentStep, index: number) => void;
@@ -17,21 +16,69 @@ type ExecutionCallbacks = {
 export const useAgentExecution = (callbacks: ExecutionCallbacks) => {
   const [plan, setPlan] = useState<AgentPlan | null>(null);
   const [executionState, setExecutionState] = useState<AgentExecutionState | null>(null);
-  const abortRef = useRef(false);
+
+  const toExecutionState = useCallback((run: AgentRunState): AgentExecutionState => {
+    return {
+      runId: run.runId,
+      planId: run.plan.id,
+      status: run.status,
+      currentStepIndex: run.currentStepIndex,
+      isRunning: run.status === "running",
+      isPaused: run.status === "paused",
+      completedSteps: run.completedSteps,
+      totalSteps: run.totalSteps,
+      startedAt: run.startedAt,
+      completedAt: run.completedAt,
+    };
+  }, []);
+
+  const applyRunState = useCallback(
+    (run: AgentRunState, previousPlan: AgentPlan | null) => {
+      run.plan.steps.forEach((step, index) => {
+        const previousStatus = previousPlan?.steps[index]?.status;
+        if (previousStatus === step.status) {
+          return;
+        }
+
+        if (step.status === "running") {
+          callbacks.onStepStart(step, index);
+          return;
+        }
+
+        if (step.status === "completed") {
+          const result: AgentActionResult = {
+            success: true,
+            message: step.result || `${step.label} completed`,
+            data: {},
+          };
+          callbacks.onStepComplete(step, index, result);
+          return;
+        }
+
+        if (step.status === "failed") {
+          callbacks.onStepFail(step, index, step.error || "Step failed");
+        }
+      });
+
+      setPlan(run.plan);
+      setExecutionState(toExecutionState(run));
+
+      if (run.status === "completed") {
+        callbacks.onStatusChange("idle");
+        callbacks.onPlanComplete(run.plan);
+      } else if (run.status === "failed" || run.status === "aborted") {
+        callbacks.onStatusChange("idle");
+      }
+    },
+    [callbacks, toExecutionState],
+  );
 
   const createPlan = useCallback(
     async (prompt: string, leads: Lead[]): Promise<AgentPlan> => {
-      const steps = await agentService.buildPlanFromApi(prompt, leads);
-      const newPlan: AgentPlan = {
-        id: createId(),
-        title: prompt.slice(0, 80),
-        steps,
-        createdAt: new Date().toISOString(),
-        approved: false,
-        approvalMode: null,
-      };
-      setPlan(newPlan);
-      return newPlan;
+      const backendPlan = await agentApiService.createPlan(prompt, leads);
+      setPlan(backendPlan);
+      setExecutionState(null);
+      return backendPlan;
     },
     [],
   );
@@ -80,174 +127,101 @@ export const useAgentExecution = (callbacks: ExecutionCallbacks) => {
       autoApproveLowRisk: boolean,
     ) => {
       if (!currentPlan.approved) return;
-
-      abortRef.current = false;
       callbacks.onStatusChange("executing");
 
-      const state: AgentExecutionState = {
-        planId: currentPlan.id,
-        currentStepIndex: 0,
-        isRunning: true,
-        isPaused: false,
-        completedSteps: 0,
-        totalSteps: currentPlan.steps.length,
-        startedAt: new Date().toISOString(),
-      };
-      setExecutionState(state);
-
-      const updatedSteps = [...currentPlan.steps];
-
-      for (let i = 0; i < updatedSteps.length; i++) {
-        if (abortRef.current) break;
-
-        const step = updatedSteps[i];
-
-        if (
-          currentPlan.approvalMode === "step_by_step" &&
-          !(autoApproveLowRisk && step.riskLevel === "low")
-        ) {
-          setExecutionState((prev) =>
-            prev ? { ...prev, currentStepIndex: i, isPaused: true } : prev,
-          );
-          return;
-        }
-
-        updatedSteps[i] = { ...step, status: "running" };
-        setPlan((prev) =>
-          prev ? { ...prev, steps: [...updatedSteps] } : prev,
-        );
-        callbacks.onStepStart(step, i);
-
-        setExecutionState((prev) =>
-          prev ? { ...prev, currentStepIndex: i, isPaused: false } : prev,
-        );
-
-        try {
-          const result = await agentService.executeAction(
-            step.actionType,
-            leads,
-            prompt,
-            tone,
-          );
-
-          updatedSteps[i] = {
-            ...step,
-            status: result.success ? "completed" : "failed",
-            result: result.message,
-            error: result.success ? undefined : result.message,
-          };
-
-          setPlan((prev) =>
-            prev ? { ...prev, steps: [...updatedSteps] } : prev,
-          );
-
-          setExecutionState((prev) =>
-            prev
-              ? { ...prev, completedSteps: (prev.completedSteps || 0) + 1 }
-              : prev,
-          );
-
-          callbacks.onStepComplete(updatedSteps[i], i, result);
-        } catch (err) {
-          const errorMsg = err instanceof Error ? err.message : "Unknown error";
-          updatedSteps[i] = { ...step, status: "failed", error: errorMsg };
-          setPlan((prev) =>
-            prev ? { ...prev, steps: [...updatedSteps] } : prev,
-          );
-          callbacks.onStepFail(updatedSteps[i], i, errorMsg);
-        }
+      try {
+        const run = await agentApiService.startRun({
+          prompt,
+          leads,
+          tone,
+          approvalMode: currentPlan.approvalMode || "all",
+          autoApproveLowRisk,
+          autoSave: true,
+        });
+        applyRunState(run, currentPlan);
+      } catch {
+        callbacks.onStatusChange("idle");
       }
-
-      setExecutionState((prev) =>
-        prev
-          ? {
-              ...prev,
-              isRunning: false,
-              completedAt: new Date().toISOString(),
-            }
-          : prev,
-      );
-
-      callbacks.onStatusChange("idle");
-
-      const finalPlan: AgentPlan = { ...currentPlan, steps: updatedSteps };
-      setPlan(finalPlan);
-      callbacks.onPlanComplete(finalPlan);
     },
-    [callbacks],
+    [callbacks, applyRunState],
   );
 
   const continueExecution = useCallback(
     async (leads: Lead[], prompt: string, tone: string, autoApproveLowRisk: boolean) => {
-      if (!plan || !executionState) return;
+      void leads;
+      void prompt;
+      void tone;
 
-      const nextIndex = executionState.currentStepIndex;
-      const step = plan.steps[nextIndex];
-      if (!step) return;
+      if (!executionState?.runId) return;
 
       callbacks.onStatusChange("executing");
-
-      const updatedSteps = [...plan.steps];
-      updatedSteps[nextIndex] = { ...step, status: "running" };
-      const updatedPlan = { ...plan, steps: updatedSteps };
-      setPlan(updatedPlan);
-      callbacks.onStepStart(step, nextIndex);
-
       try {
-        const result = await agentService.executeAction(
-          step.actionType,
-          leads,
-          prompt,
-          tone,
-        );
-
-        updatedSteps[nextIndex] = {
-          ...step,
-          status: result.success ? "completed" : "failed",
-          result: result.message,
-          error: result.success ? undefined : result.message,
-        };
-        setPlan((prev) => (prev ? { ...prev, steps: [...updatedSteps] } : prev));
-
-        setExecutionState((prev) =>
-          prev
-            ? { ...prev, completedSteps: prev.completedSteps + 1, currentStepIndex: nextIndex + 1 }
-            : prev,
-        );
-
-        callbacks.onStepComplete(updatedSteps[nextIndex], nextIndex, result);
-      } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : "Unknown error";
-        updatedSteps[nextIndex] = { ...step, status: "failed", error: errorMsg };
-        setPlan((prev) => (prev ? { ...prev, steps: [...updatedSteps] } : prev));
-        callbacks.onStepFail(updatedSteps[nextIndex], nextIndex, errorMsg);
-      }
-
-      if (nextIndex + 1 < plan.steps.length) {
-        const remainingPlan: AgentPlan = {
-          ...plan,
-          steps: updatedSteps,
-          approvalMode: plan.approvalMode,
-        };
-        await executePlan(remainingPlan, leads, prompt, tone, autoApproveLowRisk);
-      } else {
-        setExecutionState((prev) =>
-          prev ? { ...prev, isRunning: false, completedAt: new Date().toISOString() } : prev,
-        );
+        const run = await agentApiService.approveStep(executionState.runId, autoApproveLowRisk);
+        applyRunState(run, plan);
+      } catch {
         callbacks.onStatusChange("idle");
-        callbacks.onPlanComplete({ ...plan, steps: updatedSteps });
       }
     },
-    [plan, executionState, callbacks, executePlan],
+    [executionState?.runId, callbacks, applyRunState, plan],
+  );
+
+  const skipCurrentStep = useCallback(
+    async (leads: Lead[], prompt: string, tone: string, autoApproveLowRisk: boolean) => {
+      void leads;
+      void prompt;
+      void tone;
+
+      if (!executionState?.runId) return;
+
+      callbacks.onStatusChange("executing");
+      try {
+        const run = await agentApiService.skipStep(executionState.runId, autoApproveLowRisk);
+        applyRunState(run, plan);
+      } catch {
+        callbacks.onStatusChange("idle");
+      }
+    },
+    [executionState?.runId, callbacks, applyRunState, plan],
   );
 
   const abortExecution = useCallback(() => {
-    abortRef.current = true;
-    setExecutionState((prev) =>
-      prev ? { ...prev, isRunning: false, isPaused: false } : prev,
-    );
+    const runId = executionState?.runId;
     callbacks.onStatusChange("idle");
-  }, [callbacks]);
+
+    if (!runId) {
+      setExecutionState((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: "aborted",
+              isRunning: false,
+              isPaused: false,
+              completedAt: new Date().toISOString(),
+            }
+          : prev,
+      );
+      return;
+    }
+
+    void agentApiService
+      .abortRun(runId)
+      .then((run) => {
+        applyRunState(run, plan);
+      })
+      .catch(() => {
+        setExecutionState((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: "aborted",
+                isRunning: false,
+                isPaused: false,
+                completedAt: new Date().toISOString(),
+              }
+            : prev,
+        );
+      });
+  }, [executionState?.runId, callbacks, applyRunState, plan]);
 
   const resetPlan = useCallback(() => {
     setPlan(null);
@@ -263,6 +237,7 @@ export const useAgentExecution = (callbacks: ExecutionCallbacks) => {
     removeStep,
     executePlan,
     continueExecution,
+    skipCurrentStep,
     abortExecution,
     resetPlan,
   };

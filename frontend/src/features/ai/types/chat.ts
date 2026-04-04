@@ -13,6 +13,8 @@ export type ChatMessage = {
   role: ChatRole;
   content: string;
   card?: InsightCard;
+  mode?: "ask" | "agent";
+  offerAgent?: boolean;
   hidden?: boolean;
 };
 

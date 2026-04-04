@@ -10,6 +10,7 @@ from app.services.agent_executor import AgentExecutor
 from app.services.aggregator import LeadAggregator
 from app.services.ai_router import AIRouter
 from app.services.email_service import EmailService
+from app.services.agent_run_service import AgentRunService
 
 
 def create_app() -> FastAPI:
@@ -37,12 +38,14 @@ def create_app() -> FastAPI:
         email_service=email_service,
         firebase_client=firebase_client,
     )
+    agent_run_service = AgentRunService(agent_executor)
 
     app.state.settings = settings
     app.state.firebase_client = firebase_client
     app.state.lead_aggregator = lead_aggregator
     app.state.email_service = email_service
     app.state.agent_executor = agent_executor
+    app.state.agent_run_service = agent_run_service
 
     app.add_middleware(
         CORSMiddleware,

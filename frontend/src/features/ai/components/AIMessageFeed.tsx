@@ -5,6 +5,7 @@ import type { AIMode, AgentPlan, AgentExecutionState, SmartSuggestion } from "..
 import { AgentPlanCard } from "./AgentPlanCard";
 import { AgentExecutionTimeline } from "./AgentExecutionTimeline";
 import { EmptyState } from "./EmptyState";
+import { PermissionModal } from "./PermissionModal";
 
 type AIMessageFeedProps = {
   messages: ChatMessage[];
@@ -26,7 +27,10 @@ type AIMessageFeedProps = {
   onEditStep: (stepId: string, updates: Partial<{ label: string; description: string }>) => void;
   onRemoveStep: (stepId: string) => void;
   onContinueExecution: () => void;
+  onSkipExecution: () => void;
   onAbortExecution: () => void;
+  autoApproveLowRisk: boolean;
+  onToggleAutoApprove: () => void;
 };
 
 export const AIMessageFeed = ({
@@ -49,8 +53,16 @@ export const AIMessageFeed = ({
   onEditStep,
   onRemoveStep,
   onContinueExecution,
+  onSkipExecution,
   onAbortExecution,
+  autoApproveLowRisk,
+  onToggleAutoApprove,
 }: AIMessageFeedProps) => {
+  const pausedStep =
+    agentPlan && executionState?.isPaused
+      ? agentPlan.steps[executionState.currentStepIndex] ?? null
+      : null;
+
   return (
     <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1 scrollbar-thin">
       {messages.length === 0 && !agentPlan ? (
@@ -61,7 +73,9 @@ export const AIMessageFeed = ({
         />
       ) : null}
 
-      {messages.map((message) => (
+      {messages.map((message) => {
+        const messageMode = message.mode ?? mode;
+        return (
         <div
           key={message.id}
           className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} animate-fadeIn`}
@@ -101,38 +115,52 @@ export const AIMessageFeed = ({
 
             {message.role === "assistant" ? (
               <div className="mt-2.5 flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => onUseMessage(message.content)}
-                  className="rounded-md border border-accent/[0.08] bg-surface-secondary/50 px-2.5 py-1 text-[11px] font-medium text-content-secondary transition-all hover:border-accent/20 hover:text-content"
-                >
-                  Use this
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onEditMessage(message.content)}
-                  className="rounded-md border border-accent/[0.08] bg-surface-secondary/50 px-2.5 py-1 text-[11px] font-medium text-content-secondary transition-all hover:border-accent/20 hover:text-content"
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onConvertToAgent(message.content)}
-                  className="rounded-md border border-info/[0.12] bg-info/[0.06] px-2.5 py-1 text-[11px] font-medium text-info/80 transition-all hover:bg-info/[0.12] hover:text-info"
-                >
-                  Agent Task
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onHideMessage(message.id)}
-                  className="rounded-md border border-danger/[0.12] bg-danger/[0.05] px-2.5 py-1 text-[11px] font-medium text-danger/60 transition-all hover:bg-danger/[0.1] hover:text-danger"
-                >
-                  Ignore
-                </button>
+                {messageMode === "ask" ? (
+                  message.offerAgent ? (
+                    <button
+                      type="button"
+                      onClick={() => onConvertToAgent(message.content)}
+                      className="rounded-md border border-info/[0.12] bg-info/[0.06] px-2.5 py-1 text-[11px] font-medium text-info/80 transition-all hover:bg-info/[0.12] hover:text-info"
+                    >
+                      Run in Agent mode
+                    </button>
+                  ) : null
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => onUseMessage(message.content)}
+                      className="rounded-md border border-accent/[0.08] bg-surface-secondary/50 px-2.5 py-1 text-[11px] font-medium text-content-secondary transition-all hover:border-accent/20 hover:text-content"
+                    >
+                      Use this
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onEditMessage(message.content)}
+                      className="rounded-md border border-accent/[0.08] bg-surface-secondary/50 px-2.5 py-1 text-[11px] font-medium text-content-secondary transition-all hover:border-accent/20 hover:text-content"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onConvertToAgent(message.content)}
+                      className="rounded-md border border-info/[0.12] bg-info/[0.06] px-2.5 py-1 text-[11px] font-medium text-info/80 transition-all hover:bg-info/[0.12] hover:text-info"
+                    >
+                      Agent Task
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onHideMessage(message.id)}
+                      className="rounded-md border border-danger/[0.12] bg-danger/[0.05] px-2.5 py-1 text-[11px] font-medium text-danger/60 transition-all hover:bg-danger/[0.1] hover:text-danger"
+                    >
+                      Ignore
+                    </button>
+                  </>
+                )}
               </div>
             ) : null}
 
-            {message.card ? (
+            {message.card && messageMode !== "ask" ? (
               <div className="mt-3 overflow-hidden rounded-xl border border-warning/[0.12] bg-surface/60">
                 <div className="border-b border-warning/[0.08] bg-warning/[0.04] px-3.5 py-2">
                   <p className="text-[13px] font-semibold text-warning">
@@ -184,7 +212,8 @@ export const AIMessageFeed = ({
             ) : null}
           </div>
         </div>
-      ))}
+        );
+      })}
 
       {agentPlan && !executionState ? (
         <AgentPlanCard
@@ -202,6 +231,17 @@ export const AIMessageFeed = ({
           executionState={executionState}
           onContinue={onContinueExecution}
           onAbort={onAbortExecution}
+        />
+      ) : null}
+
+      {pausedStep ? (
+        <PermissionModal
+          step={pausedStep}
+          onApprove={onContinueExecution}
+          onSkip={onSkipExecution}
+          onAbort={onAbortExecution}
+          autoApproveLowRisk={autoApproveLowRisk}
+          onToggleAutoApprove={onToggleAutoApprove}
         />
       ) : null}
 

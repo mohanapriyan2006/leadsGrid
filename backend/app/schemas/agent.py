@@ -16,6 +16,7 @@ AgentStepStatus = Literal["pending", "running", "completed", "failed", "skipped"
 RiskLevel = Literal["low", "medium", "high"]
 ApprovalMode = Literal["all", "step_by_step"]
 ToneType = Literal["professional", "friendly", "direct"]
+AgentRunLifecycleStatus = Literal["running", "paused", "completed", "failed", "aborted"]
 
 
 class LeadItem(BaseModel):
@@ -29,6 +30,7 @@ class LeadItem(BaseModel):
     url: str | None = None
     author: str | None = None
     email: str | None = None
+    created_at: str | None = None
 
 
 class AgentStep(BaseModel):
@@ -73,6 +75,37 @@ class AgentActionResult(BaseModel):
     success: bool
     message: str
     data: dict[str, Any] = Field(default_factory=dict)
+
+
+class AgentRunStartRequest(BaseModel):
+    prompt: str = Field(min_length=3, max_length=2000)
+    leads: list[LeadItem] = Field(default_factory=list)
+    tone: ToneType = "professional"
+    userId: str | None = None
+    autoSave: bool = True
+    approvalMode: ApprovalMode = "all"
+    autoApproveLowRisk: bool = False
+
+
+class AgentRunAdvanceRequest(BaseModel):
+    autoApproveLowRisk: bool | None = None
+
+
+class AgentRunState(BaseModel):
+    runId: str
+    status: AgentRunLifecycleStatus
+    plan: AgentPlan
+    currentStepIndex: int
+    completedSteps: int
+    totalSteps: int
+    startedAt: datetime
+    completedAt: datetime | None = None
+    updatedAt: datetime
+    results: list[AgentActionResult] = Field(default_factory=list)
+
+
+class AgentRunStateResponse(BaseModel):
+    run: AgentRunState
 
 
 class AgentRunRequest(BaseModel):

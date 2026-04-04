@@ -1,7 +1,7 @@
 import { apiClient, getStoredToken } from "../../../lib/api";
 import { getFirebaseAuth } from "../../../lib/firebase";
 import type { Lead } from "../../leads/types/lead";
-import type { AgentActionType, AgentPlan, AgentStep } from "../types/agent";
+import type { AgentActionType, AgentPlan, AgentRunStatus, AgentStep } from "../types/agent";
 
 export type AgentActionResult = {
   success: boolean;
@@ -20,6 +20,20 @@ type BackendLead = {
   url: string | null;
   author: string;
   email: string | null;
+  created_at?: string | null;
+};
+
+export type AgentRunState = {
+  runId: string;
+  status: AgentRunStatus;
+  plan: AgentPlan;
+  currentStepIndex: number;
+  completedSteps: number;
+  totalSteps: number;
+  startedAt: string;
+  completedAt?: string;
+  updatedAt: string;
+  results: AgentActionResult[];
 };
 
 const toBackendLead = (lead: Lead): BackendLead => ({
@@ -33,6 +47,7 @@ const toBackendLead = (lead: Lead): BackendLead => ({
   url: lead.permalink || null,
   author: lead.author,
   email: lead.email || null,
+  created_at: lead.created_at || null,
 });
 
 const buildHeaders = async (): Promise<Record<string, string>> => {
@@ -89,5 +104,64 @@ export const agentApiService = {
     );
 
     return response.data;
+  },
+
+  startRun: async (params: {
+    prompt: string;
+    leads: Lead[];
+    tone: string;
+    approvalMode: "all" | "step_by_step";
+    autoApproveLowRisk: boolean;
+    autoSave?: boolean;
+  }): Promise<AgentRunState> => {
+    const headers = await buildHeaders();
+    const response = await apiClient.post<{ run: AgentRunState }>(
+      "/agent/runs/start",
+      {
+        prompt: params.prompt,
+        leads: params.leads.map(toBackendLead),
+        tone: params.tone,
+        approvalMode: params.approvalMode,
+        autoApproveLowRisk: params.autoApproveLowRisk,
+        autoSave: params.autoSave ?? true,
+      },
+      { headers },
+    );
+
+    return response.data.run;
+  },
+
+  getRunStatus: async (runId: string): Promise<AgentRunState> => {
+    const headers = await buildHeaders();
+    const response = await apiClient.get<{ run: AgentRunState }>(`/agent/runs/${runId}`, {
+      headers,
+    });
+    return response.data.run;
+  },
+
+  approveStep: async (runId: string, autoApproveLowRisk: boolean): Promise<AgentRunState> => {
+    const headers = await buildHeaders();
+    const response = await apiClient.post<{ run: AgentRunState }>(
+      `/agent/runs/${runId}/approve`,
+      { autoApproveLowRisk },
+      { headers },
+    );
+    return response.data.run;
+  },
+
+  skipStep: async (runId: string, autoApproveLowRisk: boolean): Promise<AgentRunState> => {
+    const headers = await buildHeaders();
+    const response = await apiClient.post<{ run: AgentRunState }>(
+      `/agent/runs/${runId}/skip`,
+      { autoApproveLowRisk },
+      { headers },
+    );
+    return response.data.run;
+  },
+
+  abortRun: async (runId: string): Promise<AgentRunState> => {
+    const headers = await buildHeaders();
+    const response = await apiClient.post<{ run: AgentRunState }>(`/agent/runs/${runId}/abort`, {}, { headers });
+    return response.data.run;
   },
 };

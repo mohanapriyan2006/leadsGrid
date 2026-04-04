@@ -11,6 +11,8 @@ export type AgentActionType =
 
 export type AgentStepStatus = "pending" | "running" | "completed" | "failed" | "skipped";
 
+export type AgentRunStatus = "running" | "paused" | "completed" | "failed" | "aborted";
+
 export type RiskLevel = "low" | "medium" | "high";
 
 export type AgentStep = {
@@ -34,7 +36,9 @@ export type AgentPlan = {
 };
 
 export type AgentExecutionState = {
+  runId: string;
   planId: string;
+  status: AgentRunStatus;
   currentStepIndex: number;
   isRunning: boolean;
   isPaused: boolean;

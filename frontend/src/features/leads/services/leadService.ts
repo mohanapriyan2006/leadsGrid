@@ -1,5 +1,6 @@
 import { collection, query, where, getDocs, doc, addDoc, updateDoc, deleteDoc, orderBy, Timestamp } from "firebase/firestore";
 import { db, getFirebaseAuth } from "../../../lib/firebase";
+import { apiClient } from "../../../lib/api";
 import type { Lead } from "../types/lead";
 import type {
   BinLead,
@@ -15,6 +16,8 @@ import type {
   ManageLeadUrgency,
 } from "../types/manageLead";
 import { createFirestoreLead, toFirestoreLeadPatch, toManageLead } from "./leadModel";
+import type { DiscoveryLeadDto, DiscoveryParams } from "../types/discovery";
+import { adaptDiscoveryLead } from "./discoveryAdapter";
 
 const getCurrentUser = () => {
   const auth = getFirebaseAuth();
@@ -30,11 +33,32 @@ const getUserLeadsCollection = (uid: string) => collection(db, "users", uid, "le
 const getUserLeadDocument = (uid: string, leadId: string) => doc(db, "users", uid, "leads", leadId);
 
 export const leadService = {
-  // Discovery logic should call a Cloud Function or separate service for scraping
-  discoverLeads: async (params: { query: string; source: Lead["source"]; limit: number }): Promise<Lead[]> => {
-    // TODO: Connect to Cloud Function / AI scraping backend
-    console.warn("discoverLeads: currently a mock in Firebase migration");
-    return [];
+  discoverLeads: async (params: DiscoveryParams): Promise<Lead[]> => {
+    if (!params.query.trim()) {
+      return [];
+    }
+
+    const auth = getFirebaseAuth();
+    const user = auth?.currentUser;
+    const token = user ? await user.getIdToken() : null;
+
+    const response = await apiClient.get<DiscoveryLeadDto[]>("/agent/discover", {
+      params: {
+        query: params.query,
+        limit: params.limit ?? 12,
+      },
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(user?.uid ? { "x-user-id": user.uid } : {}),
+      },
+    });
+
+    const mapped = (response.data || []).map(adaptDiscoveryLead);
+    if (!params.selectedSources || params.selectedSources.length === 0) {
+      return mapped;
+    }
+
+    return mapped.filter((lead) => params.selectedSources?.includes(lead.source));
   },
 
   listManageLeads: async (params: {

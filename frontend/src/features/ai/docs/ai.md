@@ -28,10 +28,16 @@ Provides AI-assisted sales chat with quick actions, message generation, file-awa
 - Constants: `src/features/ai/constants/aiPage.ts`
 
 ## Behavior
-- Generates assistant responses based on lead and pipeline context.
+- Ask mode runs frontend-only provider calls with ordered fallback: Gemini -> Groq -> OpenRouter.
+- Ask mode returns text responses only and can show one CTA to switch into Agent mode for execution tasks.
+- Agent mode uses structured plan/execution timeline components with approval-aware controls.
 - Supports quick action prompts and file-aware prompt seeding.
-- Supports message hiding, reusing, editing, and send-email actions.
 - Supports save/restore chat sessions in local page state.
+
+## Ask Mode Guardrails
+- No insight cards/actions are rendered in Ask mode responses.
+- Ask mode is advisory only; execution flows are delegated to Agent mode.
+- Provider keys are sourced from `VITE_*` env variables.
 
 ## Future Improvements
 - Persist chat history to Firestore through `aiHistoryService`.

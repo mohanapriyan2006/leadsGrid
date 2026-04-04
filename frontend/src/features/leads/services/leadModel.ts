@@ -8,11 +8,19 @@ export type FirestoreLead = {
   name?: string;
   email?: string | null;
   company?: string;
+  title?: string;
+  summary?: string;
+  content?: string;
+  author?: string;
+  platform?: string;
+  upvotes?: number;
+  url?: string | null;
   status?: LeadStatus;
   pipelineStage?: string;
+  stage?: string;
   isDeleted?: boolean;
   deletedAt?: Timestamp | string | null;
-  source?: "manual" | "csv" | "ai";
+  source?: "manual" | "csv" | "ai" | "reddit" | "linkedin" | "twitter" | "hackernews" | "search";
   notes?: string | null;
   tags?: string[];
   phone?: string | null;
@@ -22,6 +30,9 @@ export type FirestoreLead = {
   createdAt?: Timestamp | string;
   updatedAt?: Timestamp | string;
   lastActivityAt?: Timestamp | string;
+  created_at?: Timestamp | string;
+  updated_at?: Timestamp | string;
+  last_activity_at?: Timestamp | string;
   // CSV fields
   category?: string | null;
   rating?: number | null;
@@ -54,7 +65,40 @@ const STAGE_TO_STATUS: Record<ManageLeadStage, LeadStatus> = {
 const SOURCE_TO_MANAGE: Record<NonNullable<FirestoreLead["source"]>, ManageLeadSource> = {
   manual: "website",
   csv: "website",
-  ai: "linkedin",
+  ai: "website",
+  reddit: "reddit",
+  linkedin: "linkedin",
+  twitter: "twitter",
+  hackernews: "hackernews",
+  search: "search",
+};
+
+const pickFirstText = (...values: Array<string | null | undefined>): string | null => {
+  for (const value of values) {
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (trimmed) {
+        return trimmed;
+      }
+    }
+  }
+  return null;
+};
+
+const toSource = (lead: FirestoreLead): ManageLeadSource => {
+  const source = (lead.source || "").toLowerCase() as NonNullable<FirestoreLead["source"]>;
+  if (source && SOURCE_TO_MANAGE[source]) {
+    return SOURCE_TO_MANAGE[source];
+  }
+
+  const platform = (lead.platform || "").toLowerCase();
+  if (platform === "reddit") return "reddit";
+  if (platform === "linkedin") return "linkedin";
+  if (platform === "twitter") return "twitter";
+  if (platform === "hackernews") return "hackernews";
+  if (platform === "search") return "search";
+
+  return "website";
 };
 
 const toISO = (value: Timestamp | string | null | undefined) => {
@@ -73,15 +117,20 @@ const toISO = (value: Timestamp | string | null | undefined) => {
 
 export const toManageLead = (id: string, data: DocumentData): ManageLead => {
   const lead = data as FirestoreLead;
+  const normalizedName = pickFirstText(lead.name, lead.author, lead.title, lead.summary, lead.content) ?? "Unknown";
+  const normalizedCompany = pickFirstText(lead.company, lead.title, lead.author, lead.name) ?? normalizedName;
   const stageFromPipeline = (lead.pipelineStage || "").toUpperCase() as ManageLeadStage;
+  const stageFromLegacy = (lead.stage || "").toUpperCase() as ManageLeadStage;
   const stage = ["NEW", "QUALIFIED", "CONTACTED", "RESPONDED", "NEGOTIATION", "CONTRACTED", "IN_PROGRESS", "CLOSED"].includes(stageFromPipeline)
     ? stageFromPipeline
-    : STATUS_TO_STAGE[lead.status ?? "new"];
+    : ["NEW", "QUALIFIED", "CONTACTED", "RESPONDED", "NEGOTIATION", "CONTRACTED", "IN_PROGRESS", "CLOSED"].includes(stageFromLegacy)
+      ? stageFromLegacy
+      : STATUS_TO_STAGE[lead.status ?? "new"];
 
   return {
     id,
-    name: lead.name ?? "Unknown",
-    company: lead.company ?? "Unknown",
+    name: normalizedName,
+    company: normalizedCompany,
     // CSV fields
     category: lead.category ?? null,
     rating: lead.rating ?? null,
@@ -91,20 +140,20 @@ export const toManageLead = (id: string, data: DocumentData): ManageLead => {
     open_now: lead.openNow ?? null,
     google_maps_url: lead.googleMapsUrl ?? null,
     // Existing fields
-    source: SOURCE_TO_MANAGE[lead.source ?? "manual"],
+    source: toSource(lead),
     stage,
     email: lead.email ?? null,
     phone: lead.phone ?? null,
     budget_estimate: lead.budgetEstimate ?? 0,
     urgency: lead.urgency ?? "medium",
     score: lead.score ?? 50,
-    last_activity_at: toISO(lead.lastActivityAt ?? lead.updatedAt),
-    created_at: toISO(lead.createdAt),
-    updated_at: toISO(lead.updatedAt),
+    last_activity_at: toISO(lead.lastActivityAt ?? lead.last_activity_at ?? lead.updatedAt ?? lead.updated_at ?? lead.createdAt ?? lead.created_at),
+    created_at: toISO(lead.createdAt ?? lead.created_at),
+    updated_at: toISO(lead.updatedAt ?? lead.updated_at ?? lead.createdAt ?? lead.created_at),
     notes: lead.notes ?? null,
     is_going_cold: false,
     is_deleted: lead.isDeleted ?? false,
-    deleted_at: toISO(lead.deletedAt),
+    deleted_at: lead.deletedAt ? toISO(lead.deletedAt) : null,
     ai_analysis: {
       intent_score: lead.score ?? 50,
       pain_points: [],

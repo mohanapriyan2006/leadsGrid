@@ -8,12 +8,16 @@ const ICONS: Record<SourceType, string> = {
   linkedin: "in",
   twitter: "X",
   reddit: "r/",
+  hackernews: "HN",
+  search: "S",
 };
 
 const COLORS: Record<SourceType, string> = {
   linkedin: "#0A66C2",
   twitter: "#1D9BF0",
   reddit: "#FF4500",
+  hackernews: "#F97316",
+  search: "#22C55E",
 };
 
 export const SourceIcon = ({ source }: SourceIconProps) => {

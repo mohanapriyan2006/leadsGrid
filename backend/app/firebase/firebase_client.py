@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timezone
 from uuid import uuid4
+from typing import Any
 
 from app.core.config import Settings
 
@@ -56,17 +57,74 @@ class FirebaseClient:
                 "reason": "firebase-disabled",
             }
 
+        def parse_created(value: Any) -> datetime:
+            if isinstance(value, datetime):
+                return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+
+            if isinstance(value, (int, float)):
+                return datetime.fromtimestamp(value, tz=timezone.utc)
+
+            if isinstance(value, str) and value.strip():
+                text = value.strip()
+                try:
+                    return datetime.fromisoformat(text.replace("Z", "+00:00"))
+                except ValueError:
+                    return datetime.now(timezone.utc)
+
+            return datetime.now(timezone.utc)
+
+        def to_urgency(score_value: float) -> str:
+            if score_value >= 85:
+                return "high"
+            if score_value >= 65:
+                return "medium"
+            return "low"
+
         batch = self._db.batch()
         for lead in leads:
             lead_id = lead.get("id") or str(uuid4())
             doc_ref = self._db.collection("users").document(user_id).collection("leads").document(lead_id)
+            title = (lead.get("title") or "").strip()
+            author = (lead.get("author") or "").strip()
+            summary = (lead.get("summary") or lead.get("content") or "").strip()
+            summary_label = summary[:80] if summary else ""
+            name = author or title or summary_label or "Unknown"
+            company = title or author or name
+            platform = (lead.get("platform") or "search").strip().lower() or "search"
+            created_at_raw = lead.get("created_at")
+            created_at_dt = parse_created(created_at_raw)
+            now = datetime.now(timezone.utc)
+            score = float(lead.get("score") or 0)
+
             payload = {
+                # Canonical ManageLead-compatible fields used by frontend boards.
+                "name": name,
+                "company": company,
+                "email": lead.get("email"),
+                "phone": None,
+                "status": "new",
+                "pipelineStage": "NEW",
+                "isDeleted": False,
+                "deletedAt": None,
+                "source": platform if platform in {"reddit", "linkedin", "twitter", "hackernews", "search"} else "ai",
+                "notes": lead.get("summary") or None,
+                "tags": lead.get("tags") if isinstance(lead.get("tags"), list) else [platform],
+                "budgetEstimate": 0,
+                "score": score,
+                "urgency": to_urgency(score),
+                "createdAt": created_at_dt,
+                "updatedAt": now,
+                "lastActivityAt": now,
+
+                # Preserve discovery payload fields for full frontend Lead compatibility.
                 "title": lead.get("title"),
                 "summary": lead.get("summary"),
-                "platform": lead.get("platform"),
-                "score": lead.get("score"),
-                "status": "new",
-                "created_at": datetime.now(timezone.utc),
+                "content": lead.get("content"),
+                "platform": platform,
+                "author": lead.get("author"),
+                "url": lead.get("url"),
+                "upvotes": int(lead.get("upvotes") or 0),
+                "created_at": created_at_dt.isoformat(),
             }
             batch.set(doc_ref, payload, merge=True)
 

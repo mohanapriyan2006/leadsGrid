@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 
 import httpx
 from bs4 import BeautifulSoup
@@ -45,6 +46,7 @@ async def fetch_google_like_search(query: str, limit: int = 20, timeout: int = 1
                 "upvotes": 0,
                 "url": link,
                 "author": None,
+                "created_at": datetime.now(timezone.utc).isoformat(),
             }
         )
 

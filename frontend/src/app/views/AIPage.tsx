@@ -14,7 +14,7 @@ import {
   createId,
   type QuickAction,
 } from "../../features/ai/constants/aiPage";
-import type { ChatMessage, ChatSession, InsightCard } from "../../features/ai/types/chat";
+import type { ChatMessage, ChatSession } from "../../features/ai/types/chat";
 import { MOCK_LEADS } from "../../features/leads/constants/mockLeads";
 import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLeads";
 import { useMessageGenerator } from "../../features/leads/hooks/useMessageGenerator";
@@ -27,7 +27,7 @@ import { useMode } from "../../features/ai/hooks/useMode";
 import { useSuggestions } from "../../features/ai/hooks/useSuggestions";
 import { useAgentExecution } from "../../features/ai/hooks/useAgentExecution";
 import type { AgentStep } from "../../features/ai/types/agent";
-import type { AgentActionResult } from "../../features/ai/services/agentService";
+import type { AgentActionResult } from "../../features/ai/services/agentApiService";
 
 export const AIPage = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -67,6 +67,13 @@ export const AIPage = () => {
 
   const addMessage = useCallback((message: ChatMessage) => {
     setMessages((prev) => [...prev, message]);
+  }, []);
+
+  const shouldOfferAgent = useCallback((prompt: string, response: string, providerFlag?: boolean) => {
+    if (providerFlag) return true;
+    const combined = `${prompt} ${response}`.toLowerCase();
+    const executionHints = ["find leads", "send", "execute", "schedule", "update crm", "automation", "bulk"];
+    return executionHints.some((hint) => combined.includes(hint));
   }, []);
 
   const agentCallbacks = useMemo(
@@ -113,6 +120,7 @@ export const AIPage = () => {
     removeStep,
     executePlan,
     continueExecution,
+    skipCurrentStep,
     abortExecution,
     resetPlan,
   } = useAgentExecution(agentCallbacks);
@@ -154,21 +162,6 @@ export const AIPage = () => {
       .join("\n");
   };
 
-  const buildInsightCard = (): InsightCard => {
-    return {
-      leadName: topLead.author,
-      score: Math.max(72, topLead.score),
-      budget: topLead.budget ? "₹1.5L+" : "Budget TBD",
-      pain: ["No mobile presence", "Follow-up gaps", "Manual pipeline tracking"],
-      suggestion: "Offer MVP app in 2 weeks with a conversion-focused demo.",
-    };
-  };
-
-  const shouldShowCard = (prompt: string) => {
-    const text = prompt.toLowerCase();
-    return text.includes("best") || text.includes("lead") || text.includes("next action") || text.includes("pipeline");
-  };
-
   const sendAskMessage = async (overridePrompt?: string) => {
     const prompt = (overridePrompt ?? input).trim();
     if (!prompt || loading) return;
@@ -189,14 +182,16 @@ export const AIPage = () => {
         id: createId(),
         role: "assistant",
         content: result.message,
-        card: shouldShowCard(prompt) ? buildInsightCard() : undefined,
+        mode: "ask",
+        offerAgent: shouldOfferAgent(prompt, result.message, result.requires_agent),
       });
     } catch {
       addMessage({
         id: createId(),
         role: "assistant",
         content: `I found strong intent from ${topLead.author}. Best to contact now (${Math.max(topLead.score, 82)}% close probability).`,
-        card: shouldShowCard(prompt) ? buildInsightCard() : undefined,
+        mode: "ask",
+        offerAgent: true,
       });
     } finally {
       setLoading(false);
@@ -220,6 +215,7 @@ export const AIPage = () => {
       id: createId(),
       role: "agent",
       content: "🤖 Analyzing your request and building an execution plan...",
+      mode: "agent",
     });
 
     setTimeout(() => {
@@ -228,7 +224,7 @@ export const AIPage = () => {
           addMessage({
             id: createId(),
             role: "agent",
-            content: "⚠️ Backend planner unavailable. Using local fallback plan.",
+            content: "⚠️ Unable to build execution plan right now. Please retry.",
           });
         })
         .finally(() => {
@@ -275,6 +271,10 @@ export const AIPage = () => {
 
   const handleContinueExecution = () => {
     void continueExecution(leadPool, lastAgentPrompt, tone, autoApproveLowRisk);
+  };
+
+  const handleSkipExecutionStep = () => {
+    void skipCurrentStep(leadPool, lastAgentPrompt, tone, autoApproveLowRisk);
   };
 
   const handleAbortExecution = () => {
@@ -455,7 +455,10 @@ export const AIPage = () => {
                 onEditStep={editPlanStep}
                 onRemoveStep={removeStep}
                 onContinueExecution={handleContinueExecution}
+                onSkipExecution={handleSkipExecutionStep}
                 onAbortExecution={handleAbortExecution}
+                autoApproveLowRisk={autoApproveLowRisk}
+                onToggleAutoApprove={() => setAutoApproveLowRisk((value) => !value)}
               />
             </div>
           </div>

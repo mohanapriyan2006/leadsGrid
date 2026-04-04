@@ -1,6 +1,7 @@
 import { addDoc, collection, Timestamp } from "firebase/firestore";
 
 import { db, getFirebaseAuth } from "../../../lib/firebase";
+import { askAiService } from "../../ai/services/askAiService";
 
 export type MessageGenerationPayload = {
   lead_context: string;
@@ -14,6 +15,7 @@ export type MessageGenerationResult = {
   provider: string;
   draft?: string | null;
   evaluation?: string | null;
+  requires_agent?: boolean;
 };
 
 export type SendEmailPayload = {
@@ -35,13 +37,18 @@ export type SendEmailResult = {
 
 export const messageService = {
   generateMessage: async (payload: MessageGenerationPayload): Promise<MessageGenerationResult> => {
-    const context = payload.lead_context.slice(0, payload.max_words * 6);
-    const message = `Hi there,\n\nBased on your context, here is a ${payload.tone} draft:\n${context}\n\nBest regards,`;
+    const result = await askAiService.generateText({
+      prompt: payload.lead_context,
+      tone: payload.tone,
+      maxWords: payload.max_words,
+    });
+
     return {
-      message,
-      confidence: 80,
-      provider: "firebase-local",
-      draft: message,
+      message: result.text,
+      confidence: result.confidence,
+      provider: result.provider,
+      draft: result.text,
+      requires_agent: result.requiresAgent,
     };
   },
 

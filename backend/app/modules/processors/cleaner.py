@@ -25,6 +25,7 @@ def clean_records(records: list[dict]) -> list[dict]:
                 "author": item.get("author"),
                 "score": float(item.get("score") or 0),
                 "email": item.get("email"),
+                "created_at": item.get("created_at"),
             }
         )
 

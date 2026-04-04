@@ -4,40 +4,44 @@
 Handles lead ingestion display, intent visualization, and integration points to scoring pipelines.
 
 ## API
-- `GET /api/leads`
-- `POST /api/leads/sync`
-- `POST /api/leads/async`
-- `GET /api/leads/discover`
-- `POST /api/ai/message`
+- `GET /api/agent/discover?query=...&limit=...`
+- `POST /api/agent/plan`
+- `POST /api/agent/execute`
+- `POST /api/ai/message` (Ask text generation fallback route in frontend service)
 
 ## Components
 - `LeadCard`
 - `LeadsStream`
 - `AIMessagePanel`
 - `leadsPagePrimitives` (reusable page-level icons, skeleton card, and UI helpers)
+- `LeadsDiscoveryFilters`
+- `LeadsDiscoverySearchBar`
+- `LeadsDiscoveryResultCard`
+- `LeadsDiscoveryDraftPanel`
 
 ## Hooks
 - `useLeads`
 - `useMessageGenerator`
+- `useLeadsDiscoveryFilters`
 
 ## Services
-- `leadService.getLeads`
+- `leadService.discoverLeads` (real backend discovery)
+- `discoveryAdapter.adaptDiscoveryLead` (DTO to frontend Lead mapping)
 
 ## State
 - `useLeadStore.leads`
 
 ## Leads Page Architecture
-- `src/app/views/LeadsPage.tsx` now focuses on orchestration and rendering flow.
-- `src/app/views/LeadsDiscoveryPage.tsx` uses Tailwind + glass utility classes directly (no injected stylesheet).
-- `src/features/leads/constants/leadsPageOptions.ts` contains source/industry UI options.
-- `src/features/leads/components/leadsPagePrimitives.tsx` contains reusable visual primitives and helper utilities.
+- `src/app/views/LeadsDiscoveryPage.tsx` is orchestration-only and delegates UI blocks to feature components.
+- `src/features/leads/types/discovery.ts` defines backend discovery DTO contracts.
+- `src/features/leads/services/discoveryAdapter.ts` maps backend discovery fields into the canonical frontend `Lead` type.
+- `src/features/leads/constants/leadsPageOptions.ts` uses real free-source filters (`reddit`, `hackernews`, `search`).
 
 ## Current Behavior
-- Debounced real-time lead discovery from backend pipeline.
-- Displays scored leads from API and falls back to seed mocks when API returns empty.
-- Highlights high-intent leads with animated glow effects.
+- Debounced real-time lead discovery from backend free-source pipeline.
+- Uses adapter-driven mapping so discovered leads always match frontend Lead fields.
+- Displays source-accurate chips and score-threshold filtering.
 - Generates contextual outreach drafts in split-screen AI panel.
-- Applies source chip filters and minimum score threshold when rendering discovered leads.
 
 ## Future Improvements
 - Pagination and cursor-based loading.

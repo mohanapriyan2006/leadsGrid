@@ -1,0 +1,1 @@
+"""PitchPilot backend application package."""

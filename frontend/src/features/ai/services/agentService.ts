@@ -2,6 +2,7 @@ import type { Lead } from "../../leads/types/lead";
 import type { AgentActionType, AgentStep } from "../types/agent";
 import { AGENT_ACTIONS } from "../constants/agentActions";
 import { createId } from "../constants/aiPage";
+import { agentApiService } from "./agentApiService";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -164,6 +165,28 @@ export const agentService = {
     prompt: string,
     tone: string,
   ): Promise<AgentActionResult> => {
+    try {
+      return await agentApiService.executeStep(actionType === "lead_discovery"
+        ? {
+            id: createId(),
+            label: AGENT_ACTIONS.lead_discovery.label,
+            description: "Discover leads",
+            actionType,
+            status: "pending",
+            riskLevel: "low",
+          }
+        : {
+            id: createId(),
+            label: AGENT_ACTIONS[actionType].label,
+            description: AGENT_ACTIONS[actionType].description,
+            actionType,
+            status: "pending",
+            riskLevel: AGENT_ACTIONS[actionType].riskLevel,
+          }, prompt, leads, tone);
+    } catch {
+      // Fallback keeps Agent mode usable while backend is unavailable.
+    }
+
     switch (actionType) {
       case "lead_discovery":
         return executeLeadDiscovery(leads, prompt);
@@ -177,6 +200,15 @@ export const agentService = {
         return executeFollowUpSchedule(leads);
       default:
         return { success: false, message: "Unknown action type." };
+    }
+  },
+
+  buildPlanFromApi: async (prompt: string, leads: Lead[]): Promise<AgentStep[]> => {
+    try {
+      const plan = await agentApiService.createPlan(prompt, leads);
+      return plan.steps;
+    } catch {
+      return agentService.buildPlan(prompt, leads);
     }
   },
 

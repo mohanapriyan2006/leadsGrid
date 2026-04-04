@@ -223,8 +223,17 @@ export const AIPage = () => {
     });
 
     setTimeout(() => {
-      createPlan(prompt, leadPool);
-      setAIStatus("idle");
+      void createPlan(prompt, leadPool)
+        .catch(() => {
+          addMessage({
+            id: createId(),
+            role: "agent",
+            content: "⚠️ Backend planner unavailable. Using local fallback plan.",
+          });
+        })
+        .finally(() => {
+          setAIStatus("idle");
+        });
     }, 800);
   };
 

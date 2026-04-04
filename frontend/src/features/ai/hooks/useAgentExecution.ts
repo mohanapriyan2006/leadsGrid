@@ -20,8 +20,8 @@ export const useAgentExecution = (callbacks: ExecutionCallbacks) => {
   const abortRef = useRef(false);
 
   const createPlan = useCallback(
-    (prompt: string, leads: Lead[]): AgentPlan => {
-      const steps = agentService.buildPlan(prompt, leads);
+    async (prompt: string, leads: Lead[]): Promise<AgentPlan> => {
+      const steps = await agentService.buildPlanFromApi(prompt, leads);
       const newPlan: AgentPlan = {
         id: createId(),
         title: prompt.slice(0, 80),

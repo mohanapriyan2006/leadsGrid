@@ -26,38 +26,42 @@ export const LeadsDiscoveryResultCard = ({
   onGenerateDraft,
   onSaveLead,
 }: LeadsDiscoveryResultCardProps) => {
-  const isHot = lead.score >= 90;
+  const isHot = lead.score >= 85;
   const displayName = lead.author || lead.id;
 
   return (
     <article
       onClick={() => onSelect(lead.id)}
-      className={`relative cursor-pointer overflow-hidden rounded-2xl border p-4 transition-all hover:-translate-y-0.5 ${
+      className={`relative cursor-pointer overflow-hidden rounded-2xl border p-4 transition-all ${
         isSelected
-          ? "border-accent/45 bg-surface-secondary/95 shadow-[0_8px_28px_rgba(6,182,212,0.15)]"
-          : "border-accent/12 bg-surface-secondary/75 hover:border-accent/30"
+          ? "border-accent/40 bg-surface-secondary/95 shadow-[0_8px_28px_rgba(167,139,250,0.18)]"
+          : "border-accent/12 bg-surface-secondary/75 hover:border-accent/30 hover:bg-surface-secondary/90"
       }`}
-      style={{ animationDelay: `${index * 70}ms` }}
+      style={{ animationDelay: `${index * 55}ms` }}
     >
-      {isHot ? <span className="absolute inset-y-0 right-0 w-1 bg-warning/70" /> : null}
+      {isHot ? <span className="absolute inset-y-0 left-0 w-1 bg-accent-secondary/80" /> : null}
 
-      <div className="mb-3 flex items-start justify-between gap-3">
+      <div className="mb-3 flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-accent/20 bg-accent/10 text-sm font-semibold text-content-secondary">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-accent/20 bg-surface/60 text-sm font-semibold text-content-secondary">
             {initials(displayName)}
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-content">{displayName}</p>
-            <p className="truncate text-xs text-content-secondary">{lead.title ?? "Unknown Role"}</p>
+            <p className="truncate text-xs text-content-secondary">{lead.title ?? "Opportunity"}</p>
+            <div className="mt-1 inline-flex items-center gap-1 rounded-full border border-accent/15 bg-surface/50 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-tertiary">
+              <SourceIcon source={lead.source} />
+              {sourceLabel(lead.source)}
+            </div>
           </div>
         </div>
 
         <div className="text-right">
           {isHot ? (
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-warning">Hot Signal</p>
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-accent-secondary">High Intent</p>
           ) : null}
           <p className="text-xl font-bold text-content">{lead.score}</p>
-          <div className="mt-1 h-1 w-20 rounded bg-surface">
+          <div className="mt-1 h-1 w-20 rounded bg-surface/70">
             <div
               className="h-1 rounded"
               style={{ width: `${lead.score}%`, backgroundColor: scoreColor(lead.score) }}
@@ -66,21 +70,14 @@ export const LeadsDiscoveryResultCard = ({
         </div>
       </div>
 
-      <div className="mb-3 grid gap-2 md:grid-cols-2">
-        <div className="rounded-xl border border-accent/10 bg-surface/60 p-3">
-          <p className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-content-tertiary">
-            <SourceIcon source={lead.source} />
-            {sourceLabel(lead.source)}
-          </p>
-          <p className="overflow-hidden break-words text-xs text-content-secondary [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]">
-            {lead.content}
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-accent/10 bg-surface/60 p-3">
-          <p className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-accent">
+      <div className="space-y-2">
+        <p className="overflow-hidden break-words text-sm text-content-secondary [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+          {lead.content}
+        </p>
+        <div className="rounded-xl border border-accent-tertiary/20 bg-accent-tertiary/10 px-3 py-2">
+          <p className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-accent-tertiary">
             <AIIcon />
-            AI Take
+            Signal Summary
           </p>
           <p className="overflow-hidden break-words text-xs text-content-secondary [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]">
             {lead.summary}
@@ -88,7 +85,7 @@ export const LeadsDiscoveryResultCard = ({
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="mt-3 flex items-center justify-between gap-3 border-t border-accent/10 pt-3">
         <div className="flex flex-wrap items-center gap-2 text-xs text-content-tertiary">
           <span>{lead.timeAgo ?? "just now"}</span>
           <span>•</span>
@@ -104,7 +101,7 @@ export const LeadsDiscoveryResultCard = ({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="glass-btn px-2 py-1 text-[11px]"
+            className="glass-btn px-3 py-1.5 text-[11px]"
             onClick={(event) => {
               event.stopPropagation();
               onSaveLead(lead);
@@ -114,7 +111,7 @@ export const LeadsDiscoveryResultCard = ({
           </button>
           <button
             type="button"
-            className="accent-btn px-2.5 py-1 text-[11px]"
+            className="accent-btn px-3 py-1.5 text-[11px]"
             onClick={(event) => {
               event.stopPropagation();
               void onGenerateDraft(lead);

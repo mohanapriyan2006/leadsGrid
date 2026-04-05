@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import bgConnecting from "../../assets/bg-images/connecting-teams.svg";
 import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButton";
 import { PageBackground } from "../../components/ui/PageBackground";
-import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { LeadsDiscoveryDraftPanel } from "../../features/leads/components/LeadsDiscoveryDraftPanel";
 import { LeadsDiscoveryFilters } from "../../features/leads/components/LeadsDiscoveryFilters";
 import { LeadsDiscoveryResultCard } from "../../features/leads/components/LeadsDiscoveryResultCard";
@@ -34,11 +33,10 @@ export const LeadsDiscoveryPage = () => {
   const [draftError, setDraftError] = useState<string | null>(null);
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
   const [savingLeadId, setSavingLeadId] = useState<string | null>(null);
-
-  const debouncedSearchTerm = useDebouncedValue(searchTerm, 550);
+  const [submittedQuery, setSubmittedQuery] = useState("");
 
   const { leads, isLoading, isFetching, error } = useLeads({
-    query: debouncedSearchTerm,
+    query: submittedQuery,
     selectedSources: sources,
     limit: 16,
   });
@@ -75,7 +73,8 @@ export const LeadsDiscoveryPage = () => {
     return next;
   }, [filteredLeads, sortBy]);
 
-  const hiddenByFilters = leads.length > 0 && filteredLeads.length === 0;
+  const hasSearched = submittedQuery.trim().length > 2;
+  const hiddenByFilters = hasSearched && leads.length > 0 && filteredLeads.length === 0;
   const averageScore =
     sortedLeads.length > 0
       ? Math.round(sortedLeads.reduce((sum, lead) => sum + lead.score, 0) / sortedLeads.length)
@@ -99,7 +98,7 @@ export const LeadsDiscoveryPage = () => {
       });
     } catch (error) {
       const reason = error instanceof Error ? error.message : "Unknown AI error";
-      setDraftError(`AI draft generation failed: ${reason}`);
+      setDraftError(`AI insight generation failed: ${reason}`);
     }
   };
 
@@ -112,11 +111,9 @@ export const LeadsDiscoveryPage = () => {
     }
   };
 
-  const handleSendDraft = () => {
-    if (!selectedLead?.email || !draftText) return;
-    const subject = encodeURIComponent(`Follow up from ${selectedLead.author}`);
-    const body = encodeURIComponent(draftText);
-    window.location.href = `mailto:${selectedLead.email}?subject=${subject}&body=${body}`;
+  const handleOpenSource = () => {
+    if (!selectedLead?.permalink) return;
+    window.open(selectedLead.permalink, "_blank", "noopener,noreferrer");
   };
 
   const handleExportResults = () => {
@@ -163,47 +160,42 @@ export const LeadsDiscoveryPage = () => {
     }
   };
 
+  const handleFindLeads = () => {
+    const trimmed = searchTerm.trim();
+    if (trimmed.length <= 2) return;
+    setSelectedLeadId(null);
+    setSubmittedQuery(trimmed);
+  };
+
   return (
     <div className="page-with-bg">
-      <PageBackground image={bgConnecting} tint="rgba(6, 182, 212, 0.28)" />
+      <PageBackground image={bgConnecting} tint="rgba(21, 171, 123, 0.50)" />
 
       <div className="focus-fill-height h-[calc(100vh-100px)] w-full min-w-0 overflow-y-auto overflow-x-hidden space-y-4 p-6">
-        <header className="rounded-2xl border border-accent/[0.12] bg-surface-secondary/85 p-5">
-          <div className="flex flex-wrap items-start justify-between gap-4">
+        <header className="glass-card-lg p-5">
+          <div className="flex flex-wrap items-start justify-between gap-5">
             <div>
-              <h2 className="text-3xl font-semibold text-content">
-                Leads Discovery Studio
-                <span className="ml-3 inline-block rounded-full border border-accent/25 bg-accent/[0.08] px-3 py-1 align-middle text-xs text-content-secondary">
-                  {isLoading ? "Syncing..." : `${sortedLeads.length} live matches`}
+              <p className="text-[11px] uppercase tracking-[0.14em] text-content-tertiary">Lead Intelligence</p>
+              <h2 className="mt-1 text-3xl font-semibold text-content">
+                Discovery Console
+                <span className="ml-3 inline-block rounded-full border border-accent/30 bg-accent/10 px-3 py-1 align-middle text-xs text-accent">
+                  {isLoading ? "Syncing" : `${sortedLeads.length} matches`}
                 </span>
               </h2>
-              <p className="mt-1 max-w-3xl text-sm text-content-secondary">
-                Discover buyer signals from Reddit, HackerNews, and Search. Sort, filter, and generate contextual outreach drafts from one workspace.
+              <p className="mt-2 max-w-3xl text-sm text-content-secondary">
+                Find high-intent opportunities from live sources, evaluate quickly, and move qualified leads into CRM.
               </p>
-
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                <span className="rounded-full border border-accent/15 bg-surface/50 px-2.5 py-1 text-content-secondary">
-                  Avg score: <strong className="text-content">{averageScore}</strong>
-                </span>
-                <span className="rounded-full border border-success/20 bg-success/10 px-2.5 py-1 text-success">
-                  Hot leads: <strong>{hotLeadCount}</strong>
-                </span>
-                <span className="rounded-full border border-info/20 bg-info/10 px-2.5 py-1 text-info">
-                  Sources active: <strong>{sources.length}</strong>
-                </span>
-              </div>
             </div>
 
-            <div className="flex items-center gap-2 rounded-xl border border-accent/[0.1] bg-surface/50 p-2">
+            <div className="flex items-center gap-2 rounded-xl border border-accent/[0.1] bg-surface/40 p-2">
               <FullscreenToggleButton />
-
               <select
                 value={sortBy}
                 onChange={(event) => setSortBy(event.target.value as "score" | "recent")}
-                className="rounded-lg border border-accent/[0.1] bg-surface-secondary/80 px-2.5 py-2 text-xs uppercase tracking-[0.08em] text-content outline-none"
+                className="rounded-lg border border-accent/[0.12] bg-surface-secondary/70 px-2.5 py-2 text-xs uppercase tracking-[0.08em] text-content outline-none"
               >
-                <option value="score">Sort: Score</option>
-                <option value="recent">Sort: Recent</option>
+                <option value="score">Sort by Score</option>
+                <option value="recent">Sort by Recent</option>
               </select>
               <button
                 type="button"
@@ -211,8 +203,23 @@ export const LeadsDiscoveryPage = () => {
                 className="accent-btn px-3 py-2 text-xs uppercase tracking-[0.08em]"
                 disabled={sortedLeads.length === 0}
               >
-                Export Results
+                Export CSV
               </button>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-accent/15 bg-surface/45 px-4 py-3">
+              <p className="text-[11px] uppercase tracking-[0.1em] text-content-tertiary">Average Score</p>
+              <p className="mt-1 text-2xl font-semibold text-content">{averageScore}</p>
+            </div>
+            <div className="rounded-xl border border-accent-secondary/25 bg-accent-secondary/10 px-4 py-3">
+              <p className="text-[11px] uppercase tracking-[0.1em] text-accent-secondary">Hot Leads</p>
+              <p className="mt-1 text-2xl font-semibold text-accent-secondary">{hotLeadCount}</p>
+            </div>
+            <div className="rounded-xl border border-accent-tertiary/25 bg-accent-tertiary/10 px-4 py-3">
+              <p className="text-[11px] uppercase tracking-[0.1em] text-accent-tertiary">Active Sources</p>
+              <p className="mt-1 text-2xl font-semibold text-accent-tertiary">{sources.length}</p>
             </div>
           </div>
         </header>
@@ -233,6 +240,7 @@ export const LeadsDiscoveryPage = () => {
               value={searchTerm}
               isFetching={isFetching}
               onChange={setSearchTerm}
+              onFind={handleFindLeads}
             />
 
             {error ? (
@@ -250,21 +258,23 @@ export const LeadsDiscoveryPage = () => {
             <div className="space-y-3">
               {isLoading ? (
                 Array.from({ length: 3 }).map((_, index) => (
-                  <div key={index} className="glass-card animate-pulse p-4">
+                  <div key={index} className="glass-card-sm animate-pulse p-4">
                     <div className="mb-3 h-4 w-1/3 rounded bg-surface-secondary" />
                     <div className="mb-2 h-3 w-2/3 rounded bg-surface-secondary" />
                     <div className="h-16 rounded bg-surface-secondary" />
                   </div>
                 ))
               ) : sortedLeads.length === 0 ? (
-                <div className="rounded-2xl border border-accent/20 bg-surface-secondary/70 p-8 text-center">
+                <div className="glass-card-sm p-8 text-center">
                   <h3 className="text-base font-semibold text-content">
-                    {hiddenByFilters ? "Results hidden by filters" : "No leads found"}
+                    {hiddenByFilters ? "Results hidden by filters" : hasSearched ? "No leads found" : "Ready to find leads"}
                   </h3>
                   <p className="mt-2 text-sm text-content-secondary">
                     {hiddenByFilters
                       ? "Your query returned leads, but the current score/source filters hide them."
-                      : "Try a broader query like \"need crm automation\" or adjust your filters."}
+                      : hasSearched
+                        ? "Try a broader query like \"need crm automation\" or adjust your filters."
+                        : "Type an intent-rich prompt, then click Find Leads to run discovery."}
                   </p>
                   {hiddenByFilters ? (
                     <button
@@ -298,16 +308,16 @@ export const LeadsDiscoveryPage = () => {
           <LeadsDiscoveryDraftPanel
             tone={tone}
             selectedLead={selectedLead}
-            draftText={draftText}
+            insightsText={draftText}
             isGenerating={isGenerating}
             onToneChange={setTone}
-            onGenerate={() => {
+            onAnalyze={() => {
               if (selectedLead) {
                 void handleGenerateDraft(selectedLead);
               }
             }}
-            onCopy={handleCopyDraft}
-            onSend={handleSendDraft}
+            onCopyInsights={handleCopyDraft}
+            onOpenSource={handleOpenSource}
           />
           {draftError ? (
             <div className="rounded-xl border border-danger/25 bg-danger/10 p-3 text-sm text-danger">

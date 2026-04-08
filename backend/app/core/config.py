@@ -17,11 +17,8 @@ class Settings(BaseSettings):
     source_limit_default: int = 20
 
     gemini_api_key: str | None = None
-    openai_api_key: str | None = None
     openrouter_api_key: str | None = None
     serper_api_key: str | None = None
-    hunter_api_key: str | None = None
-    clearbit_api_key: str | None = None
 
     firebase_project_id: str | None = None
     firebase_service_account_path: str | None = None

@@ -3,7 +3,6 @@ import asyncio
 from app.core.config import get_settings
 from app.modules.processors.cleaner import clean_records
 from app.modules.processors.deduplicator import dedupe_records
-from app.modules.processors.enricher import enrich_records
 from app.modules.processors.query_builder import build_query_plan
 from app.modules.processors.scorer import score_records
 from app.modules.processors.verifier import verify_records
@@ -37,8 +36,7 @@ class LeadAggregator:
 
         cleaned = clean_records(merged)
         deduped = dedupe_records(cleaned)
-        enriched = await enrich_records(deduped, self.settings, self.timeout_seconds)
-        scored = score_records(enriched, query_plan["high_intent"])
+        scored = score_records(deduped, query_plan["high_intent"])
         verified = verify_records(scored, max_age_days=self.settings.max_lead_age_days)
 
         # Guardrail: strict verification can over-filter. Fall back to scored

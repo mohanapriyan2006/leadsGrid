@@ -17,8 +17,8 @@ import { messageService } from "../../features/leads/services/messageService";
 import type { Lead } from "../../features/leads/types/lead";
 import { useLeadStore } from "../../store/useLeadStore";
 import type { ToneType } from "../../features/common/types/ui";
-import { PageBackground } from "../../components/ui/PageBackground";
 import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButton";
+import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import bgChatBot from "../../assets/bg-images/chat-bot.svg";
 import { useMode } from "../../features/ai/hooks/useMode";
 import { useSuggestions } from "../../features/ai/hooks/useSuggestions";
@@ -410,10 +410,12 @@ export const AIPage = () => {
   const visibleMessages = messages.filter((message) => !message.hidden);
 
   return (
-    <div className="page-with-bg">
-      <PageBackground image={bgChatBot} tint={mode == "agent" ? "rgba(6, 182, 212, 0.28)" : "rgba(99, 102, 241, 0.25)"} opacity={0.22} />
-
-      <div className="focus-fill-height flex h-[calc(100vh-100px)] flex-col overflow-hidden p-4 md:p-6">
+    <ResponsivePageLayout
+      backgroundImage={bgChatBot}
+      tint={mode == "agent" ? "rgba(6, 182, 212, 0.28)" : "rgba(99, 102, 241, 0.25)"}
+      opacity={0.22}
+      contentClassName="flex flex-col overflow-hidden !p-4 md:!p-6"
+    >
         <AIHeader
           historyOpen={historyOpen}
           chatHistory={chatHistory}
@@ -509,7 +511,6 @@ export const AIPage = () => {
           onClose={() => setAttachLeadsOpen(false)}
           onApply={handleAttachLeads}
         />
-      </div>
-    </div>
+    </ResponsivePageLayout>
   );
 };

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import bgConnecting from "../../assets/bg-images/connecting-teams.svg";
 import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButton";
-import { PageBackground } from "../../components/ui/PageBackground";
+import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import { LeadsDiscoveryDraftPanel } from "../../features/leads/components/LeadsDiscoveryDraftPanel";
 import { LeadsDiscoveryFilters } from "../../features/leads/components/LeadsDiscoveryFilters";
 import { LeadsDiscoveryResultCard } from "../../features/leads/components/LeadsDiscoveryResultCard";
@@ -21,6 +21,8 @@ const getIntentLabel = (score: number): string => {
   return "low";
 };
 
+type TriageQueue = "all" | "hot_qualified" | "high_urgency" | "needs_nurture";
+
 export const LeadsDiscoveryPage = () => {
   const {
     searchTerm,
@@ -37,6 +39,7 @@ export const LeadsDiscoveryPage = () => {
   const [tone, setTone] = useState<ToneType>("professional");
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"score" | "recent">("score");
+  const [triageQueue, setTriageQueue] = useState<TriageQueue>("all");
   const [draftError, setDraftError] = useState<string | null>(null);
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
   const [savingLeadId, setSavingLeadId] = useState<string | null>(null);
@@ -161,6 +164,57 @@ export const LeadsDiscoveryPage = () => {
     ? Math.round((qualifiedVisibleCount / analyzedVisibleCount) * 100)
     : 0;
 
+  const triagedLeads = useMemo(() => {
+    if (triageQueue === "all") {
+      return sortedLeads;
+    }
+
+    return sortedLeads.filter((lead) => {
+      const advancedIntent = advancedIntentByLeadId[lead.id];
+      if (!advancedIntent) {
+        return false;
+      }
+
+      if (triageQueue === "hot_qualified") {
+        return advancedIntent.status === "qualified" && advancedIntent.score >= 80;
+      }
+
+      if (triageQueue === "high_urgency") {
+        return advancedIntent.urgency === "high";
+      }
+
+      return (
+        advancedIntent.status === "unqualified"
+        || advancedIntent.category === "learning"
+        || advancedIntent.category === "discussion"
+        || advancedIntent.score < 70
+      );
+    });
+  }, [advancedIntentByLeadId, sortedLeads, triageQueue]);
+
+  const triageCounts = useMemo(() => {
+    const all = sortedLeads.length;
+    const hotQualified = sortedLeads.filter((lead) => {
+      const intent = advancedIntentByLeadId[lead.id];
+      return intent?.status === "qualified" && intent.score >= 80;
+    }).length;
+    const highUrgency = sortedLeads.filter((lead) => advancedIntentByLeadId[lead.id]?.urgency === "high").length;
+    const needsNurture = sortedLeads.filter((lead) => {
+      const intent = advancedIntentByLeadId[lead.id];
+      return Boolean(
+        intent
+        && (
+          intent.status === "unqualified"
+          || intent.category === "learning"
+          || intent.category === "discussion"
+          || intent.score < 70
+        )
+      );
+    }).length;
+
+    return { all, hotQualified, highUrgency, needsNurture };
+  }, [advancedIntentByLeadId, sortedLeads]);
+
   const draftText = isGenerating
     ? "Generating..."
     : typeof generatedMessage === "string"
@@ -207,7 +261,7 @@ export const LeadsDiscoveryPage = () => {
   };
 
   const handleBulkAnalyzeVisible = async () => {
-    if (sortedLeads.length === 0 || isBulkAnalyzing) {
+    if (triagedLeads.length === 0 || isBulkAnalyzing) {
       return;
     }
 
@@ -218,14 +272,14 @@ export const LeadsDiscoveryPage = () => {
     let completed = 0;
     let failed = 0;
 
-    for (const lead of sortedLeads) {
+    for (const lead of triagedLeads) {
       try {
         await analyzeLeadIntent(lead);
       } catch {
         failed += 1;
       } finally {
         completed += 1;
-        setBulkAnalyzeProgress(Math.round((completed / sortedLeads.length) * 100));
+        setBulkAnalyzeProgress(Math.round((completed / triagedLeads.length) * 100));
       }
     }
 
@@ -379,6 +433,7 @@ export const LeadsDiscoveryPage = () => {
     const trimmed = searchTerm.trim();
     if (trimmed.length <= 2) return;
     setSelectedLeadId(null);
+    setTriageQueue("all");
     setAdvancedIntentByLeadId({});
     setDraftError(null);
     setOutreachError(null);
@@ -387,15 +442,16 @@ export const LeadsDiscoveryPage = () => {
   };
 
   return (
-    <div className="page-with-bg">
-      <PageBackground image={bgConnecting} tint="rgba(21, 171, 123, 0.50)" />
-
-      <div className="focus-fill-height h-[calc(100vh-100px)] w-full min-w-0 overflow-y-auto overflow-x-hidden space-y-4 p-6">
+    <ResponsivePageLayout
+      backgroundImage={bgConnecting}
+      tint="rgba(21, 171, 123, 0.50)"
+      contentClassName="w-full min-w-0 overflow-x-hidden space-y-4"
+    >
         <header className="glass-card-lg p-5">
           <div className="flex flex-wrap items-start justify-between gap-5">
             <div>
               <p className="text-[11px] uppercase tracking-[0.14em] text-content-tertiary">Lead Intelligence</p>
-              <h2 className="mt-1 text-3xl font-semibold text-content">
+              <h2 className="mt-1 text-2xl font-semibold text-content sm:text-3xl">
                 Discovery Console
                 <span className="ml-3 inline-block rounded-full border border-accent/30 bg-accent/10 px-3 py-1 align-middle text-xs text-accent">
                   {isLoading ? "Syncing" : `${sortedLeads.length} matches`}
@@ -406,7 +462,7 @@ export const LeadsDiscoveryPage = () => {
               </p>
             </div>
 
-            <div className="flex items-center gap-2 rounded-xl border border-accent/[0.1] bg-surface/40 p-2">
+            <div className="flex w-full flex-wrap items-center gap-2 rounded-xl border border-accent/[0.1] bg-surface/40 p-2 lg:w-auto">
               <FullscreenToggleButton />
               <select
                 value={sortBy}
@@ -430,14 +486,14 @@ export const LeadsDiscoveryPage = () => {
                   void handleBulkAnalyzeVisible();
                 }}
                 className="glass-btn px-3 py-2 text-xs uppercase tracking-[0.08em]"
-                disabled={sortedLeads.length === 0 || isBulkAnalyzing}
+                disabled={triagedLeads.length === 0 || isBulkAnalyzing}
               >
                 {isBulkAnalyzing ? `Analyzing ${bulkAnalyzeProgress}%` : "Analyze Visible"}
               </button>
             </div>
           </div>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-5">
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             <div className="rounded-xl border border-accent/15 bg-surface/45 px-4 py-3">
               <p className="text-[11px] uppercase tracking-[0.1em] text-content-tertiary">Average Score</p>
               <p className="mt-1 text-2xl font-semibold text-content">{averageScore}</p>
@@ -471,7 +527,7 @@ export const LeadsDiscoveryPage = () => {
           onClear={clearFilters}
         />
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,1fr)]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(300px,1fr)]">
           <section className="min-w-0 space-y-3">
             <LeadsDiscoverySearchBar
               value={searchTerm}
@@ -479,6 +535,57 @@ export const LeadsDiscoveryPage = () => {
               onChange={setSearchTerm}
               onFind={handleFindLeads}
             />
+
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <button
+                type="button"
+                onClick={() => setTriageQueue("all")}
+                className={`rounded-lg border px-3 py-2 text-left text-xs transition ${
+                  triageQueue === "all"
+                    ? "border-accent/30 bg-accent/10 text-content"
+                    : "border-accent/10 bg-surface/40 text-content-secondary hover:border-accent/20"
+                }`}
+              >
+                <p className="uppercase tracking-[0.08em]">All Leads</p>
+                <p className="mt-1 text-sm font-semibold">{triageCounts.all}</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTriageQueue("hot_qualified")}
+                className={`rounded-lg border px-3 py-2 text-left text-xs transition ${
+                  triageQueue === "hot_qualified"
+                    ? "border-success/35 bg-success/10 text-content"
+                    : "border-accent/10 bg-surface/40 text-content-secondary hover:border-accent/20"
+                }`}
+              >
+                <p className="uppercase tracking-[0.08em]">Hot Qualified</p>
+                <p className="mt-1 text-sm font-semibold">{triageCounts.hotQualified}</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTriageQueue("high_urgency")}
+                className={`rounded-lg border px-3 py-2 text-left text-xs transition ${
+                  triageQueue === "high_urgency"
+                    ? "border-warning/35 bg-warning/10 text-content"
+                    : "border-accent/10 bg-surface/40 text-content-secondary hover:border-accent/20"
+                }`}
+              >
+                <p className="uppercase tracking-[0.08em]">High Urgency</p>
+                <p className="mt-1 text-sm font-semibold">{triageCounts.highUrgency}</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTriageQueue("needs_nurture")}
+                className={`rounded-lg border px-3 py-2 text-left text-xs transition ${
+                  triageQueue === "needs_nurture"
+                    ? "border-info/35 bg-info/10 text-content"
+                    : "border-accent/10 bg-surface/40 text-content-secondary hover:border-accent/20"
+                }`}
+              >
+                <p className="uppercase tracking-[0.08em]">Needs Nurture</p>
+                <p className="mt-1 text-sm font-semibold">{triageCounts.needsNurture}</p>
+              </button>
+            </div>
 
             {error ? (
               <div className="rounded-xl border border-danger/25 bg-danger/10 p-4 text-sm text-danger">
@@ -509,7 +616,7 @@ export const LeadsDiscoveryPage = () => {
                     <div className="h-16 rounded bg-surface-secondary" />
                   </div>
                 ))
-              ) : sortedLeads.length === 0 ? (
+              ) : triagedLeads.length === 0 ? (
                 <div className="glass-card-sm p-8 text-center">
                   <h3 className="text-base font-semibold text-content">
                     {hiddenByFilters ? "Results hidden by filters" : hasSearched ? "No leads found" : "Ready to find leads"}
@@ -532,7 +639,7 @@ export const LeadsDiscoveryPage = () => {
                   ) : null}
                 </div>
               ) : (
-                sortedLeads.map((lead, index) => (
+                triagedLeads.map((lead, index) => (
                   <LeadsDiscoveryResultCard
                     key={lead.id}
                     lead={lead}
@@ -591,7 +698,6 @@ export const LeadsDiscoveryPage = () => {
             </div>
           ) : null}
         </div>
-      </div>
-    </div>
+    </ResponsivePageLayout>
   );
 };

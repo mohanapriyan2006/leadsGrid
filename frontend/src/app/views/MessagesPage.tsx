@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { PageBackground } from "../../components/ui/PageBackground";
+import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import bgRemotely from "../../assets/bg-images/remotely.svg";
 import { useMessageGenerator } from "../../features/leads/hooks/useMessageGenerator";
 import { messageService } from "../../features/leads/services/messageService";
@@ -120,15 +120,17 @@ export const MessagesPage = () => {
   };
 
   return (
-    <div className="page-with-bg">
-      <PageBackground image={bgRemotely} tint="rgba(56, 189, 248 , 0.80)" />
-      <div className="h-[calc(100vh-100px)] overflow-auto space-y-4 p-6">
+    <ResponsivePageLayout
+      backgroundImage={bgRemotely}
+      tint="rgba(56, 189, 248 , 0.80)"
+      contentClassName="space-y-4"
+    >
         <header className="glass-card p-5">
-          <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-3xl font-semibold text-transparent">Message Synthesis</h2>
+          <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-2xl font-semibold text-transparent sm:text-3xl">Message Synthesis</h2>
           <p className="mt-1 text-sm text-content-secondary">Generate personalized outbound drafts from live lead context.</p>
         </header>
 
-        <div className="grid gap-4 xl:grid-cols-[1fr_1.4fr]">
+        <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
           <MessageLeadPanel
             contextPreviewLimit={CONTEXT_PREVIEW_LIMIT}
             loading={loading}
@@ -176,7 +178,6 @@ export const MessagesPage = () => {
           lead={selectedLead}
           onClose={() => setDetailsOpen(false)}
         />
-      </div>
-    </div>
+    </ResponsivePageLayout>
   );
 };

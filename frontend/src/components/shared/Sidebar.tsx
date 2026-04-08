@@ -2,9 +2,13 @@ import { NavLink } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import { navigationItems } from "../../constants/navigation";
 
-export const Sidebar = () => {
+type SidebarProps = {
+  className?: string;
+};
+
+export const Sidebar = ({ className = "" }: SidebarProps) => {
   return (
-    <aside className="hidden w-64 border-r border-accent/10 bg-surface-secondary/80 p-4 backdrop-blur-glass md:block">
+    <aside className={`hidden w-64 border-r border-accent/10 bg-surface-secondary/80 p-4 backdrop-blur-glass md:block ${className}`.trim()}>
       <div className="mb-8 px-2">
         <div className="flex items-center gap-2">
           <img src={logo} alt="leadsGrid" className="h-10 w-10" />

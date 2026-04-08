@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 
 import bgDataAtWork from "../../assets/bg-images/data-at-work.svg";
-import { PageBackground } from "../../components/ui/PageBackground";
+import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import { DashboardHero } from "../../features/dashboard/components/DashboardHero";
 import { DashboardHotLeadsWidget } from "../../features/dashboard/components/DashboardHotLeadsWidget";
 import { DashboardKpiGrid } from "../../features/dashboard/components/DashboardKpiGrid";
@@ -32,10 +32,11 @@ export const DashboardPage = () => {
 	} = useDashboardData();
 
 	return (
-		<section className="page-with-bg">
-			<PageBackground image={bgDataAtWork} tint="rgba(167, 139, 250, 0.55)" opacity={0.82} />
-
-			<div className="h-[calc(100vh-100px)] overflow-auto p-6">
+		<ResponsivePageLayout
+			backgroundImage={bgDataAtWork}
+			tint="rgba(167, 139, 250, 0.55)"
+			opacity={0.82}
+		>
 				{loading ? <DashboardSkeleton /> : null}
 
 				{!loading ? (
@@ -67,7 +68,7 @@ export const DashboardPage = () => {
 						</motion.div>
 
 						<motion.div
-							className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]"
+							className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]"
 							initial="hidden"
 							animate="show"
 							variants={reveal}
@@ -89,7 +90,6 @@ export const DashboardPage = () => {
 						</motion.div>
 					</div>
 				) : null}
-			</div>
-		</section>
+		</ResponsivePageLayout>
 	);
 };

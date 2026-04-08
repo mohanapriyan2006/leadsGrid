@@ -10,7 +10,7 @@ import { ConfirmDialog } from "../../features/leads/components/ConfirmDialog";
 import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLeads";
 import { leadService } from "../../features/leads/services/leadService";
 import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButton";
-import { PageBackground } from "../../components/ui/PageBackground";
+import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import bgConnecting from "../../assets/bg-images/connecting-teams.svg";
 import type { DealStatus } from "../../features/common/types/ui";
 import { AddDealForm } from "../../features/crm/components/AddDealForm";
@@ -225,12 +225,14 @@ export const CRMPage = () => {
   };
 
   return (
-    <div className="page-with-bg">
-      <PageBackground image={bgConnecting} tint="rgba(109, 111, 252, 0.70)" />
-      <div className="focus-fill-height h-[calc(100vh-100px)] overflow-auto space-y-4 p-6">
-        <header className="glass-card-lg flex flex-col justify-between gap-3 px-5 py-5 md:flex-row md:items-center md:px-6">
+    <ResponsivePageLayout
+      backgroundImage={bgConnecting}
+      tint="rgba(109, 111, 252, 0.70)"
+      contentClassName="space-y-4"
+    >
+        <header className="glass-card-lg flex flex-col justify-between gap-3 px-4 py-4 sm:px-5 sm:py-5 md:flex-row md:items-center md:px-6">
           <div>
-            <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-3xl font-semibold text-transparent">
+            <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-2xl font-semibold text-transparent sm:text-3xl">
               Pipeline CRM
             </h2>
             <p className="mt-1 text-sm text-content-secondary">
@@ -321,7 +323,7 @@ export const CRMPage = () => {
               void handleDragEnd(event);
             }}
           >
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {STATUS_COLUMNS.map((status) => {
                 const columnDeals = deals.filter((deal) => deal.status === status);
 
@@ -397,14 +399,14 @@ export const CRMPage = () => {
         <AnimatePresence>
           {editOpen && activeDeal && (
             <motion.div
-              className="fixed inset-0 z-[110] flex items-center justify-center bg-surface/80 backdrop-blur-sm px-4"
+              className="fixed inset-0 z-[110] flex items-center justify-center bg-surface/80 px-4 py-6 backdrop-blur-sm sm:py-10"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setEditOpen(false)}
             >
               <motion.form
-                className="glass-card-lg w-full max-w-xl space-y-3 p-5"
+                className="glass-card-lg w-full max-w-xl max-h-[90dvh] space-y-3 overflow-y-auto p-4 sm:p-5"
                 initial={{ opacity: 0, y: 10, scale: 0.985 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 8, scale: 0.985 }}
@@ -503,7 +505,6 @@ export const CRMPage = () => {
           }
         }
       `}</style>
-      </div>
-    </div>
+    </ResponsivePageLayout>
   );
 };

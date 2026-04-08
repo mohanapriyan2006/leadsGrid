@@ -16,7 +16,7 @@ export const ManageLeadsTableView = ({
 }: ManageLeadsTableViewProps) => {
   return (
     <div className="glass-card overflow-hidden">
-      <div className="grid grid-cols-[1.2fr_1.2fr_1.4fr_130px_80px_110px_220px] border-b border-accent/10 bg-gradient-to-r from-accent/5 via-transparent to-transparent px-4 py-2 text-[10px] uppercase tracking-[0.16em] text-content-tertiary">
+      <div className="hidden grid-cols-[1.2fr_1.2fr_1.4fr_130px_80px_110px_220px] border-b border-accent/10 bg-gradient-to-r from-accent/5 via-transparent to-transparent px-4 py-2 text-[10px] uppercase tracking-[0.16em] text-content-tertiary md:grid">
         <span>Name</span>
         <span>Company</span>
         <span>Contact</span>
@@ -26,10 +26,57 @@ export const ManageLeadsTableView = ({
         <span>Actions</span>
       </div>
 
+      <div className="space-y-2 p-3 md:hidden">
+        {leads.map((lead) => (
+          <article key={`mobile-${lead.id}`} className="glass-card-sm space-y-2 p-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-content">{lead.name}</p>
+                <p className="truncate text-xs text-content-secondary">{lead.company}</p>
+              </div>
+              <span className="badge-accent">{lead.score}</span>
+            </div>
+
+            <p className="text-xs text-content-secondary">{lead.email || lead.phone || "N/A"}</p>
+
+            <div className="flex items-center justify-between gap-2 text-xs">
+              <span className="rounded-glass-sm border border-accent/20 bg-accent-soft px-2 py-1 text-content-secondary">
+                {lead.stage}
+              </span>
+              <span className="text-content-secondary">{formatMoney(lead.budget_estimate)}</span>
+            </div>
+
+            <div className="flex flex-wrap gap-1">
+              <button
+                type="button"
+                className="glass-btn px-2 py-1 text-[11px]"
+                onClick={() => onOpenDetails(lead.id)}
+              >
+                Details
+              </button>
+              <button
+                type="button"
+                className="glass-btn px-2 py-1 text-[11px]"
+                onClick={() => onOpenEdit(lead.id)}
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2 py-1 text-[11px] text-danger"
+                onClick={() => onDelete(lead.id)}
+              >
+                Delete
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+
       {leads.map((lead) => (
         <div
           key={lead.id}
-          className="grid grid-cols-[1.2fr_1.2fr_1.4fr_130px_80px_110px_220px] items-center border-b border-accent/5 px-4 py-2 text-xs transition-colors hover:bg-accent/5"
+          className="hidden grid-cols-[1.2fr_1.2fr_1.4fr_130px_80px_110px_220px] items-center border-b border-accent/5 px-4 py-2 text-xs transition-colors hover:bg-accent/5 md:grid"
         >
           <span className="text-content">{lead.name}</span>
           <span className="text-content-secondary">{lead.company}</span>

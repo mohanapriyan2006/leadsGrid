@@ -36,8 +36,8 @@ import type {
 } from "../../features/leads/types/manageLead";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { useLeadStore } from "../../store/useLeadStore";
-import { PageBackground } from "../../components/ui/PageBackground";
 import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButton";
+import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import bgTeamCollab from "../../assets/bg-images/team-collaboration.svg";
 
 export const ManageLeadsPage = () => {
@@ -320,10 +320,11 @@ export const ManageLeadsPage = () => {
   }
 
   return (
-    <div className="page-with-bg">
-      <PageBackground image={bgTeamCollab} tint="rgba(168, 85, 247, 0.80)" />
-
-      <div className="focus-fill-height h-[calc(100vh-100px)] overflow-auto space-y-4 p-6">
+    <ResponsivePageLayout
+      backgroundImage={bgTeamCollab}
+      tint="rgba(168, 85, 247, 0.80)"
+      contentClassName="space-y-4"
+    >
         <ManageLeadsHeader
           manageLeadView={manageLeadView}
           insights={insights}
@@ -381,7 +382,7 @@ export const ManageLeadsPage = () => {
               void handleDragEnd(event);
             }}
           >
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {grouped.map((column) => (
                 <ManageLeadsStageColumn
                   key={column.id}
@@ -515,7 +516,6 @@ export const ManageLeadsPage = () => {
             });
           }}
         />
-      </div>
-    </div>
+    </ResponsivePageLayout>
   );
 };

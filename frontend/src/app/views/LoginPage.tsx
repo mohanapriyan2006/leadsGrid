@@ -2,7 +2,7 @@ import { useState } from "react";
 import { FirebaseError } from "firebase/app";
 import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { getFirebaseAuth, googleProvider, isFirebaseConfigured } from "../../lib/firebase";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import bgTeamCollab from "../../assets/bg-images/team-collaboration.svg";
 
 const getFirebaseAuthErrorMessage = (error: unknown, isRegistering: boolean) => {
@@ -61,6 +61,8 @@ export const LoginPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname || "/dashboard";
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,7 +92,7 @@ export const LoginPage = () => {
       } else {
         await signInWithEmailAndPassword(auth, normalizedEmail, password);
       }
-      navigate("/dashboard");
+      navigate(redirectTo, { replace: true });
     } catch (err: unknown) {
       setError(getFirebaseAuthErrorMessage(err, isRegistering));
     } finally {
@@ -110,7 +112,7 @@ export const LoginPage = () => {
     try {
       setIsSubmitting(true);
       await signInWithPopup(auth, googleProvider);
-      navigate("/dashboard");
+      navigate(redirectTo, { replace: true });
     } catch (err: unknown) {
       setError(getFirebaseAuthErrorMessage(err, false));
     } finally {

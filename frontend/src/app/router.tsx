@@ -1,9 +1,10 @@
 import { lazy, Suspense, type ReactNode } from "react";
-import { createBrowserRouter } from "react-router-dom";
+import { Link, createBrowserRouter } from "react-router-dom";
 
 import { AppShell } from "./shell/AppShell";
 import { ProtectedRoute } from "./shell/ProtectedRoute";
 import { LoginPage } from "./views/LoginPage";
+import { RouteErrorPage } from "./views/RouteErrorPage";
 import { RouteSkeleton } from "./views/RouteSkeleton";
 
 const DashboardPage = lazy(() =>
@@ -42,10 +43,12 @@ export const router = createBrowserRouter([
   {
     path: "/",
     element: withSuspense(<LandingPage />),
+    errorElement: <RouteErrorPage title="Unable to open landing page" />,
   },
   {
     path: "/login",
     element: <LoginPage />,
+    errorElement: <RouteErrorPage title="Unable to open login" />,
   },
   {
     element: (
@@ -53,6 +56,7 @@ export const router = createBrowserRouter([
         <AppShell />
       </ProtectedRoute>
     ),
+    errorElement: <RouteErrorPage title="Unable to navigate right now" />,
     children: [
       {
         path: "dashboard",
@@ -95,9 +99,9 @@ export const router = createBrowserRouter([
         <div className="text-center">
           <h1 className="text-4xl font-bold text-accent mb-4">404</h1>
           <p className="text-content-secondary mb-6">Page not found</p>
-          <a href="/" className="text-accent hover:text-accent-secondary transition-colors">
+          <Link to="/" className="text-accent hover:text-accent-secondary transition-colors">
             Go home
-          </a>
+          </Link>
         </div>
       </div>
     ),

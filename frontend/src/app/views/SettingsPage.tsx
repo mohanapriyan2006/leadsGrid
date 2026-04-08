@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { PageBackground } from "../../components/ui/PageBackground";
+import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import bgDataAtWork from "../../assets/bg-images/data-at-work.svg";
 import { useAuth } from "../../features/auth/AuthContext";
 import { getFirebaseAuth } from "../../lib/firebase";
@@ -97,18 +97,20 @@ export const SettingsPage = () => {
   };
 
   return (
-    <div className="page-with-bg">
-      <PageBackground image={bgDataAtWork} tint="rgba(236, 254, 72, 0.51)" />
-      <div className="h-[calc(100vh-100px)] overflow-auto space-y-4 p-6">
+    <ResponsivePageLayout
+      backgroundImage={bgDataAtWork}
+      tint="rgba(236, 254, 72, 0.51)"
+      contentClassName="space-y-4"
+    >
         <header className="glass-card p-5">
-          <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-3xl font-semibold text-transparent">System Configuration</h2>
+          <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-2xl font-semibold text-transparent sm:text-3xl">System Configuration</h2>
           <p className="mt-1 text-sm text-content-secondary">Configure outreach engine behavior and signal cadence.</p>
         </header>
 
         {/* User Profile Section */}
         <div className="glass-card p-5 space-y-4">
           <h3 className="text-sm font-semibold tracking-[0.1em] text-content-tertiary uppercase">User Profile</h3>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
             <div className="h-14 w-14 rounded-full bg-accent/20 flex items-center justify-center text-xl font-bold text-accent">
               {user?.email?.[0].toUpperCase() || "U"}
             </div>
@@ -117,7 +119,7 @@ export const SettingsPage = () => {
               <p className="text-xs text-content-secondary">Account created: {user?.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString() : "N/A"}</p>
             </div>
           </div>
-          <div className="flex gap-3 pt-2">
+          <div className="flex flex-wrap gap-3 pt-2">
             <button
               type="button"
               onClick={() => setLogoutConfirmOpen(true)}
@@ -161,7 +163,7 @@ export const SettingsPage = () => {
         {/* Logout Confirmation Modal */}
         {logoutConfirmOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface/80 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-2xl border border-accent/20 bg-surface-secondary p-6 shadow-[0_18px_60px_rgba(0,0,0,0.4)]">
+            <div className="w-full max-w-md rounded-2xl border border-accent/20 bg-surface-secondary p-5 sm:p-6 shadow-[0_18px_60px_rgba(0,0,0,0.4)]">
               <h3 className="mb-2 text-lg font-semibold text-content">Log Out?</h3>
               <p className="mb-6 text-sm text-content-secondary">Are you sure you want to log out of your account?</p>
               <div className="flex gap-3">
@@ -187,7 +189,7 @@ export const SettingsPage = () => {
         {/* Delete Account Triple Confirmation Modal */}
         {deleteStep > 0 && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface/90 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-2xl border border-danger/30 bg-surface-secondary p-6 shadow-[0_18px_60px_rgba(239,68,68,0.4)]">
+            <div className="w-full max-w-md rounded-2xl border border-danger/30 bg-surface-secondary p-5 sm:p-6 shadow-[0_18px_60px_rgba(239,68,68,0.4)]">
               {/* Step 1: Re-authenticate */}
               {deleteStep === 1 && (
                 <>
@@ -306,7 +308,6 @@ export const SettingsPage = () => {
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </ResponsivePageLayout>
   );
 };

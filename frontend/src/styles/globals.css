@@ -190,15 +190,23 @@
 
   /* Page with background — wrapper for pages that use PageBackground */
   .page-with-bg {
-    @apply relative min-h-[calc(100vh-100px)];
+    @apply relative min-h-full;
+  }
+
+  .page-scroll-container {
+    @apply min-h-[calc(100dvh-56px)] overflow-auto p-3 sm:min-h-[calc(100dvh-60px)] sm:p-4 md:p-6;
+  }
+
+  .shell-main {
+    @apply min-h-0 flex-1;
   }
 
   .focus-shell {
-    min-height: 100vh;
+    min-height: 100dvh;
   }
 
   .focus-shell .focus-fill-height {
-    height: 100vh;
+    min-height: 100dvh;
   }
 
   .page-header {
@@ -240,5 +248,65 @@
 
   .glow-danger {
     box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+  }
+
+  .logo-loader-shell {
+    @apply flex min-h-screen items-center justify-center bg-surface px-4;
+  }
+
+  .logo-loader-orb {
+    position: absolute;
+    width: min(66vw, 560px);
+    height: min(66vw, 560px);
+    border-radius: 9999px;
+    background: radial-gradient(circle, rgba(167, 139, 250, 0.32) 0%, rgba(99, 102, 241, 0.16) 42%, transparent 75%);
+    filter: blur(8px);
+    animation: loaderPulse 2.2s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .logo-loader-card {
+    @apply relative z-10 flex flex-col items-center gap-4 rounded-glass-lg border border-accent/20 bg-surface-secondary/70 px-7 py-6 backdrop-blur-glass;
+    box-shadow:
+      0 16px 60px rgba(0, 0, 0, 0.45),
+      0 0 35px rgba(167, 139, 250, 0.2);
+  }
+
+  .logo-loader-image {
+    width: 68px;
+    height: 68px;
+    border-radius: 16px;
+    object-fit: cover;
+    animation: logoFloat 1.6s ease-in-out infinite;
+    box-shadow: 0 0 22px rgba(167, 139, 250, 0.4);
+  }
+
+  .logo-loader-text {
+    @apply text-center text-sm font-medium text-content-secondary;
+    letter-spacing: 0.03em;
+  }
+}
+
+@keyframes loaderPulse {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.65;
+  }
+
+  50% {
+    transform: scale(1.02);
+    opacity: 1;
+  }
+}
+
+@keyframes logoFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
   }
 }

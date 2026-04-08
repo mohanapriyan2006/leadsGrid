@@ -21,7 +21,7 @@ export const CRMTableView = ({
 }: CRMTableViewProps) => {
   return (
     <div className="glass-card overflow-hidden">
-      <div className="grid grid-cols-[2fr_1.5fr_1fr_90px_1fr_220px] border-b border-accent/10 bg-gradient-to-r from-accent/5 via-transparent to-transparent px-4 py-3 text-[10px] uppercase tracking-[0.18em] text-content-tertiary">
+      <div className="hidden grid-cols-[2fr_1.5fr_1fr_90px_1fr_220px] border-b border-accent/10 bg-gradient-to-r from-accent/5 via-transparent to-transparent px-4 py-3 text-[10px] uppercase tracking-[0.18em] text-content-tertiary md:grid">
         <span>Client</span>
         <span>Company</span>
         <span>Status</span>
@@ -29,7 +29,63 @@ export const CRMTableView = ({
         <span>Last action</span>
         <span>Actions</span>
       </div>
-      <div className="divide-y divide-accent/5">
+
+      <div className="space-y-2 p-3 md:hidden">
+        {deals.map((deal) => (
+          <article key={`mobile-${deal.id}`} className="glass-card-sm space-y-2 p-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-content">{deal.name}</p>
+                <p className="truncate text-xs text-content-secondary">{deal.company}</p>
+              </div>
+              <ScoreBadge score={deal.score} />
+            </div>
+
+            <div className="flex items-center justify-between gap-2">
+              <StatusBadge status={deal.status} />
+              <select
+                value={deal.status}
+                onChange={(event) => onUpdateStatus(deal.id, event.target.value as DealStatus)}
+                className="glass-input h-8 px-2 py-1 text-xs"
+              >
+                {STATUS_COLUMNS.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <p className="text-xs text-content-tertiary">Last action: {deal.lastAction}</p>
+
+            <div className="flex flex-wrap gap-1">
+              <button
+                type="button"
+                className="glass-btn px-2 py-1 text-[11px]"
+                onClick={() => onOpenDetails(deal.id)}
+              >
+                Details
+              </button>
+              <button
+                type="button"
+                className="glass-btn px-2 py-1 text-[11px]"
+                onClick={() => onOpenEdit(deal.id)}
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2 py-1 text-[11px] text-danger"
+                onClick={() => onDeleteRequest(deal.id)}
+              >
+                Delete
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <div className="hidden divide-y divide-accent/5 md:block">
         {deals.map((deal, index) => (
           <div
             key={deal.id}

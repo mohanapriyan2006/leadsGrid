@@ -10,6 +10,7 @@ type LeadsDiscoveryResultCardProps = {
   index: number;
   isSelected: boolean;
   onSelect: (leadId: string) => void;
+  onAnalyze: (lead: Lead) => void;
   onGenerateDraft: (lead: Lead) => void;
   onSaveLead: (lead: Lead) => void;
 };
@@ -30,6 +31,7 @@ export const LeadsDiscoveryResultCard = ({
   index,
   isSelected,
   onSelect,
+  onAnalyze,
   onGenerateDraft,
   onSaveLead,
 }: LeadsDiscoveryResultCardProps) => {
@@ -108,6 +110,11 @@ export const LeadsDiscoveryResultCard = ({
               <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
                 Urgency: {advancedIntent.urgency}
               </span>
+              {advancedIntent.buying_signals.length > 0 ? (
+                <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                  Signals: {advancedIntent.buying_signals.length}
+                </span>
+              ) : null}
             </div>
             <p className="text-xs text-content-secondary">Pain: {advancedIntent.pain_point}</p>
           </div>
@@ -128,6 +135,17 @@ export const LeadsDiscoveryResultCard = ({
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="glass-btn px-3 py-1.5 text-[11px]"
+            disabled={isAnalyzing}
+            onClick={(event) => {
+              event.stopPropagation();
+              onAnalyze(lead);
+            }}
+          >
+            {isAnalyzing ? "Analyzing..." : "Analyze"}
+          </button>
           <button
             type="button"
             className="glass-btn px-3 py-1.5 text-[11px]"

@@ -1,7 +1,9 @@
 import { addDoc, collection, Timestamp } from "firebase/firestore";
 
+import { apiClient, getStoredToken } from "../../../lib/api";
 import { db, getFirebaseAuth } from "../../../lib/firebase";
 import { askAiService } from "../../ai/services/askAiService";
+import type { HyperPersonalizedOutreachRequest, HyperPersonalizedOutreachResult } from "../types/lead";
 
 export type MessageGenerationPayload = {
   lead_context: string;
@@ -33,6 +35,25 @@ export type SendEmailResult = {
   subject: string;
   provider: string;
   sent_at: string;
+};
+
+const buildAuthHeaders = async (): Promise<Record<string, string>> => {
+  const headers: Record<string, string> = {};
+  const auth = getFirebaseAuth();
+
+  if (auth?.currentUser) {
+    const token = await auth.currentUser.getIdToken();
+    headers.Authorization = `Bearer ${token}`;
+    headers["x-user-id"] = auth.currentUser.uid;
+    return headers;
+  }
+
+  const storedToken = getStoredToken();
+  if (storedToken) {
+    headers.Authorization = `Bearer ${storedToken}`;
+  }
+
+  return headers;
 };
 
 export const messageService = {
@@ -76,5 +97,18 @@ export const messageService = {
       provider: "firestore",
       sent_at: new Date().toISOString(),
     };
+  },
+
+  generateHyperPersonalizedOutreach: async (
+    payload: HyperPersonalizedOutreachRequest,
+  ): Promise<HyperPersonalizedOutreachResult> => {
+    const headers = await buildAuthHeaders();
+    const response = await apiClient.post<HyperPersonalizedOutreachResult>(
+      "/leads/generate-hyper-personalized-outreach",
+      payload,
+      { headers },
+    );
+
+    return response.data;
   },
 };

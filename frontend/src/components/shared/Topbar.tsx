@@ -41,12 +41,11 @@ export const Topbar = () => {
               "◎"
             )}
           </button>
-          <button 
-            onClick={signOut}
-            className="absolute top-10 right-0 hidden group-hover:block whitespace-nowrap glass-card-sm px-3 py-1 text-content text-xs hover:bg-accent-soft"
+          <div 
+            className="absolute top-10 right-0 hidden group-hover:block whitespace-nowrap glass-card-sm px-3 py-1 text-content text-xs"
           >
-            Sign Out
-          </button>
+            {user?.displayName || "User"}
+          </div>
         </div>
         <span className={isBackendOnline ? "badge-success" : "badge-error"}>
           {isBackendOnline ? "online" : "offline"}

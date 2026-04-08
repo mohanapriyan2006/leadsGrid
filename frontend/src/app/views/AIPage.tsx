@@ -68,8 +68,25 @@ export const AIPage = () => {
   const attachedLeads = useMemo(() => {
     if (attachedLeadIds.length === 0) return [];
     const selected = new Set(attachedLeadIds);
-    return leadPool.filter((lead) => selected.has(lead.id));
-  }, [attachedLeadIds, leadPool]);
+    return manageLeads
+      .filter((lead) => selected.has(lead.id))
+      .map((lead) => ({
+        id: lead.id,
+        author: lead.name,
+        title: lead.company,
+        summary: lead.notes || `Lead from ${lead.company}`,
+        content: lead.notes || `Lead from ${lead.company}`,
+        score: lead.score,
+        email: lead.email || undefined,
+        phone: lead.phone || undefined,
+        website: lead.website_url || undefined,
+        address: lead.address || undefined,
+        source: "search" as const,
+        created_at: lead.created_at,
+        tags: lead.notes ? [lead.source] : ["saved"],
+        intent_label: "prospect",
+      }));
+  }, [attachedLeadIds, manageLeads]);
 
   const attachedLeadChips = useMemo(
     () => attachedLeads.map((lead) => ({ id: lead.id, title: getLeadChipTitle(lead) })),
@@ -472,7 +489,22 @@ export const AIPage = () => {
 
         <AttachLeadsModal
           open={attachLeadsOpen}
-          leads={leadPool}
+          leads={manageLeads.map((lead) => ({
+            id: lead.id,
+            author: lead.name,
+            title: lead.company,
+            summary: lead.notes || `Lead from ${lead.company}`,
+            content: lead.notes || `Lead from ${lead.company}`,
+            score: lead.score,
+            email: lead.email || undefined,
+            phone: lead.phone || undefined,
+            website: lead.website_url || undefined,
+            address: lead.address || undefined,
+            source: "search" as const,
+            created_at: lead.created_at,
+            tags: lead.notes ? [lead.source] : ["saved"],
+            intent_label: "prospect",
+          }))}
           selectedLeadIds={attachedLeadIds}
           onClose={() => setAttachLeadsOpen(false)}
           onApply={handleAttachLeads}

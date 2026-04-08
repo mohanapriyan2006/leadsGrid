@@ -65,3 +65,30 @@ export type LeadAnalysis = {
   portfolio_match: LeadPortfolioMatch | null;
   analyzed_at: string;
 };
+
+export type HyperPersonalizedOutreachRequest = {
+  lead_text: string;
+  lead_title?: string;
+  lead_author?: string;
+  pain_point: string;
+  user_skills: string[];
+  portfolio_summary: string;
+  tone: "professional" | "friendly" | "direct";
+};
+
+export type HyperPersonalizedOutreachMetadata = {
+  provider: string;
+  personalization_score: number;
+  compliance_score: number;
+  word_count: number;
+  within_word_limit: boolean;
+  has_soft_cta: boolean;
+  rewritten: boolean;
+  violations: string[];
+  constraints_checked: string[];
+};
+
+export type HyperPersonalizedOutreachResult = {
+  message: string;
+  metadata: HyperPersonalizedOutreachMetadata;
+};

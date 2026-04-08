@@ -2,6 +2,8 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, ValidationError
 
 from app.schemas.lead_analysis import AdvancedLeadIntentScore
+from app.schemas.lead_analysis import HyperPersonalizedOutreachRequest
+from app.schemas.lead_analysis import HyperPersonalizedOutreachResponse
 from app.services.ai_prompts_service import ai_prompts_service
 
 router = APIRouter(prefix="/leads", tags=["leads"])
@@ -106,6 +108,27 @@ async def generate_outreach(body: AnalyzeLeadRequest) -> dict:
         return outreach.model_dump()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Outreach generation failed: {str(e)}")
+
+
+@router.post("/generate-hyper-personalized-outreach", response_model=HyperPersonalizedOutreachResponse)
+async def generate_hyper_personalized_outreach(
+    body: HyperPersonalizedOutreachRequest,
+) -> HyperPersonalizedOutreachResponse:
+    lead_text = f"{body.lead_title} {body.lead_text}".strip()
+
+    try:
+        return await ai_prompts_service.generate_hyper_personalized_outreach(
+            lead_text=lead_text,
+            pain_point=body.pain_point,
+            user_skills=body.user_skills,
+            portfolio_summary=body.portfolio_summary,
+            name=body.lead_author or "there",
+            tone=body.tone,
+        )
+    except (ValueError, ValidationError) as e:
+        raise HTTPException(status_code=422, detail=f"Hyper-personalized outreach failed validation: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Hyper-personalized outreach failed: {str(e)}")
 
 
 @router.post("/suggest-action")

@@ -12,7 +12,7 @@ import { useMessageGenerator } from "../../features/leads/hooks/useMessageGenera
 import { useLeads } from "../../features/leads/hooks/useLeads";
 import { leadAnalysisService, type AdvancedLeadIntent } from "../../features/leads/services/leadAnalysisService";
 import { leadService } from "../../features/leads/services/leadService";
-import type { Lead } from "../../features/leads/types/lead";
+import type { HyperPersonalizedOutreachResult, Lead } from "../../features/leads/types/lead";
 import type { ToneType } from "../../features/common/types/ui";
 
 const getIntentLabel = (score: number): string => {
@@ -41,6 +41,14 @@ export const LeadsDiscoveryPage = () => {
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
   const [savingLeadId, setSavingLeadId] = useState<string | null>(null);
   const [analyzingLeadId, setAnalyzingLeadId] = useState<string | null>(null);
+  const [isBulkAnalyzing, setIsBulkAnalyzing] = useState(false);
+  const [bulkAnalyzeProgress, setBulkAnalyzeProgress] = useState(0);
+  const [outreachError, setOutreachError] = useState<string | null>(null);
+  const [painPointInput, setPainPointInput] = useState("");
+  const [userSkillsInput, setUserSkillsInput] = useState("FastAPI, React, CRM automation");
+  const [portfolioSummaryInput, setPortfolioSummaryInput] = useState(
+    "I build lead-generation and outreach systems that help sales teams convert qualified prospects faster.",
+  );
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [advancedIntentByLeadId, setAdvancedIntentByLeadId] = useState<Record<string, AdvancedLeadIntent>>({});
 
@@ -50,7 +58,14 @@ export const LeadsDiscoveryPage = () => {
     limit: 16,
   });
 
-  const { generateMessage, generatedMessage, isGenerating } = useMessageGenerator();
+  const {
+    generateMessage,
+    generatedMessage,
+    isGenerating,
+    generateHyperPersonalizedOutreach,
+    hyperOutreachResult,
+    isGeneratingHyperOutreach,
+  } = useMessageGenerator();
 
   const enrichedLeads = useMemo(() => {
     return leads.map((lead) => {
@@ -76,12 +91,43 @@ export const LeadsDiscoveryPage = () => {
   );
 
   const selectedIntent = selectedLeadId ? advancedIntentByLeadId[selectedLeadId] ?? null : null;
+  const outreachResult = (hyperOutreachResult ?? null) as HyperPersonalizedOutreachResult | null;
+  const skillsList = useMemo(
+    () => userSkillsInput.split(",").map((value) => value.trim()).filter(Boolean),
+    [userSkillsInput],
+  );
+  const canGenerateOutreach = Boolean(
+    selectedLead
+    && painPointInput.trim().length >= 3
+    && skillsList.length >= 1
+    && portfolioSummaryInput.trim().length >= 10,
+  );
 
   useEffect(() => {
     if (!selectedLeadId && enrichedLeads.length > 0) {
       setSelectedLeadId(enrichedLeads[0].id);
     }
   }, [enrichedLeads, selectedLeadId]);
+
+  useEffect(() => {
+    if (!selectedLead) {
+      setPainPointInput("");
+      return;
+    }
+
+    const prefilledPainPoint =
+      selectedIntent?.pain_point
+      || selectedLead.pain_point
+      || selectedLead.summary
+      || "";
+    setPainPointInput(prefilledPainPoint);
+  }, [selectedLead, selectedIntent]);
+
+  useEffect(() => {
+    if (outreachError) {
+      setOutreachError(null);
+    }
+  }, [painPointInput, userSkillsInput, portfolioSummaryInput]);
 
   const filteredLeads = useMemo(() => {
     return enrichedLeads.filter((lead) => lead.score >= scoreMin);
@@ -109,6 +155,11 @@ export const LeadsDiscoveryPage = () => {
       ? Math.round(sortedLeads.reduce((sum, lead) => sum + lead.score, 0) / sortedLeads.length)
       : 0;
   const hotLeadCount = sortedLeads.filter((lead) => lead.score >= 80).length;
+  const analyzedVisibleCount = sortedLeads.filter((lead) => Boolean(advancedIntentByLeadId[lead.id])).length;
+  const qualifiedVisibleCount = sortedLeads.filter((lead) => advancedIntentByLeadId[lead.id]?.status === "qualified").length;
+  const qualificationRate = analyzedVisibleCount > 0
+    ? Math.round((qualifiedVisibleCount / analyzedVisibleCount) * 100)
+    : 0;
 
   const draftText = isGenerating
     ? "Generating..."
@@ -116,27 +167,30 @@ export const LeadsDiscoveryPage = () => {
       ? generatedMessage
       : generatedMessage?.message ?? "";
 
-  const analyzeLeadIntent = async (lead: Lead): Promise<AdvancedLeadIntent> => {
+  const analyzeLeadIntent = async (lead: Lead, force = false): Promise<AdvancedLeadIntent> => {
     const cached = advancedIntentByLeadId[lead.id];
-    if (cached) {
+    if (cached && !force) {
       return cached;
     }
 
     setAnalyzingLeadId(lead.id);
-    const advancedIntent = await leadAnalysisService.analyzeAdvancedIntent({
-      lead_text: lead.content,
-      lead_title: lead.title,
-      lead_author: lead.author,
-      score: lead.score,
-    });
+    try {
+      const advancedIntent = await leadAnalysisService.analyzeAdvancedIntent({
+        lead_text: lead.content,
+        lead_title: lead.title,
+        lead_author: lead.author,
+        score: lead.score,
+      });
 
-    setAdvancedIntentByLeadId((prev) => ({
-      ...prev,
-      [lead.id]: advancedIntent,
-    }));
-    setAnalyzingLeadId(null);
+      setAdvancedIntentByLeadId((prev) => ({
+        ...prev,
+        [lead.id]: advancedIntent,
+      }));
 
-    return advancedIntent;
+      return advancedIntent;
+    } finally {
+      setAnalyzingLeadId(null);
+    }
   };
 
   const handleAnalyzeLead = async (lead: Lead) => {
@@ -149,6 +203,37 @@ export const LeadsDiscoveryPage = () => {
       setAnalyzingLeadId(null);
       const reason = error instanceof Error ? error.message : "Unknown AI error";
       setDraftError(`Lead analysis failed: ${reason}`);
+    }
+  };
+
+  const handleBulkAnalyzeVisible = async () => {
+    if (sortedLeads.length === 0 || isBulkAnalyzing) {
+      return;
+    }
+
+    setIsBulkAnalyzing(true);
+    setBulkAnalyzeProgress(0);
+    setDraftError(null);
+
+    let completed = 0;
+    let failed = 0;
+
+    for (const lead of sortedLeads) {
+      try {
+        await analyzeLeadIntent(lead);
+      } catch {
+        failed += 1;
+      } finally {
+        completed += 1;
+        setBulkAnalyzeProgress(Math.round((completed / sortedLeads.length) * 100));
+      }
+    }
+
+    setIsBulkAnalyzing(false);
+    if (failed > 0) {
+      setSaveFeedback(`Bulk analysis complete: ${completed - failed}/${completed} succeeded.`);
+    } else {
+      setSaveFeedback(`Bulk analysis complete: ${completed} leads analyzed.`);
     }
   };
 
@@ -186,6 +271,49 @@ export const LeadsDiscoveryPage = () => {
     if (!draftText) return;
     try {
       await navigator.clipboard.writeText(draftText);
+    } catch {
+      // no-op
+    }
+  };
+
+  const handleGenerateOutreach = async () => {
+    if (!selectedLead) return;
+
+    if (!painPointInput.trim()) {
+      setOutreachError("Pain point is required for hyper-personalized outreach.");
+      return;
+    }
+    if (skillsList.length === 0) {
+      setOutreachError("Add at least one skill for personalized outreach.");
+      return;
+    }
+    if (!portfolioSummaryInput.trim()) {
+      setOutreachError("Portfolio summary is required for personalized outreach.");
+      return;
+    }
+
+    setOutreachError(null);
+
+    try {
+      await generateHyperPersonalizedOutreach({
+        lead_text: selectedLead.content,
+        lead_title: selectedLead.title || "",
+        lead_author: selectedLead.author || "",
+        pain_point: painPointInput.trim(),
+        user_skills: skillsList,
+        portfolio_summary: portfolioSummaryInput.trim(),
+        tone,
+      });
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "Unknown outreach error";
+      setOutreachError(`Outreach generation failed: ${reason}`);
+    }
+  };
+
+  const handleCopyOutreach = async () => {
+    if (!outreachResult?.message) return;
+    try {
+      await navigator.clipboard.writeText(outreachResult.message);
     } catch {
       // no-op
     }
@@ -253,6 +381,7 @@ export const LeadsDiscoveryPage = () => {
     setSelectedLeadId(null);
     setAdvancedIntentByLeadId({});
     setDraftError(null);
+    setOutreachError(null);
     setSaveFeedback(null);
     setSubmittedQuery(trimmed);
   };
@@ -295,10 +424,20 @@ export const LeadsDiscoveryPage = () => {
               >
                 Export CSV
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  void handleBulkAnalyzeVisible();
+                }}
+                className="glass-btn px-3 py-2 text-xs uppercase tracking-[0.08em]"
+                disabled={sortedLeads.length === 0 || isBulkAnalyzing}
+              >
+                {isBulkAnalyzing ? `Analyzing ${bulkAnalyzeProgress}%` : "Analyze Visible"}
+              </button>
             </div>
           </div>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div className="mt-4 grid gap-3 sm:grid-cols-5">
             <div className="rounded-xl border border-accent/15 bg-surface/45 px-4 py-3">
               <p className="text-[11px] uppercase tracking-[0.1em] text-content-tertiary">Average Score</p>
               <p className="mt-1 text-2xl font-semibold text-content">{averageScore}</p>
@@ -310,6 +449,14 @@ export const LeadsDiscoveryPage = () => {
             <div className="rounded-xl border border-accent-tertiary/25 bg-accent-tertiary/10 px-4 py-3">
               <p className="text-[11px] uppercase tracking-[0.1em] text-accent-tertiary">Active Sources</p>
               <p className="mt-1 text-2xl font-semibold text-accent-tertiary">{sources.length}</p>
+            </div>
+            <div className="rounded-xl border border-accent/20 bg-accent/10 px-4 py-3">
+              <p className="text-[11px] uppercase tracking-[0.1em] text-accent">Analyzed</p>
+              <p className="mt-1 text-2xl font-semibold text-content">{analyzedVisibleCount}</p>
+            </div>
+            <div className="rounded-xl border border-success/25 bg-success/10 px-4 py-3">
+              <p className="text-[11px] uppercase tracking-[0.1em] text-success">Qualified Rate</p>
+              <p className="mt-1 text-2xl font-semibold text-content">{qualificationRate}%</p>
             </div>
           </div>
         </header>
@@ -340,7 +487,15 @@ export const LeadsDiscoveryPage = () => {
             ) : null}
 
             {saveFeedback ? (
-              <div className="rounded-xl border border-accent/20 bg-accent/10 p-3 text-sm text-content-secondary">
+              <div
+                className={`rounded-xl p-3 text-sm ${
+                  saveFeedback.startsWith("Saved")
+                    ? "border border-success/25 bg-success/10 text-success"
+                    : saveFeedback.startsWith("Not saved")
+                      ? "border border-warning/25 bg-warning/10 text-warning"
+                      : "border border-accent/20 bg-accent/10 text-content-secondary"
+                }`}
+              >
                 {saveFeedback}
               </div>
             ) : null}
@@ -387,6 +542,10 @@ export const LeadsDiscoveryPage = () => {
                     index={index}
                     isSelected={selectedLeadId === lead.id}
                     onSelect={setSelectedLeadId}
+                    onAnalyze={(selected) => {
+                      if (analyzingLeadId === selected.id) return;
+                      void handleAnalyzeLead(selected);
+                    }}
                     onGenerateDraft={handleGenerateDraft}
                     onSaveLead={(selected) => {
                       if (savingLeadId === selected.id) return;
@@ -403,19 +562,32 @@ export const LeadsDiscoveryPage = () => {
             selectedLead={selectedLead}
             selectedIntent={selectedIntent}
             insightsText={draftText}
+            outreachResult={outreachResult}
+            painPointInput={painPointInput}
+            userSkillsInput={userSkillsInput}
+            portfolioSummaryInput={portfolioSummaryInput}
+            canGenerateOutreach={canGenerateOutreach}
             isGenerating={isGenerating}
+            isGeneratingOutreach={isGeneratingHyperOutreach}
             onToneChange={setTone}
+            onPainPointChange={setPainPointInput}
+            onUserSkillsChange={setUserSkillsInput}
+            onPortfolioSummaryChange={setPortfolioSummaryInput}
             onAnalyze={() => {
               if (selectedLead) {
                 void handleAnalyzeLead(selectedLead);
               }
             }}
+            onGenerateOutreach={() => {
+              void handleGenerateOutreach();
+            }}
             onCopyInsights={handleCopyDraft}
+            onCopyOutreach={handleCopyOutreach}
             onOpenSource={handleOpenSource}
           />
-          {draftError ? (
+          {draftError || outreachError ? (
             <div className="rounded-xl border border-danger/25 bg-danger/10 p-3 text-sm text-danger">
-              {draftError}
+              {draftError || outreachError}
             </div>
           ) : null}
         </div>

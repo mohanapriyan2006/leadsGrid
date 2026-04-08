@@ -8,6 +8,7 @@ Handles lead ingestion display, intent visualization, and integration points to 
 - `POST /api/agent/plan`
 - `POST /api/agent/execute`
 - `POST /api/ai/message` (Ask text generation fallback route in frontend service)
+- `POST /api/leads/generate-hyper-personalized-outreach`
 
 ## Components
 - `LeadCard`
@@ -27,6 +28,7 @@ Handles lead ingestion display, intent visualization, and integration points to 
 ## Services
 - `leadService.discoverLeads` (real backend discovery)
 - `discoveryAdapter.adaptDiscoveryLead` (DTO to frontend Lead mapping)
+- `messageService.generateHyperPersonalizedOutreach` (backend personalized outreach generator)
 
 ## State
 - `useLeadStore.leads`
@@ -42,6 +44,12 @@ Handles lead ingestion display, intent visualization, and integration points to 
 - Uses adapter-driven mapping so discovered leads always match frontend Lead fields.
 - Displays source-accurate chips and score-threshold filtering.
 - Generates contextual outreach drafts in split-screen AI panel.
+- Supports hyper-personalized outreach generation in the Discovery side panel with explicit inputs:
+	- pain point
+	- user skills
+	- portfolio summary
+- Surfaces outreach metadata (provider, personalization score, compliance score, word count, soft-CTA indicator).
+- Uses backend quality enforcement with one-pass auto-polish when generated content misses constraints.
 
 ## Future Improvements
 - Pagination and cursor-based loading.

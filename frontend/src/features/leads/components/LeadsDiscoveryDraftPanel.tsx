@@ -1,6 +1,6 @@
 import type { ToneType } from "../../common/types/ui";
 import type { AdvancedLeadIntent } from "../services/leadAnalysisService";
-import type { Lead } from "../types/lead";
+import type { HyperPersonalizedOutreachResult, Lead } from "../types/lead";
 import { AIIcon, initials } from "./leadsPagePrimitives";
 
 type LeadsDiscoveryDraftPanelProps = {
@@ -8,10 +8,21 @@ type LeadsDiscoveryDraftPanelProps = {
   selectedLead: Lead | null;
   selectedIntent: AdvancedLeadIntent | null;
   insightsText: string;
+  outreachResult: HyperPersonalizedOutreachResult | null;
+  painPointInput: string;
+  userSkillsInput: string;
+  portfolioSummaryInput: string;
+  canGenerateOutreach: boolean;
   isGenerating: boolean;
+  isGeneratingOutreach: boolean;
   onToneChange: (tone: ToneType) => void;
+  onPainPointChange: (value: string) => void;
+  onUserSkillsChange: (value: string) => void;
+  onPortfolioSummaryChange: (value: string) => void;
   onAnalyze: () => void;
+  onGenerateOutreach: () => void;
   onCopyInsights: () => Promise<void>;
+  onCopyOutreach: () => Promise<void>;
   onOpenSource: () => void;
 };
 
@@ -50,14 +61,37 @@ export const LeadsDiscoveryDraftPanel = ({
   selectedLead,
   selectedIntent,
   insightsText,
+  outreachResult,
+  painPointInput,
+  userSkillsInput,
+  portfolioSummaryInput,
+  canGenerateOutreach,
   isGenerating,
+  isGeneratingOutreach,
   onToneChange,
+  onPainPointChange,
+  onUserSkillsChange,
+  onPortfolioSummaryChange,
   onAnalyze,
+  onGenerateOutreach,
   onCopyInsights,
+  onCopyOutreach,
   onOpenSource,
 }: LeadsDiscoveryDraftPanelProps) => {
   const insightBullets = toInsightBullets(insightsText);
   const leadSignals = selectedLead ? buildLeadSignals(selectedLead) : [];
+  const skillsCount = userSkillsInput
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean).length;
+
+  const qualityLabel = outreachResult
+    ? outreachResult.metadata.personalization_score >= 0.85
+      ? "Excellent"
+      : outreachResult.metadata.personalization_score >= 0.7
+        ? "Strong"
+        : "Needs polish"
+    : null;
 
   return (
     <aside className="glass-card overflow-y-auto h-[calc(100vh-150px)] min-w-0 space-y-4 p-5 xl:sticky xl:top-0">
@@ -170,6 +204,95 @@ export const LeadsDiscoveryDraftPanel = ({
             </p>
           )}
         </div>
+      </div>
+
+      <div className="space-y-2 rounded-xl border border-accent/10 bg-surface/40 p-3">
+        <p className="text-xs uppercase tracking-[0.1em] text-content-tertiary">Hyper-Personalized Outreach</p>
+
+        <div className="space-y-1">
+          <label className="text-[11px] uppercase tracking-[0.08em] text-content-tertiary">Pain Point</label>
+          <textarea
+            value={painPointInput}
+            onChange={(event) => onPainPointChange(event.target.value)}
+            rows={2}
+            placeholder="Lead pain point"
+            className="glass-input w-full resize-none px-2 py-2 text-xs text-content"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-[11px] uppercase tracking-[0.08em] text-content-tertiary">Your Skills</label>
+          <input
+            value={userSkillsInput}
+            onChange={(event) => onUserSkillsChange(event.target.value)}
+            placeholder="FastAPI, React, CRM automation"
+            className="glass-input w-full px-2 py-2 text-xs text-content"
+          />
+          <p className="text-[11px] text-content-tertiary">{skillsCount} skills detected</p>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-[11px] uppercase tracking-[0.08em] text-content-tertiary">Portfolio Summary</label>
+          <textarea
+            value={portfolioSummaryInput}
+            onChange={(event) => onPortfolioSummaryChange(event.target.value)}
+            rows={2}
+            placeholder="Relevant outcomes you've delivered"
+            className="glass-input w-full resize-none px-2 py-2 text-xs text-content"
+          />
+          <p className="text-[11px] text-content-tertiary">{portfolioSummaryInput.trim().length}/2000 chars</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            className="accent-btn px-2 py-2 text-xs"
+            onClick={onGenerateOutreach}
+            disabled={!selectedLead || isGeneratingOutreach || !canGenerateOutreach}
+          >
+            {isGeneratingOutreach ? "Generating..." : "Generate Outreach"}
+          </button>
+          <button
+            type="button"
+            className="glass-btn px-2 py-2 text-xs"
+            onClick={() => {
+              void onCopyOutreach();
+            }}
+            disabled={!outreachResult?.message}
+          >
+            Copy Outreach
+          </button>
+        </div>
+
+        {outreachResult ? (
+          <div className="space-y-2 rounded-lg border border-accent-secondary/20 bg-accent-secondary/10 p-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="rounded-full border border-accent/30 bg-accent/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-accent">
+                {qualityLabel}
+              </span>
+              {outreachResult.metadata.rewritten ? (
+                <span className="text-[10px] uppercase tracking-[0.08em] text-content-secondary">Auto-polished</span>
+              ) : null}
+            </div>
+            <p className="text-xs leading-5 text-content">{outreachResult.message}</p>
+            <div className="grid grid-cols-2 gap-1 text-[11px] text-content-secondary">
+              <span>Provider: {outreachResult.metadata.provider}</span>
+              <span>Score: {Math.round(outreachResult.metadata.personalization_score * 100)}%</span>
+              <span>Compliance: {Math.round(outreachResult.metadata.compliance_score * 100)}%</span>
+              <span>Words: {outreachResult.metadata.word_count}</span>
+              <span>Soft CTA: {outreachResult.metadata.has_soft_cta ? "Yes" : "No"}</span>
+            </div>
+            {outreachResult.metadata.violations.length > 0 ? (
+              <div className="rounded border border-warning/25 bg-warning/10 p-2 text-[11px] text-warning">
+                Needs fixes: {outreachResult.metadata.violations.join(", ")}
+              </div>
+            ) : (
+              <div className="rounded border border-accent/20 bg-accent/10 p-2 text-[11px] text-content-secondary">
+                All quality checks passed.
+              </div>
+            )}
+          </div>
+        ) : null}
       </div>
 
       {selectedLead ? (

@@ -18,6 +18,7 @@ import type { Lead } from "../../features/leads/types/lead";
 import { useLeadStore } from "../../store/useLeadStore";
 import type { ToneType } from "../../features/common/types/ui";
 import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButton";
+import { PageBackground } from "../../components/ui/PageBackground";
 import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import bgChatBot from "../../assets/bg-images/chat-bot.svg";
 import { useMode } from "../../features/ai/hooks/useMode";
@@ -416,6 +417,11 @@ export const AIPage = () => {
       opacity={0.22}
       contentClassName="flex flex-col overflow-hidden !p-4 md:!p-6"
     >
+        <PageBackground
+          image={bgChatBot}
+          tint={mode == "agent" ? "rgba(6, 182, 212, 0.56)" : "rgba(99, 102, 241, 0.52)"}
+          opacity={0.74}
+        />
         <AIHeader
           historyOpen={historyOpen}
           chatHistory={chatHistory}

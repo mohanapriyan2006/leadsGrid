@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import bgConnecting from "../../assets/bg-images/connecting-teams.svg";
 import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButton";
+import { PageBackground } from "../../components/ui/PageBackground";
 import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import { LeadsDiscoveryDraftPanel } from "../../features/leads/components/LeadsDiscoveryDraftPanel";
 import { LeadsDiscoveryFilters } from "../../features/leads/components/LeadsDiscoveryFilters";
@@ -447,6 +448,7 @@ export const LeadsDiscoveryPage = () => {
       tint="rgba(21, 171, 123, 0.50)"
       contentClassName="w-full min-w-0 overflow-x-hidden space-y-4"
     >
+        <PageBackground image={bgConnecting} tint="rgba(21, 171, 123, 0.64)" opacity={0.86} />
         <header className="glass-card-lg p-5">
           <div className="flex flex-wrap items-start justify-between gap-5">
             <div>

@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 
 import bgDataAtWork from "../../assets/bg-images/data-at-work.svg";
+import { PageBackground } from "../../components/ui/PageBackground";
 import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import { DashboardHero } from "../../features/dashboard/components/DashboardHero";
 import { DashboardHotLeadsWidget } from "../../features/dashboard/components/DashboardHotLeadsWidget";
@@ -37,6 +38,7 @@ export const DashboardPage = () => {
 			tint="rgba(167, 139, 250, 0.55)"
 			opacity={0.82}
 		>
+			<PageBackground image={bgDataAtWork} tint="rgba(167, 139, 250, 0.66)" opacity={0.86} />
 				{loading ? <DashboardSkeleton /> : null}
 
 				{!loading ? (

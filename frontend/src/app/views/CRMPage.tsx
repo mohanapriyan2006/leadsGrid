@@ -10,6 +10,7 @@ import { ConfirmDialog } from "../../features/leads/components/ConfirmDialog";
 import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLeads";
 import { leadService } from "../../features/leads/services/leadService";
 import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButton";
+import { PageBackground } from "../../components/ui/PageBackground";
 import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import bgConnecting from "../../assets/bg-images/connecting-teams.svg";
 import type { DealStatus } from "../../features/common/types/ui";
@@ -228,8 +229,10 @@ export const CRMPage = () => {
     <ResponsivePageLayout
       backgroundImage={bgConnecting}
       tint="rgba(109, 111, 252, 0.70)"
+      opacity={0.84}
       contentClassName="space-y-4"
     >
+        <PageBackground image={bgConnecting} tint="rgba(109, 111, 252, 0.76)" opacity={0.88} />
         <header className="glass-card-lg flex flex-col justify-between gap-3 px-4 py-4 sm:px-5 sm:py-5 md:flex-row md:items-center md:px-6">
           <div>
             <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-2xl font-semibold text-transparent sm:text-3xl">

@@ -37,6 +37,7 @@ import type {
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { useLeadStore } from "../../store/useLeadStore";
 import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButton";
+import { PageBackground } from "../../components/ui/PageBackground";
 import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import bgTeamCollab from "../../assets/bg-images/team-collaboration.svg";
 
@@ -325,6 +326,7 @@ export const ManageLeadsPage = () => {
       tint="rgba(168, 85, 247, 0.80)"
       contentClassName="space-y-4"
     >
+        <PageBackground image={bgTeamCollab} tint="rgba(168, 85, 247, 0.82)" opacity={0.88} />
         <ManageLeadsHeader
           manageLeadView={manageLeadView}
           insights={insights}

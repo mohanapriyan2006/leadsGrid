@@ -1,7 +1,5 @@
 import type { PropsWithChildren } from "react";
 
-import { PageBackground } from "./PageBackground";
-
 type ResponsivePageLayoutProps = PropsWithChildren<{
   backgroundImage?: string;
   tint?: string;
@@ -10,15 +8,11 @@ type ResponsivePageLayoutProps = PropsWithChildren<{
 }>;
 
 export const ResponsivePageLayout = ({
-  backgroundImage,
-  tint = "rgba(167, 139, 250, 0.55)",
-  opacity = 0.82,
   contentClassName = "",
   children,
 }: ResponsivePageLayoutProps) => {
   return (
-    <section className="page-with-bg">
-      {backgroundImage ? <PageBackground image={backgroundImage} tint={tint} opacity={opacity} /> : null}
+    <section className="page-with-bg h-screen overflow-auto">
       <div className={`page-scroll-container ${contentClassName}`.trim()}>{children}</div>
     </section>
   );

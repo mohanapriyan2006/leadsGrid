@@ -4,6 +4,7 @@ import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLe
 import type { BinLead } from "../../features/leads/types/manageLead";
 import { RecycleBinDetailsModal } from "../../features/recycle-bin/components/RecycleBinDetailsModal";
 import { RecycleBinTable } from "../../features/recycle-bin/components/RecycleBinTable";
+import { PageBackground } from "../../components/ui/PageBackground";
 import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import bgBusinessPlan from "../../assets/bg-images/business-plan.svg";
 
@@ -62,6 +63,7 @@ export const RecyclicBinPage = () => {
       tint="rgba(255, 102, 102, 0.47)"
       contentClassName="space-y-4"
     >
+        <PageBackground image={bgBusinessPlan} tint="rgba(255, 102, 102, 0.64)" opacity={0.84} />
         <header className="glass-card p-5">
           <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-2xl font-semibold text-transparent sm:text-3xl">Manage Leads Bin</h2>
           <p className="mt-1 text-sm text-content-secondary">Restore soft deleted leads or delete permanently.</p>

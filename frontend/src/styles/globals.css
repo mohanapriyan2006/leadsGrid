@@ -190,7 +190,7 @@
 
   /* Page with background — wrapper for pages that use PageBackground */
   .page-with-bg {
-    @apply relative min-h-full;
+    @apply relative isolate min-h-[calc(100dvh-56px)] sm:min-h-[calc(100dvh-60px)];
   }
 
   .page-scroll-container {
@@ -251,7 +251,7 @@
   }
 
   .logo-loader-shell {
-    @apply flex min-h-screen items-center justify-center bg-surface px-4;
+    @apply relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-surface px-4;
   }
 
   .logo-loader-orb {

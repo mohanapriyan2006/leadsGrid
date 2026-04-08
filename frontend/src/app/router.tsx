@@ -48,7 +48,6 @@ export const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
-    path: "/",
     element: (
       <ProtectedRoute>
         <AppShell />
@@ -88,5 +87,19 @@ export const router = createBrowserRouter([
         element: withSuspense(<SettingsPage />),
       },
     ],
+  },
+  {
+    path: "*",
+    element: (
+      <div className="min-h-screen flex items-center justify-center bg-surface text-content">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-accent mb-4">404</h1>
+          <p className="text-content-secondary mb-6">Page not found</p>
+          <a href="/" className="text-accent hover:text-accent-secondary transition-colors">
+            Go home
+          </a>
+        </div>
+      </div>
+    ),
   },
 ]);

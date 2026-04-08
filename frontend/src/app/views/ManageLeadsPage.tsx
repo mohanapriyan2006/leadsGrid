@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DndContext, type DragEndEvent } from "@dnd-kit/core";
+import {
+  DndContext,
+  type DragEndEvent,
+  type DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+  DragOverlay,
+} from "@dnd-kit/core";
 import { useNavigate } from "react-router-dom";
+import { CSS } from "@dnd-kit/utilities";
 
 import { ConfirmDialog } from "../../features/leads/components/ConfirmDialog";
 import { EditLeadModal } from "../../features/leads/components/EditLeadModal";
@@ -73,6 +83,16 @@ export const ManageLeadsPage = () => {
     stage: "NEW" as ManageLeadStage,
     budget_estimate: 0,
   });
+
+  const [activeDragLead, setActiveDragLead] = useState<ManageLead | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   const debouncedSearch = useDebouncedValue(search, 300);
 
@@ -188,17 +208,38 @@ export const ManageLeadsPage = () => {
 
   const handleDragEnd = async (event: DragEndEvent) => {
     setIsDragging(false);
+    setActiveDragLead(null);
     const { active, over } = event;
     if (!over) return;
 
     const activeId = String(active.id);
-    const targetStage = BOARD_STAGES.find((item) => item.id === String(over.id))?.id;
     const source = filteredLeads.find((lead) => lead.id === activeId);
+    if (!source) return;
 
-    if (!targetStage || !source || source.stage === targetStage) return;
+    const overId = String(over.id);
+
+    // Check if dropped directly on a stage column
+    let targetStage = BOARD_STAGES.find((stage) => stage.id === overId)?.id;
+
+    // If not dropped on a stage, check if dropped on another lead in a different stage
+    if (!targetStage) {
+      const targetLead = filteredLeads.find((lead) => lead.id === overId);
+      if (targetLead && targetLead.stage !== source.stage) {
+        targetStage = targetLead.stage;
+      }
+    }
+
+    if (!targetStage || source.stage === targetStage) return;
 
     await leadService.updateManageLead(source.id, { stage: targetStage });
     await loadInsights();
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setIsDragging(true);
+    const leadId = String(event.active.id);
+    const lead = filteredLeads.find((l) => l.id === leadId);
+    if (lead) setActiveDragLead(lead);
   };
 
   const runAction = async (leadId: string, actionType: ManageLeadActionType, targetStage?: ManageLeadStage) => {
@@ -333,7 +374,9 @@ export const ManageLeadsPage = () => {
 
         {manageLeadView === "kanban" ? (
           <DndContext
-            onDragStart={() => setIsDragging(true)}
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
             onDragEnd={(event) => {
               void handleDragEnd(event);
             }}
@@ -351,6 +394,20 @@ export const ManageLeadsPage = () => {
                 />
               ))}
             </div>
+            <DragOverlay>
+              {activeDragLead ? (
+                <div
+                  className="glass-card-sm p-3 text-xs opacity-90 shadow-lg rotate-2 cursor-grabbing"
+                  style={{ transform: CSS.Translate.toString({ x: 0, y: 0, scaleX: 1, scaleY: 1 }) }}
+                >
+                  <p className="text-sm font-semibold text-content">{activeDragLead.name}</p>
+                  <p className="text-[11px] text-content-secondary">{activeDragLead.company}</p>
+                  <div className="mt-3 flex items-center gap-2 text-[11px] text-content-tertiary">
+                    <span>Score {activeDragLead.score}</span>
+                  </div>
+                </div>
+              ) : null}
+            </DragOverlay>
           </DndContext>
         ) : null}
 

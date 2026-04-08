@@ -13,7 +13,55 @@ export type Lead = {
   content: string;
   summary: string;
   score: number;
+  decision_maker?: "yes" | "no" | "unknown";
+  buying_signals?: string[];
+  pain_point?: string;
+  category?: "hiring" | "problem" | "switching" | "learning" | "discussion";
+  status?: "qualified" | "unqualified";
   tags: string[];
   intent_label: string;
   created_at: string;
+  ai_analysis?: LeadAnalysis;
+};
+
+export type LeadIntentDetails = {
+  score: number;
+  urgency: "low" | "medium" | "high";
+  budget: "low" | "medium" | "high" | "unknown";
+  decision_maker: "yes" | "no" | "unknown";
+  pain_point: string;
+  lead_type: "job" | "complaint" | "learning" | "hiring";
+};
+
+export type LeadValidationResult = {
+  is_valid_lead: boolean;
+  reason: string;
+};
+
+export type LeadOutreachMessage = {
+  message: string;
+};
+
+export type LeadFollowUpMessage = {
+  message: string;
+};
+
+export type LeadActionSuggestion = {
+  action: "ignore" | "save" | "contact_now";
+  reason: string;
+};
+
+export type LeadPortfolioMatch = {
+  project_name: string;
+  why_match: string;
+};
+
+export type LeadAnalysis = {
+  intent: LeadIntentDetails;
+  validation: LeadValidationResult;
+  outreach: LeadOutreachMessage;
+  follow_up: LeadFollowUpMessage;
+  action: LeadActionSuggestion;
+  portfolio_match: LeadPortfolioMatch | null;
+  analyzed_at: string;
 };

@@ -1,8 +1,12 @@
 import type { Lead } from "../types/lead";
+import type { AdvancedLeadIntent } from "../services/leadAnalysisService";
 import { AIIcon, SourceIcon, initials, scoreColor } from "./leadsPagePrimitives";
 
 type LeadsDiscoveryResultCardProps = {
   lead: Lead;
+  advancedIntent?: AdvancedLeadIntent;
+  isAnalyzing?: boolean;
+  isSaving?: boolean;
   index: number;
   isSelected: boolean;
   onSelect: (leadId: string) => void;
@@ -20,6 +24,9 @@ const sourceLabel = (source: Lead["source"]) => {
 
 export const LeadsDiscoveryResultCard = ({
   lead,
+  advancedIntent,
+  isAnalyzing = false,
+  isSaving = false,
   index,
   isSelected,
   onSelect,
@@ -28,6 +35,8 @@ export const LeadsDiscoveryResultCard = ({
 }: LeadsDiscoveryResultCardProps) => {
   const isHot = lead.score >= 85;
   const displayName = lead.author || lead.id;
+  const isQualified = advancedIntent?.status === "qualified";
+  const disableSave = !!advancedIntent && !isQualified;
 
   return (
     <article
@@ -83,6 +92,26 @@ export const LeadsDiscoveryResultCard = ({
             {lead.summary}
           </p>
         </div>
+
+        {advancedIntent ? (
+          <div className="rounded-xl border border-accent-secondary/20 bg-accent-secondary/10 px-3 py-2">
+            <div className="mb-2 flex flex-wrap items-center gap-1.5">
+              <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                {advancedIntent.status}
+              </span>
+              <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                {advancedIntent.category}
+              </span>
+              <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                Decision: {advancedIntent.decision_maker}
+              </span>
+              <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                Urgency: {advancedIntent.urgency}
+              </span>
+            </div>
+            <p className="text-xs text-content-secondary">Pain: {advancedIntent.pain_point}</p>
+          </div>
+        ) : null}
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-3 border-t border-accent/10 pt-3">
@@ -102,22 +131,24 @@ export const LeadsDiscoveryResultCard = ({
           <button
             type="button"
             className="glass-btn px-3 py-1.5 text-[11px]"
+            disabled={disableSave || isSaving || isAnalyzing}
             onClick={(event) => {
               event.stopPropagation();
               onSaveLead(lead);
             }}
           >
-            Save
+            {isSaving ? "Saving..." : disableSave ? "Unqualified" : "Save"}
           </button>
           <button
             type="button"
             className="accent-btn px-3 py-1.5 text-[11px]"
+            disabled={isAnalyzing}
             onClick={(event) => {
               event.stopPropagation();
               void onGenerateDraft(lead);
             }}
           >
-            Generate Draft
+            {isAnalyzing ? "Analyzing..." : "Generate Draft"}
           </button>
         </div>
       </div>

@@ -10,9 +10,16 @@ import { LeadsDiscoverySearchBar } from "../../features/leads/components/LeadsDi
 import { useLeadsDiscoveryFilters } from "../../features/leads/hooks/useLeadsDiscoveryFilters";
 import { useMessageGenerator } from "../../features/leads/hooks/useMessageGenerator";
 import { useLeads } from "../../features/leads/hooks/useLeads";
+import { leadAnalysisService, type AdvancedLeadIntent } from "../../features/leads/services/leadAnalysisService";
 import { leadService } from "../../features/leads/services/leadService";
 import type { Lead } from "../../features/leads/types/lead";
 import type { ToneType } from "../../features/common/types/ui";
+
+const getIntentLabel = (score: number): string => {
+  if (score >= 80) return "high";
+  if (score >= 60) return "medium";
+  return "low";
+};
 
 export const LeadsDiscoveryPage = () => {
   const {
@@ -33,7 +40,9 @@ export const LeadsDiscoveryPage = () => {
   const [draftError, setDraftError] = useState<string | null>(null);
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
   const [savingLeadId, setSavingLeadId] = useState<string | null>(null);
+  const [analyzingLeadId, setAnalyzingLeadId] = useState<string | null>(null);
   const [submittedQuery, setSubmittedQuery] = useState("");
+  const [advancedIntentByLeadId, setAdvancedIntentByLeadId] = useState<Record<string, AdvancedLeadIntent>>({});
 
   const { leads, isLoading, isFetching, error } = useLeads({
     query: submittedQuery,
@@ -43,20 +52,40 @@ export const LeadsDiscoveryPage = () => {
 
   const { generateMessage, generatedMessage, isGenerating } = useMessageGenerator();
 
+  const enrichedLeads = useMemo(() => {
+    return leads.map((lead) => {
+      const advancedIntent = advancedIntentByLeadId[lead.id];
+      if (!advancedIntent) return lead;
+
+      return {
+        ...lead,
+        score: advancedIntent.score,
+        decision_maker: advancedIntent.decision_maker,
+        buying_signals: advancedIntent.buying_signals,
+        pain_point: advancedIntent.pain_point,
+        category: advancedIntent.category,
+        status: advancedIntent.status,
+        intent_label: getIntentLabel(advancedIntent.score),
+      };
+    });
+  }, [leads, advancedIntentByLeadId]);
+
   const selectedLead = useMemo(
-    () => leads.find((lead) => lead.id === selectedLeadId) ?? null,
-    [leads, selectedLeadId],
+    () => enrichedLeads.find((lead) => lead.id === selectedLeadId) ?? null,
+    [enrichedLeads, selectedLeadId],
   );
 
+  const selectedIntent = selectedLeadId ? advancedIntentByLeadId[selectedLeadId] ?? null : null;
+
   useEffect(() => {
-    if (!selectedLeadId && leads.length > 0) {
-      setSelectedLeadId(leads[0].id);
+    if (!selectedLeadId && enrichedLeads.length > 0) {
+      setSelectedLeadId(enrichedLeads[0].id);
     }
-  }, [leads, selectedLeadId]);
+  }, [enrichedLeads, selectedLeadId]);
 
   const filteredLeads = useMemo(() => {
-    return leads.filter((lead) => lead.score >= scoreMin);
-  }, [leads, scoreMin]);
+    return enrichedLeads.filter((lead) => lead.score >= scoreMin);
+  }, [enrichedLeads, scoreMin]);
 
   const sortedLeads = useMemo(() => {
     const next = [...filteredLeads];
@@ -87,16 +116,67 @@ export const LeadsDiscoveryPage = () => {
       ? generatedMessage
       : generatedMessage?.message ?? "";
 
+  const analyzeLeadIntent = async (lead: Lead): Promise<AdvancedLeadIntent> => {
+    const cached = advancedIntentByLeadId[lead.id];
+    if (cached) {
+      return cached;
+    }
+
+    setAnalyzingLeadId(lead.id);
+    const advancedIntent = await leadAnalysisService.analyzeAdvancedIntent({
+      lead_text: lead.content,
+      lead_title: lead.title,
+      lead_author: lead.author,
+      score: lead.score,
+    });
+
+    setAdvancedIntentByLeadId((prev) => ({
+      ...prev,
+      [lead.id]: advancedIntent,
+    }));
+    setAnalyzingLeadId(null);
+
+    return advancedIntent;
+  };
+
+  const handleAnalyzeLead = async (lead: Lead) => {
+    setSelectedLeadId(lead.id);
+    setDraftError(null);
+    try {
+      const advancedIntent = await analyzeLeadIntent(lead);
+      setSaveFeedback(`Analyzed: ${advancedIntent.status.toUpperCase()} (${advancedIntent.category}, ${advancedIntent.urgency} urgency)`);
+    } catch (error) {
+      setAnalyzingLeadId(null);
+      const reason = error instanceof Error ? error.message : "Unknown AI error";
+      setDraftError(`Lead analysis failed: ${reason}`);
+    }
+  };
+
   const handleGenerateDraft = async (lead: Lead) => {
     setSelectedLeadId(lead.id);
     setDraftError(null);
     try {
+      const advancedIntent = await analyzeLeadIntent(lead);
+
+      const analysisContext = [
+        `Lead summary: ${lead.summary}`,
+        `Lead content: ${lead.content}`,
+        `Intent score: ${advancedIntent.score}`,
+        `Urgency: ${advancedIntent.urgency}`,
+        `Decision maker: ${advancedIntent.decision_maker}`,
+        `Pain point: ${advancedIntent.pain_point}`,
+        `Category: ${advancedIntent.category}`,
+        `Qualification status: ${advancedIntent.status}`,
+        `Buying signals: ${advancedIntent.buying_signals.join(", ") || "none"}`,
+      ].join("\n");
+
       await generateMessage({
-        lead_context: `${lead.summary}\n${lead.content}`,
+        lead_context: analysisContext,
         tone,
         max_words: 120,
       });
     } catch (error) {
+      setAnalyzingLeadId(null);
       const reason = error instanceof Error ? error.message : "Unknown AI error";
       setDraftError(`AI insight generation failed: ${reason}`);
     }
@@ -150,9 +230,16 @@ export const LeadsDiscoveryPage = () => {
     setSavingLeadId(lead.id);
     setSaveFeedback(null);
     try {
+      const advancedIntent = await analyzeLeadIntent(lead);
+      if (advancedIntent.status !== "qualified") {
+        setSaveFeedback(`Not saved: lead marked ${advancedIntent.status} (${advancedIntent.category}).`);
+        return;
+      }
+
       const saved = await leadService.saveDiscoveryLeadAsManageLead(lead);
-      setSaveFeedback(`Saved ${saved.name} to Manage Leads.`);
+      setSaveFeedback(`Saved ${saved.name} to Manage Leads (${advancedIntent.category}, score ${advancedIntent.score}).`);
     } catch (error) {
+      setAnalyzingLeadId(null);
       const reason = error instanceof Error ? error.message : "Unknown save error";
       setSaveFeedback(`Save failed: ${reason}`);
     } finally {
@@ -164,6 +251,9 @@ export const LeadsDiscoveryPage = () => {
     const trimmed = searchTerm.trim();
     if (trimmed.length <= 2) return;
     setSelectedLeadId(null);
+    setAdvancedIntentByLeadId({});
+    setDraftError(null);
+    setSaveFeedback(null);
     setSubmittedQuery(trimmed);
   };
 
@@ -291,6 +381,9 @@ export const LeadsDiscoveryPage = () => {
                   <LeadsDiscoveryResultCard
                     key={lead.id}
                     lead={lead}
+                    advancedIntent={advancedIntentByLeadId[lead.id]}
+                    isAnalyzing={analyzingLeadId === lead.id}
+                    isSaving={savingLeadId === lead.id}
                     index={index}
                     isSelected={selectedLeadId === lead.id}
                     onSelect={setSelectedLeadId}
@@ -308,12 +401,13 @@ export const LeadsDiscoveryPage = () => {
           <LeadsDiscoveryDraftPanel
             tone={tone}
             selectedLead={selectedLead}
+            selectedIntent={selectedIntent}
             insightsText={draftText}
             isGenerating={isGenerating}
             onToneChange={setTone}
             onAnalyze={() => {
               if (selectedLead) {
-                void handleGenerateDraft(selectedLead);
+                void handleAnalyzeLead(selectedLead);
               }
             }}
             onCopyInsights={handleCopyDraft}

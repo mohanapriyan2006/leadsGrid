@@ -20,6 +20,9 @@ export type ManageLeadUrgency = "low" | "medium" | "high";
 export type ManageLeadAnalysis = {
   intent_score: number;
   pain_points: string[];
+  buying_signals?: string[];
+  decision_maker?: "yes" | "no" | "unknown";
+  qualification_status?: "qualified" | "unqualified";
   suggested_pitch: string;
   portfolio_match: string;
   next_action: string;

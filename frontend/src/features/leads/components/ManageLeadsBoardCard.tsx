@@ -32,10 +32,9 @@ export const ManageLeadsBoardCard = ({
       {...listeners}
       onMouseEnter={(event) => onHoverStart(lead.id, event)}
       onMouseLeave={() => onHoverEnd(lead.id)}
-      className={`glass-card-sm p-3 text-xs transition cursor-grab active:cursor-grabbing ${
-        isDragging ? "opacity-65" : ""
+      className={`glass-card-sm cursor-grab p-3 text-xs transition hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-glow active:cursor-grabbing ${
+        isDragging ? "opacity-50" : ""
       }`}
-      whileHover={{ y: -2 }}
     >
       <p className="text-sm font-semibold text-content">{lead.name}</p>
       <p className="text-[11px] text-content-secondary">{lead.company}</p>

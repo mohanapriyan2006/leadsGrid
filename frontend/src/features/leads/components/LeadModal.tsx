@@ -157,6 +157,17 @@ export const LeadModal = ({
                 <span className="badge-warning">
                   Pain: {lead.ai_analysis.pain_points[0] ?? "Unknown"}
                 </span>
+                {lead.ai_analysis.decision_maker ? (
+                  <span className="badge-info">Decision: {lead.ai_analysis.decision_maker}</span>
+                ) : null}
+                {lead.ai_analysis.qualification_status ? (
+                  <span className="badge-success">{lead.ai_analysis.qualification_status}</span>
+                ) : null}
+                {(lead.ai_analysis.buying_signals ?? []).slice(0, 3).map((signal) => (
+                  <span key={signal} className="badge-warning">
+                    {signal}
+                  </span>
+                ))}
                 <span className="badge-accent">
                   Fix: {lead.ai_analysis.suggested_pitch || "No suggestion"}
                 </span>

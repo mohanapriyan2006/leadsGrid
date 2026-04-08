@@ -11,6 +11,10 @@ type LeadCardProps = {
 
 export const LeadCard = ({ lead, isSelected, onSelect, onGenerateDraft }: LeadCardProps) => {
   const isHighIntent = lead.score >= 85;
+  const leadDecision = lead.decision_maker || lead.ai_analysis?.intent.decision_maker;
+  const leadPainPoint = lead.pain_point || lead.ai_analysis?.intent.pain_point;
+  const leadStatus = lead.status;
+  const leadSignals = (lead.buying_signals || []).slice(0, 3);
 
   return (
     <motion.article
@@ -39,7 +43,25 @@ export const LeadCard = ({ lead, isSelected, onSelect, onGenerateDraft }: LeadCa
             {tag}
           </span>
         ))}
+        {leadDecision ? (
+          <span className="rounded-full border border-info/30 bg-info-soft/60 px-2 py-1 text-[11px] text-content-secondary">
+            Decision: {leadDecision}
+          </span>
+        ) : null}
+        {leadStatus ? (
+          <span className="rounded-full border border-success/30 bg-success-soft/60 px-2 py-1 text-[11px] text-content-secondary">
+            {leadStatus}
+          </span>
+        ) : null}
+        {leadSignals.map((signal) => (
+          <span key={signal} className="rounded-full border border-warning/30 bg-warning-soft/60 px-2 py-1 text-[11px] text-content-secondary">
+            {signal}
+          </span>
+        ))}
       </div>
+      {leadPainPoint ? (
+        <p className="mt-2 text-xs text-content-secondary">Pain: {leadPainPoint}</p>
+      ) : null}
       <div className="mt-4 flex items-center justify-between">
         <button
           type="button"

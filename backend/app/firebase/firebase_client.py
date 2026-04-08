@@ -145,3 +145,25 @@ class FirebaseClient:
             }
         )
         return {"logged": True, "runId": run_ref.id}
+
+    def get_user_projects(self, user_id: str) -> list[dict]:
+        if not self._enabled or not self._db or not user_id:
+            return []
+
+        try:
+            projects_ref = self._db.collection("users").document(user_id).collection("projects")
+            docs = projects_ref.stream()
+            projects = []
+            for doc in docs:
+                data = doc.to_dict()
+                if data:
+                    projects.append({
+                        "id": doc.id,
+                        "name": data.get("name", ""),
+                        "description": data.get("description", ""),
+                        "tags": data.get("tags", []),
+                        "url": data.get("url", ""),
+                    })
+            return projects
+        except Exception:
+            return []

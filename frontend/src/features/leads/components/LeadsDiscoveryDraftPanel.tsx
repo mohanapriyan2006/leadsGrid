@@ -1,10 +1,12 @@
 import type { ToneType } from "../../common/types/ui";
+import type { AdvancedLeadIntent } from "../services/leadAnalysisService";
 import type { Lead } from "../types/lead";
 import { AIIcon, initials } from "./leadsPagePrimitives";
 
 type LeadsDiscoveryDraftPanelProps = {
   tone: ToneType;
   selectedLead: Lead | null;
+  selectedIntent: AdvancedLeadIntent | null;
   insightsText: string;
   isGenerating: boolean;
   onToneChange: (tone: ToneType) => void;
@@ -28,6 +30,9 @@ const buildLeadSignals = (lead: Lead) => {
   if (lead.budget) signals.push("Budget signal detected");
   if (lead.email) signals.push("Contact channel available");
   if (lead.tags.length > 0) signals.push(`${lead.tags.length} topical tags`);
+  if (lead.decision_maker) signals.push(`Decision maker: ${lead.decision_maker}`);
+  if (lead.status) signals.push(`Qualification: ${lead.status}`);
+  if (lead.category) signals.push(`Category: ${lead.category}`);
   return signals.length > 0 ? signals : ["Needs deeper qualification"];
 };
 
@@ -43,6 +48,7 @@ const toInsightBullets = (text: string) => {
 export const LeadsDiscoveryDraftPanel = ({
   tone,
   selectedLead,
+  selectedIntent,
   insightsText,
   isGenerating,
   onToneChange,
@@ -103,6 +109,30 @@ export const LeadsDiscoveryDraftPanel = ({
             <p className="mb-1 text-[11px] uppercase tracking-[0.08em] text-content-tertiary">Intent Summary</p>
             <p className="text-xs leading-5 text-content-secondary">{selectedLead.summary}</p>
           </div>
+
+          {selectedIntent ? (
+            <div className="rounded-lg border border-accent-secondary/20 bg-accent-secondary/10 p-2.5">
+              <p className="mb-1 text-[11px] uppercase tracking-[0.08em] text-content-tertiary">Advanced Qualification</p>
+              <div className="flex flex-wrap gap-1.5">
+                <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                  {selectedIntent.status}
+                </span>
+                <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                  {selectedIntent.category}
+                </span>
+                <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                  Decision: {selectedIntent.decision_maker}
+                </span>
+                <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                  Urgency: {selectedIntent.urgency}
+                </span>
+              </div>
+              <p className="mt-2 text-xs text-content-secondary">Pain: {selectedIntent.pain_point}</p>
+              {selectedIntent.buying_signals.length > 0 ? (
+                <p className="mt-1 text-xs text-content-secondary">Signals: {selectedIntent.buying_signals.join(" • ")}</p>
+              ) : null}
+            </div>
+          ) : null}
 
           {selectedLead.tags.length > 0 ? (
             <div className="flex flex-wrap gap-1.5">
@@ -165,7 +195,7 @@ export const LeadsDiscoveryDraftPanel = ({
           onClick={onAnalyze}
           disabled={!selectedLead || isGenerating}
         >
-          {isGenerating ? "Analyzing..." : "Analyze"}
+          Analyze Lead
         </button>
         <button
           type="button"

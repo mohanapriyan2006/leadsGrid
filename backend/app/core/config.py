@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     source_limit_default: int = 20
 
     gemini_api_key: str | None = None
+    groq_api_key: str | None = None
+    groq_model: str = "llama-3.1-8b-instant"
     openrouter_api_key: str | None = None
     serper_api_key: str | None = None
 

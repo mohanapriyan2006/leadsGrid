@@ -28,8 +28,8 @@ export const ManageLeadsStageColumn = ({
   return (
     <section
       ref={setNodeRef}
-      className={`glass-card p-3 transition ${
-        isOver ? "border-accent/50 shadow-glow" : ""
+      className={`glass-card group flex flex-col p-3 transition hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-glow ${
+        isOver ? "border-accent/50 ring-1 ring-accent/30 shadow-glow" : ""
       }`}
     >
       <div className="mb-3 rounded-glass-sm border border-accent/15 bg-gradient-to-r from-accent/10 to-accent-secondary/5 px-3 py-2">

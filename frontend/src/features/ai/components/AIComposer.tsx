@@ -43,7 +43,7 @@ export const AIComposer = ({
   };
 
   return (
-    <div className="sticky bottom-0 z-10 overflow-hidden rounded-2xl border border-accent/[0.1] bg-surface-secondary/85">
+    <div className="sticky bottom-0 z-10 overflow-hidden rounded-2xl border border-accent/[0.1] bg-surface-secondary/60">
       {attachedLeads.length > 0 ? (
         <div className="flex flex-wrap items-center gap-2 border-b border-accent/[0.08] bg-surface/35 px-3 py-2">
           <span className="text-[10px] font-semibold uppercase tracking-widest text-content-tertiary">

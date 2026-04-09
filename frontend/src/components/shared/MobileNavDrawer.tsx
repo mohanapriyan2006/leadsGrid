@@ -185,8 +185,6 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
             <div className="flex items-center gap-3 mb-4">
               <div className="relative flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-700 to-purple-900 shadow-glow animate-float">
                 <img src={logo} alt="leadsGrid" className="h-6 w-6" />
-                <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green-400 animate-ping" />
-                <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green-400" />
               </div>
               <div>
                 <span className="text-xl uppercase tracking-[0.10em] text-content-tertiary">LeadsGrid</span>

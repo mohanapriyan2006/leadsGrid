@@ -40,7 +40,6 @@ export const Topbar = ({ onOpenMobileNav }: TopbarProps) => {
       <div className="flex items-center gap-2 shrink-0 md:hidden block">
         <div className="relative flex items-center justify-center w-fit h-fit rounded-xl bg-gradient-to-br from-accent to-accent-secondary shadow-glow">
           <img src={logo} alt="leadsGrid" className="h-6 w-6" />
-          <div className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-green-400 animate-pulse" />
         </div>
       </div>
 

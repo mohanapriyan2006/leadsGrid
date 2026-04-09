@@ -228,7 +228,7 @@
 
   /* AI Chat Panel — opaque glass for chat area, prevents BG bleed */
   .ai-chat-panel {
-    background: rgba(10, 12, 20, 0.82);
+    background: rgba(10, 12, 20, 0.60);
     backdrop-filter: blur(24px) saturate(1.2);
     -webkit-backdrop-filter: blur(24px) saturate(1.2);
     box-shadow:

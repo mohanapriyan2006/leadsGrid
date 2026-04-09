@@ -444,7 +444,7 @@ export const LeadsDiscoveryPage = () => {
 
   return (
     <>
-      <PageBackground image={bgConnecting} tint="rgba(21, 171, 123, 0.50)"  />
+      <PageBackground image={bgConnecting} tint="rgba(52, 191, 251, 0.66)" />
       <ResponsivePageLayout
         contentClassName="w-full min-w-0 overflow-x-hidden space-y-4"
       >

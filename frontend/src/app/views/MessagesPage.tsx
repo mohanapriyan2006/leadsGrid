@@ -122,7 +122,7 @@ export const MessagesPage = () => {
 
   return (
     <>
-      <PageBackground image={bgRemotely} tint="rgba(56, 189, 248, 0.80)" />
+      <PageBackground image={bgRemotely} tint="rgba(21, 171, 123, 0.50)"  />
       <ResponsivePageLayout
         contentClassName="space-y-4"
       >

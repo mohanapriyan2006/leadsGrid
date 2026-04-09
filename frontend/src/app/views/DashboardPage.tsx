@@ -33,12 +33,9 @@ export const DashboardPage = () => {
 	} = useDashboardData();
 
 	return (
-		<ResponsivePageLayout
-			backgroundImage={bgDataAtWork}
-			tint="rgba(167, 139, 250, 0.55)"
-			opacity={0.82}
-		>
-			<PageBackground image={bgDataAtWork} tint="rgba(167, 139, 250, 0.66)" opacity={0.86} />
+		<>
+			<PageBackground image={bgDataAtWork} tint="rgba(167, 139, 250, 0.66)" />
+			<ResponsivePageLayout>
 				{loading ? <DashboardSkeleton /> : null}
 
 				{!loading ? (
@@ -92,6 +89,7 @@ export const DashboardPage = () => {
 						</motion.div>
 					</div>
 				) : null}
-		</ResponsivePageLayout>
+			</ResponsivePageLayout>
+		</>
 	);
 };

@@ -443,12 +443,11 @@ export const LeadsDiscoveryPage = () => {
   };
 
   return (
-    <ResponsivePageLayout
-      backgroundImage={bgConnecting}
-      tint="rgba(21, 171, 123, 0.50)"
-      contentClassName="w-full min-w-0 overflow-x-hidden space-y-4"
-    >
-        <PageBackground image={bgConnecting} tint="rgba(21, 171, 123, 0.64)" opacity={0.86} />
+    <>
+      <PageBackground image={bgConnecting} tint="rgba(21, 171, 123, 0.50)"  />
+      <ResponsivePageLayout
+        contentClassName="w-full min-w-0 overflow-x-hidden space-y-4"
+      >
         <header className="glass-card-lg p-5">
           <div className="flex flex-wrap items-start justify-between gap-5">
             <div>
@@ -542,11 +541,10 @@ export const LeadsDiscoveryPage = () => {
               <button
                 type="button"
                 onClick={() => setTriageQueue("all")}
-                className={`rounded-lg border px-3 py-2 text-left text-xs transition ${
-                  triageQueue === "all"
+                className={`rounded-lg border px-3 py-2 text-left text-xs transition ${triageQueue === "all"
                     ? "border-accent/30 bg-accent/10 text-content"
                     : "border-accent/10 bg-surface/40 text-content-secondary hover:border-accent/20"
-                }`}
+                  }`}
               >
                 <p className="uppercase tracking-[0.08em]">All Leads</p>
                 <p className="mt-1 text-sm font-semibold">{triageCounts.all}</p>
@@ -554,11 +552,10 @@ export const LeadsDiscoveryPage = () => {
               <button
                 type="button"
                 onClick={() => setTriageQueue("hot_qualified")}
-                className={`rounded-lg border px-3 py-2 text-left text-xs transition ${
-                  triageQueue === "hot_qualified"
+                className={`rounded-lg border px-3 py-2 text-left text-xs transition ${triageQueue === "hot_qualified"
                     ? "border-success/35 bg-success/10 text-content"
                     : "border-accent/10 bg-surface/40 text-content-secondary hover:border-accent/20"
-                }`}
+                  }`}
               >
                 <p className="uppercase tracking-[0.08em]">Hot Qualified</p>
                 <p className="mt-1 text-sm font-semibold">{triageCounts.hotQualified}</p>
@@ -566,11 +563,10 @@ export const LeadsDiscoveryPage = () => {
               <button
                 type="button"
                 onClick={() => setTriageQueue("high_urgency")}
-                className={`rounded-lg border px-3 py-2 text-left text-xs transition ${
-                  triageQueue === "high_urgency"
+                className={`rounded-lg border px-3 py-2 text-left text-xs transition ${triageQueue === "high_urgency"
                     ? "border-warning/35 bg-warning/10 text-content"
                     : "border-accent/10 bg-surface/40 text-content-secondary hover:border-accent/20"
-                }`}
+                  }`}
               >
                 <p className="uppercase tracking-[0.08em]">High Urgency</p>
                 <p className="mt-1 text-sm font-semibold">{triageCounts.highUrgency}</p>
@@ -578,11 +574,10 @@ export const LeadsDiscoveryPage = () => {
               <button
                 type="button"
                 onClick={() => setTriageQueue("needs_nurture")}
-                className={`rounded-lg border px-3 py-2 text-left text-xs transition ${
-                  triageQueue === "needs_nurture"
+                className={`rounded-lg border px-3 py-2 text-left text-xs transition ${triageQueue === "needs_nurture"
                     ? "border-info/35 bg-info/10 text-content"
                     : "border-accent/10 bg-surface/40 text-content-secondary hover:border-accent/20"
-                }`}
+                  }`}
               >
                 <p className="uppercase tracking-[0.08em]">Needs Nurture</p>
                 <p className="mt-1 text-sm font-semibold">{triageCounts.needsNurture}</p>
@@ -597,13 +592,12 @@ export const LeadsDiscoveryPage = () => {
 
             {saveFeedback ? (
               <div
-                className={`rounded-xl p-3 text-sm ${
-                  saveFeedback.startsWith("Saved")
+                className={`rounded-xl p-3 text-sm ${saveFeedback.startsWith("Saved")
                     ? "border border-success/25 bg-success/10 text-success"
                     : saveFeedback.startsWith("Not saved")
                       ? "border border-warning/25 bg-warning/10 text-warning"
                       : "border border-accent/20 bg-accent/10 text-content-secondary"
-                }`}
+                  }`}
               >
                 {saveFeedback}
               </div>
@@ -700,6 +694,7 @@ export const LeadsDiscoveryPage = () => {
             </div>
           ) : null}
         </div>
-    </ResponsivePageLayout>
+      </ResponsivePageLayout>
+    </>
   );
 };

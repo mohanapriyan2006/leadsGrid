@@ -321,12 +321,11 @@ export const ManageLeadsPage = () => {
   }
 
   return (
-    <ResponsivePageLayout
-      backgroundImage={bgTeamCollab}
-      tint="rgba(168, 85, 247, 0.80)"
-      contentClassName="space-y-4"
-    >
-        <PageBackground image={bgTeamCollab} tint="rgba(168, 85, 247, 0.82)" opacity={0.88} />
+    <>
+      <PageBackground image={bgTeamCollab} tint="rgba(168, 85, 247, 0.80)"  />
+      <ResponsivePageLayout
+        contentClassName="space-y-4"
+      >
         <ManageLeadsHeader
           manageLeadView={manageLeadView}
           insights={insights}
@@ -518,6 +517,7 @@ export const ManageLeadsPage = () => {
             });
           }}
         />
-    </ResponsivePageLayout>
+      </ResponsivePageLayout>
+    </>
   );
 };

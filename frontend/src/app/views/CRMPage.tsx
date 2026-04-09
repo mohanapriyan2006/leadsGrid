@@ -226,13 +226,11 @@ export const CRMPage = () => {
   };
 
   return (
-    <ResponsivePageLayout
-      backgroundImage={bgConnecting}
-      tint="rgba(109, 111, 252, 0.70)"
-      opacity={0.84}
-      contentClassName="space-y-4"
-    >
-        <PageBackground image={bgConnecting} tint="rgba(109, 111, 252, 0.76)" opacity={0.88} />
+    <>
+      <PageBackground image={bgConnecting} tint="rgba(109, 111, 252, 0.70)" />
+      <ResponsivePageLayout
+        contentClassName="space-y-4"
+      >
         <header className="glass-card-lg flex flex-col justify-between gap-3 px-4 py-4 sm:px-5 sm:py-5 md:flex-row md:items-center md:px-6">
           <div>
             <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-2xl font-semibold text-transparent sm:text-3xl">
@@ -288,8 +286,8 @@ export const CRMPage = () => {
                 key={option}
                 onClick={() => setView(option)}
                 className={`relative rounded-full px-4 py-1.5 uppercase tracking-[0.18em] transition-all duration-200 ${view === option
-                    ? "bg-gradient-to-r from-accent to-accent-secondary text-content-inverse shadow-glow"
-                    : "text-content-tertiary hover:text-content-secondary"
+                  ? "bg-gradient-to-r from-accent to-accent-secondary text-content-inverse shadow-glow"
+                  : "text-content-tertiary hover:text-content-secondary"
                   }`}
               >
                 {option}
@@ -508,6 +506,7 @@ export const CRMPage = () => {
           }
         }
       `}</style>
-    </ResponsivePageLayout>
+      </ResponsivePageLayout>
+    </>
   );
 };

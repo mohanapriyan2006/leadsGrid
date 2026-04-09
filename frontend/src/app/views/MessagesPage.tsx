@@ -121,12 +121,11 @@ export const MessagesPage = () => {
   };
 
   return (
-    <ResponsivePageLayout
-      backgroundImage={bgRemotely}
-      tint="rgba(56, 189, 248 , 0.80)"
-      contentClassName="space-y-4"
-    >
-        <PageBackground image={bgRemotely} tint="rgba(56, 189, 248, 0.82)" opacity={0.88} />
+    <>
+      <PageBackground image={bgRemotely} tint="rgba(56, 189, 248, 0.80)" />
+      <ResponsivePageLayout
+        contentClassName="space-y-4"
+      >
         <header className="glass-card p-5">
           <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-2xl font-semibold text-transparent sm:text-3xl">Message Synthesis</h2>
           <p className="mt-1 text-sm text-content-secondary">Generate personalized outbound drafts from live lead context.</p>
@@ -180,6 +179,8 @@ export const MessagesPage = () => {
           lead={selectedLead}
           onClose={() => setDetailsOpen(false)}
         />
-    </ResponsivePageLayout>
+      </ResponsivePageLayout>
+    </>
   );
+
 };

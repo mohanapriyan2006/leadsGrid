@@ -11,7 +11,7 @@ import bgBusinessPlan from "../../assets/bg-images/business-plan.svg";
 export const RecyclicBinPage = () => {
   // Use centralized leads hook for real-time bin data
   const { binLeads, getLeadById, loading } = useCentralizedLeads();
-  
+
   const [selectedLead, setSelectedLead] = useState<BinLead | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
@@ -58,12 +58,13 @@ export const RecyclicBinPage = () => {
   }
 
   return (
-    <ResponsivePageLayout
-      backgroundImage={bgBusinessPlan}
-      tint="rgba(255, 102, 102, 0.47)"
-      contentClassName="space-y-4"
-    >
-        <PageBackground image={bgBusinessPlan} tint="rgba(255, 102, 102, 0.64)" opacity={0.84} />
+    <>
+      <PageBackground image={bgBusinessPlan} tint="rgba(255, 88, 88, 0.45)"  />
+      <ResponsivePageLayout
+        backgroundImage={bgBusinessPlan}
+        tint="rgba(255, 102, 102, 0.47)"
+        contentClassName="space-y-4"
+      >
         <header className="glass-card p-5">
           <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-2xl font-semibold text-transparent sm:text-3xl">Manage Leads Bin</h2>
           <p className="mt-1 text-sm text-content-secondary">Restore soft deleted leads or delete permanently.</p>
@@ -129,7 +130,8 @@ export const RecyclicBinPage = () => {
             </div>
           </div>
         )}
-    </ResponsivePageLayout>
+      </ResponsivePageLayout>
+    </>
   );
 };
 

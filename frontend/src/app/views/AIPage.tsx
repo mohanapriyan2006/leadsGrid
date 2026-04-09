@@ -411,17 +411,11 @@ export const AIPage = () => {
   const visibleMessages = messages.filter((message) => !message.hidden);
 
   return (
-    <ResponsivePageLayout
-      backgroundImage={bgChatBot}
-      tint={mode == "agent" ? "rgba(6, 182, 212, 0.28)" : "rgba(99, 102, 241, 0.25)"}
-      opacity={0.22}
+    <>
+		<PageBackground image={bgChatBot} tint={mode == "agent" ? "rgba(6, 182, 212, 0.28)" : "rgba(99, 102, 241, 0.25)"} opacity={0.40} />
+    <ResponsivePageLayout      
       contentClassName="flex flex-col overflow-hidden !p-4 md:!p-6"
     >
-        <PageBackground
-          image={bgChatBot}
-          tint={mode == "agent" ? "rgba(6, 182, 212, 0.56)" : "rgba(99, 102, 241, 0.52)"}
-          opacity={0.74}
-        />
         <AIHeader
           historyOpen={historyOpen}
           chatHistory={chatHistory}
@@ -518,5 +512,6 @@ export const AIPage = () => {
           onApply={handleAttachLeads}
         />
     </ResponsivePageLayout>
+    </>
   );
 };

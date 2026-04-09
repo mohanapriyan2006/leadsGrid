@@ -98,12 +98,10 @@ export const SettingsPage = () => {
   };
 
   return (
-    <ResponsivePageLayout
-      backgroundImage={bgDataAtWork}
-      tint="rgba(236, 254, 72, 0.51)"
-      contentClassName="space-y-4"
-    >
-        <PageBackground image={bgDataAtWork} tint="rgba(236, 254, 72, 0.62)" opacity={0.84} />
+    <>
+      <PageBackground image={bgDataAtWork} tint="rgba(159, 175, 12, 0.49)" />
+      <ResponsivePageLayout contentClassName="space-y-4"  >
+
         <header className="glass-card p-5">
           <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-2xl font-semibold text-transparent sm:text-3xl">System Configuration</h2>
           <p className="mt-1 text-sm text-content-secondary">Configure outreach engine behavior and signal cadence.</p>
@@ -310,6 +308,7 @@ export const SettingsPage = () => {
             </div>
           </div>
         )}
-    </ResponsivePageLayout>
+      </ResponsivePageLayout>
+    </>
   );
 };

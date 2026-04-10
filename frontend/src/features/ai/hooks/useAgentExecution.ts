@@ -1,9 +1,10 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 
 import type { Lead } from "../../leads/types/lead";
 import type { AgentPlan, AgentStep, AgentExecutionState, AIStatus } from "../types/agent";
 import { agentApiService } from "../services/agentApiService";
 import type { AgentActionResult, AgentRunState } from "../services/agentApiService";
+import { agentRunRealtimeService } from "../services/agentRunRealtimeService";
 
 type ExecutionCallbacks = {
   onStepStart: (step: AgentStep, index: number) => void;
@@ -16,6 +17,26 @@ type ExecutionCallbacks = {
 export const useAgentExecution = (callbacks: ExecutionCallbacks) => {
   const [plan, setPlan] = useState<AgentPlan | null>(null);
   const [executionState, setExecutionState] = useState<AgentExecutionState | null>(null);
+  const unsubscribeRef = useRef<null | (() => void)>(null);
+  const planRef = useRef<AgentPlan | null>(null);
+
+  useEffect(() => {
+    planRef.current = plan;
+  }, [plan]);
+
+  useEffect(() => {
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+      }
+    };
+  }, []);
+
+  const stopRunWatch = useCallback(() => {
+    if (!unsubscribeRef.current) return;
+    unsubscribeRef.current();
+    unsubscribeRef.current = null;
+  }, []);
 
   const toExecutionState = useCallback((run: AgentRunState): AgentExecutionState => {
     return {
@@ -64,13 +85,25 @@ export const useAgentExecution = (callbacks: ExecutionCallbacks) => {
       setExecutionState(toExecutionState(run));
 
       if (run.status === "completed") {
+        stopRunWatch();
         callbacks.onStatusChange("idle");
         callbacks.onPlanComplete(run.plan);
       } else if (run.status === "failed" || run.status === "aborted") {
+        stopRunWatch();
         callbacks.onStatusChange("idle");
       }
     },
-    [callbacks, toExecutionState],
+    [callbacks, toExecutionState, stopRunWatch],
+  );
+
+  const startRunWatch = useCallback(
+    (runId: string) => {
+      stopRunWatch();
+      unsubscribeRef.current = agentRunRealtimeService.subscribeToRun(runId, (run) => {
+        applyRunState(run, planRef.current);
+      });
+    },
+    [stopRunWatch, applyRunState],
   );
 
   const createPlan = useCallback(
@@ -139,11 +172,12 @@ export const useAgentExecution = (callbacks: ExecutionCallbacks) => {
           autoSave: true,
         });
         applyRunState(run, currentPlan);
+        startRunWatch(run.runId);
       } catch {
         callbacks.onStatusChange("idle");
       }
     },
-    [callbacks, applyRunState],
+    [callbacks, applyRunState, startRunWatch],
   );
 
   const continueExecution = useCallback(
@@ -224,9 +258,10 @@ export const useAgentExecution = (callbacks: ExecutionCallbacks) => {
   }, [executionState?.runId, callbacks, applyRunState, plan]);
 
   const resetPlan = useCallback(() => {
+    stopRunWatch();
     setPlan(null);
     setExecutionState(null);
-  }, []);
+  }, [stopRunWatch]);
 
   return {
     plan,

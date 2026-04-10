@@ -9,8 +9,10 @@ from app.firebase.firebase_client import FirebaseClient
 from app.services.agent_executor import AgentExecutor
 from app.services.aggregator import LeadAggregator
 from app.services.ai_router import AIRouter
+from app.services.context_enhancer import ContextEnhancer
 from app.services.email_service import EmailService
 from app.services.agent_run_service import AgentRunService
+from app.services.step_evaluator import StepEvaluator
 
 
 def create_app() -> FastAPI:
@@ -31,6 +33,8 @@ def create_app() -> FastAPI:
         timeout_seconds=settings.request_timeout_seconds,
     )
     ai_router = AIRouter()
+    context_enhancer = ContextEnhancer()
+    step_evaluator = StepEvaluator()
     email_service = EmailService(settings)
     agent_executor = AgentExecutor(
         aggregator=lead_aggregator,
@@ -38,7 +42,7 @@ def create_app() -> FastAPI:
         email_service=email_service,
         firebase_client=firebase_client,
     )
-    agent_run_service = AgentRunService(agent_executor)
+    agent_run_service = AgentRunService(agent_executor, step_evaluator)
 
     app.state.settings = settings
     app.state.firebase_client = firebase_client
@@ -46,6 +50,8 @@ def create_app() -> FastAPI:
     app.state.email_service = email_service
     app.state.agent_executor = agent_executor
     app.state.agent_run_service = agent_run_service
+    app.state.context_enhancer = context_enhancer
+    app.state.step_evaluator = step_evaluator
 
     app.add_middleware(
         CORSMiddleware,

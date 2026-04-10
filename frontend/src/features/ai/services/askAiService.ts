@@ -1,6 +1,9 @@
 const REQUEST_TIMEOUT_MS = 14000;
 
+import type { AIContextPayload } from "../types/context";
+
 type AskProvider = "gemini" | "groq" | "openrouter";
+type AskStrategy = "outreach_generator" | "lead_analyzer" | "follow_up_planner" | "general";
 
 export type AskAiResult = {
   text: string;
@@ -49,15 +52,74 @@ const shouldSuggestAgentMode = (prompt: string, responseText: string): boolean =
   return actionKeywords.some((keyword) => text.includes(keyword));
 };
 
-const buildAskPrompt = (input: { prompt: string; tone: string; maxWords: number }) => {
+const routePrompt = (prompt: string, context?: AIContextPayload): AskStrategy => {
+  const text = prompt.toLowerCase();
+
+  if (text.includes("follow up") || text.includes("follow-up") || text.includes("nudge")) {
+    return "follow_up_planner";
+  }
+
+  if (text.includes("analyze") || text.includes("score") || text.includes("intent") || text.includes("qualify")) {
+    return "lead_analyzer";
+  }
+
+  if (text.includes("email") || text.includes("proposal") || text.includes("message") || text.includes("outreach")) {
+    return "outreach_generator";
+  }
+
+  if ((context?.leads_context?.length || 0) > 0 && (text.includes("best lead") || text.includes("priority"))) {
+    return "lead_analyzer";
+  }
+
+  return "general";
+};
+
+const strategyInstruction: Record<AskStrategy, string> = {
+  outreach_generator: "Generate outreach copy with clear personalization, soft CTA, and practical next steps.",
+  lead_analyzer: "Prioritize and explain lead quality, urgency, and best next actions with short rationale.",
+  follow_up_planner: "Create concise follow-up strategy with timing suggestions and low-friction call to action.",
+  general: "Provide concise, actionable sales assistance with practical recommendations.",
+};
+
+const serializeContext = (context?: AIContextPayload): string => {
+  if (!context) return "";
+
+  const compactContext = {
+    schema_version: context.schema_version,
+    tone: context.tone,
+    pipeline_snapshot: context.pipeline_snapshot,
+    memory: context.memory,
+    leads_context: context.leads_context.slice(0, 8).map((lead) => ({
+      name: lead.name,
+      company: lead.company,
+      pain_point: lead.pain_point,
+      intent_score: lead.intent_score,
+      urgency: lead.urgency,
+      budget_hint: lead.budget_hint,
+      recommended_pitch: lead.recommended_pitch,
+      confidence: lead.confidence,
+    })),
+  };
+
+  return JSON.stringify(compactContext, null, 2).slice(0, 2800);
+};
+
+const buildAskPrompt = (input: { prompt: string; tone: string; maxWords: number; context?: AIContextPayload }) => {
+  const strategy = routePrompt(input.prompt, input.context);
+  const contextBlock = serializeContext(input.context);
+
   return [
     "You are PitchPilot Ask Mode assistant.",
+    `Strategy: ${strategy}`,
+    strategyInstruction[strategy],
     "Rules:",
     "1) Return plain text only. No markdown tables, no JSON.",
     "2) Keep response concise and practical.",
     "3) If user intent needs execution/automation, include one sentence suggesting Agent mode.",
     `Tone: ${input.tone}`,
     `Max words: ${input.maxWords}`,
+    contextBlock ? "Structured context:" : "",
+    contextBlock,
     "User request:",
     input.prompt,
   ].join("\n");
@@ -174,8 +236,9 @@ const callOpenRouter = async (prompt: string): Promise<string> => {
 };
 
 export const askAiService = {
-  generateText: async (input: { prompt: string; tone: string; maxWords: number }): Promise<AskAiResult> => {
+  generateText: async (input: { prompt: string; tone: string; maxWords: number; context?: AIContextPayload }): Promise<AskAiResult> => {
     const prompt = buildAskPrompt(input);
+    const strategy = routePrompt(input.prompt, input.context);
     const providers: Array<{ name: AskProvider; run: () => Promise<string> }> = [];
 
     if (hasEnv("VITE_GEMINI_API_KEY")) {
@@ -202,7 +265,7 @@ export const askAiService = {
           text,
           provider: provider.name,
           confidence: provider.name === "gemini" ? 92 : provider.name === "groq" ? 86 : 82,
-          requiresAgent: shouldSuggestAgentMode(input.prompt, text),
+          requiresAgent: strategy !== "general" || shouldSuggestAgentMode(input.prompt, text),
         };
       } catch (error) {
         const reason = error instanceof Error ? error.message : "Unknown provider error";

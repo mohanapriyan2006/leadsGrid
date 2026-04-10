@@ -26,6 +26,8 @@ import { useSuggestions } from "../../features/ai/hooks/useSuggestions";
 import { useAgentExecution } from "../../features/ai/hooks/useAgentExecution";
 import type { AgentStep } from "../../features/ai/types/agent";
 import type { AgentActionResult } from "../../features/ai/services/agentApiService";
+import { buildContextSummary, buildStructuredAIContext } from "../../features/ai/services/contextBuilder";
+import { conversationMemoryService } from "../../features/ai/services/conversationMemoryService";
 
 export const AIPage = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -37,6 +39,7 @@ export const AIPage = () => {
   const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [lastAgentPrompt, setLastAgentPrompt] = useState("");
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
 
   const { leads } = useLeadStore();
   const { leads: manageLeads } = useCentralizedLeads();
@@ -154,37 +157,42 @@ export const AIPage = () => {
   }, [messages, loading, agentPlan, executionState]);
 
   useEffect(() => {
+    let active = true;
+
+    const loadHistory = async () => {
+      const storedSessions = await conversationMemoryService.listSessions(CHAT_HISTORY_LIMIT);
+      if (!active) return;
+      setChatHistory(storedSessions);
+    };
+
+    void loadHistory();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
     setInputValue(input);
   }, [input, setInputValue]);
 
-  const buildContext = (prompt: string) => {
-    const leadSummary = leadPool
-      .slice(0, 8)
-      .map((lead, index) => `${index + 1}. ${lead.author} | score=${lead.score} | summary=${lead.summary}`)
-      .join("\n");
+  const buildAskPayload = (prompt: string) => {
+    const structuredContext = buildStructuredAIContext({
+      prompt,
+      tone,
+      leadPool,
+      manageLeads,
+      attachedLeads,
+      messages,
+      chatHistory,
+      attachedLeadIds,
+    });
 
-    const pipelineSummary = manageLeads
-      .slice(0, 10)
-      .map((lead) => `${lead.name} (${lead.stage}) score=${lead.score}`)
-      .join("\n");
-
-    const attachedLeadsSummary = attachedLeads
-      .slice(0, 8)
-      .map((lead, index) => `${index + 1}. ${lead.title || lead.author} | score=${lead.score} | summary=${lead.summary}`)
-      .join("\n");
-
-    return [
-      "You are AI Sales Engine assistant.",
-      "Goal: return concise actionable insights.",
-      `Tone: ${tone}`,
-      `User prompt: ${prompt}`,
-      "Leads:",
-      leadSummary,
-      pipelineSummary ? `Pipeline:\n${pipelineSummary}` : "",
-      attachedLeadsSummary ? `Attached leads:\n${attachedLeadsSummary}` : "",
-    ]
-      .filter(Boolean)
-      .join("\n");
+    return {
+      prompt,
+      lead_context: buildContextSummary(structuredContext),
+      structured_context: structuredContext,
+    };
   };
 
   const sendAskMessage = async (overridePrompt?: string) => {
@@ -197,8 +205,9 @@ export const AIPage = () => {
     setAIStatus("thinking");
 
     try {
+      const askPayload = buildAskPayload(prompt);
       const result = await generateMessage({
-        lead_context: buildContext(prompt),
+        ...askPayload,
         tone,
         max_words: 140,
       });
@@ -364,14 +373,14 @@ export const AIPage = () => {
     }
   };
 
-  const createSessionFromMessages = (source: ChatMessage[]): ChatSession | null => {
+  const createSessionFromMessages = (source: ChatMessage[], sessionId?: string): ChatSession | null => {
     if (source.length === 0) return null;
 
     const firstUserPrompt = source.find((message) => message.role === "user")?.content || "Untitled conversation";
     const preview = source[source.length - 1]?.content || firstUserPrompt;
 
     return {
-      id: createId(),
+      id: sessionId ?? createId(),
       title: firstUserPrompt.slice(0, 40),
       preview: preview.slice(0, 72),
       createdAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -379,18 +388,43 @@ export const AIPage = () => {
     };
   };
 
-  const saveCurrentChat = () => {
-    const session = createSessionFromMessages(messages);
+  useEffect(() => {
+    if (messages.length === 0) return;
+
+    const sessionId = activeSessionId ?? createId();
+    if (!activeSessionId) {
+      setActiveSessionId(sessionId);
+    }
+
+    const session = createSessionFromMessages(messages, sessionId);
     if (!session) return;
 
-    setChatHistory((prev) => [session, ...prev].slice(0, CHAT_HISTORY_LIMIT));
+    setChatHistory((prev) => {
+      const remaining = prev.filter((entry) => entry.id !== session.id);
+      return [session, ...remaining].slice(0, CHAT_HISTORY_LIMIT);
+    });
+
+    void conversationMemoryService.saveSession(session);
+  }, [messages, activeSessionId]);
+
+  const saveCurrentChat = () => {
+    const session = createSessionFromMessages(messages, activeSessionId ?? undefined);
+    if (!session) return;
+
+    if (!activeSessionId) {
+      setActiveSessionId(session.id);
+    }
+
+    setChatHistory((prev) => [session, ...prev.filter((entry) => entry.id !== session.id)].slice(0, CHAT_HISTORY_LIMIT));
+    void conversationMemoryService.saveSession(session);
   };
 
   const startNewChat = () => {
     if (messages.length > 0) {
-      const session = createSessionFromMessages(messages);
+      const session = createSessionFromMessages(messages, activeSessionId ?? undefined);
       if (session) {
-        setChatHistory((prev) => [session, ...prev].slice(0, CHAT_HISTORY_LIMIT));
+        setChatHistory((prev) => [session, ...prev.filter((entry) => entry.id !== session.id)].slice(0, CHAT_HISTORY_LIMIT));
+        void conversationMemoryService.saveSession(session);
       }
     }
 
@@ -398,6 +432,7 @@ export const AIPage = () => {
     setInput("");
     setAttachedLeadIds([]);
     setHistoryOpen(false);
+    setActiveSessionId(null);
     resetPlan();
   };
 
@@ -406,6 +441,7 @@ export const AIPage = () => {
     setInput("");
     setAttachedLeadIds([]);
     setHistoryOpen(false);
+    setActiveSessionId(session.id);
   };
 
   const visibleMessages = messages.filter((message) => !message.hidden);

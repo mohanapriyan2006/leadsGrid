@@ -33,6 +33,13 @@ class LeadItem(BaseModel):
     created_at: str | None = None
 
 
+class AgentStepEvaluation(BaseModel):
+    score: int = Field(ge=0, le=100)
+    quality: Literal["excellent", "good", "needs_improvement"]
+    issues: list[str] = Field(default_factory=list)
+    improvement: str | None = None
+
+
 class AgentStep(BaseModel):
     id: str
     label: str
@@ -42,6 +49,7 @@ class AgentStep(BaseModel):
     riskLevel: RiskLevel = "low"
     result: str | None = None
     error: str | None = None
+    evaluation: AgentStepEvaluation | None = None
 
 
 class AgentPlan(BaseModel):
@@ -58,8 +66,26 @@ class AgentPlanRequest(BaseModel):
     leads: list[LeadItem] = Field(default_factory=list)
 
 
+class EnhancedLeadContext(BaseModel):
+    leadId: str | None = None
+    name: str
+    company: str
+    painPoint: str
+    intentScore: float
+    urgency: Literal["low", "medium", "high"]
+    budgetHint: Literal["low", "mid", "mid-high", "high", "unknown"]
+    recommendedPitch: str
+    priority: Literal["low", "medium", "high"]
+
+
+class AgentContextPreview(BaseModel):
+    leads: list[EnhancedLeadContext] = Field(default_factory=list)
+    summary: str = ""
+
+
 class AgentPlanResponse(BaseModel):
     plan: AgentPlan
+    contextPreview: AgentContextPreview | None = None
 
 
 class AgentExecuteRequest(BaseModel):

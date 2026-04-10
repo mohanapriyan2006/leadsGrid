@@ -3,6 +3,9 @@ import type { ManageLead } from "../types/manageLead";
 
 type ManageLeadsTableViewProps = {
   leads: ManageLead[];
+  selectedLeadIds: string[];
+  onToggleSelectLead: (leadId: string) => void;
+  onToggleSelectAllLeads: () => void;
   onOpenDetails: (leadId: string) => void;
   onOpenEdit: (leadId: string) => void;
   onDelete: (leadId: string) => void;
@@ -10,13 +13,27 @@ type ManageLeadsTableViewProps = {
 
 export const ManageLeadsTableView = ({
   leads,
+  selectedLeadIds,
+  onToggleSelectLead,
+  onToggleSelectAllLeads,
   onOpenDetails,
   onOpenEdit,
   onDelete,
 }: ManageLeadsTableViewProps) => {
+  const allLeadsSelected = leads.length > 0 && leads.every((lead) => selectedLeadIds.includes(lead.id));
+
   return (
     <div className="glass-card overflow-hidden">
-      <div className="hidden grid-cols-[1.2fr_1.2fr_1.4fr_130px_80px_110px_220px] border-b border-accent/10 bg-gradient-to-r from-accent/5 via-transparent to-transparent px-4 py-2 text-[10px] uppercase tracking-[0.16em] text-content-tertiary md:grid">
+      <div className="hidden grid-cols-[44px_1.2fr_1.2fr_1.4fr_130px_80px_110px_220px] border-b border-accent/10 bg-gradient-to-r from-accent/5 via-transparent to-transparent px-4 py-2 text-[10px] uppercase tracking-[0.16em] text-content-tertiary md:grid">
+        <label className="flex items-center justify-center">
+          <input
+            type="checkbox"
+            checked={allLeadsSelected}
+            onChange={onToggleSelectAllLeads}
+            className="h-4 w-4 accent-accent"
+            aria-label="Select all leads"
+          />
+        </label>
         <span>Name</span>
         <span>Company</span>
         <span>Contact</span>
@@ -30,9 +47,18 @@ export const ManageLeadsTableView = ({
         {leads.map((lead) => (
           <article key={`mobile-${lead.id}`} className="glass-card-sm space-y-2 p-3">
             <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-content">{lead.name}</p>
-                <p className="truncate text-xs text-content-secondary">{lead.company}</p>
+              <div className="flex min-w-0 items-start gap-2">
+                <input
+                  type="checkbox"
+                  checked={selectedLeadIds.includes(lead.id)}
+                  onChange={() => onToggleSelectLead(lead.id)}
+                  className="mt-0.5 h-4 w-4 accent-accent"
+                  aria-label={`Select ${lead.name}`}
+                />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-content">{lead.name}</p>
+                  <p className="truncate text-xs text-content-secondary">{lead.company}</p>
+                </div>
               </div>
               <span className="badge-accent">{lead.score}</span>
             </div>
@@ -76,8 +102,17 @@ export const ManageLeadsTableView = ({
       {leads.map((lead) => (
         <div
           key={lead.id}
-          className="hidden grid-cols-[1.2fr_1.2fr_1.4fr_130px_80px_110px_220px] items-center border-b border-accent/5 px-4 py-2 text-xs transition-colors hover:bg-accent/5 md:grid"
+          className="hidden grid-cols-[44px_1.2fr_1.2fr_1.4fr_130px_80px_110px_220px] items-center border-b border-accent/5 px-4 py-2 text-xs transition-colors hover:bg-accent/5 md:grid"
         >
+          <div className="flex justify-center">
+            <input
+              type="checkbox"
+              checked={selectedLeadIds.includes(lead.id)}
+              onChange={() => onToggleSelectLead(lead.id)}
+              className="h-4 w-4 accent-accent"
+              aria-label={`Select ${lead.name}`}
+            />
+          </div>
           <span className="text-content">{lead.name}</span>
           <span className="text-content-secondary">{lead.company}</span>
           <span className="text-content-secondary">{lead.email || lead.phone || "N/A"}</span>

@@ -146,6 +146,20 @@ class FirebaseClient:
         )
         return {"logged": True, "runId": run_ref.id}
 
+    def upsert_agent_run_state(self, user_id: str, run_id: str, payload: dict[str, Any]) -> dict:
+        if not self._enabled or not self._db:
+            return {"saved": False, "reason": "firebase-disabled"}
+
+        run_ref = self._db.collection("users").document(user_id).collection("agent_runs").document(run_id)
+        run_ref.set(
+            {
+                **payload,
+                "updated_at": datetime.now(timezone.utc),
+            },
+            merge=True,
+        )
+        return {"saved": True, "runId": run_id}
+
     def get_user_projects(self, user_id: str) -> list[dict]:
         if not self._enabled or not self._db or not user_id:
             return []

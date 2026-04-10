@@ -15,6 +15,13 @@ export type AgentRunStatus = "running" | "paused" | "completed" | "failed" | "ab
 
 export type RiskLevel = "low" | "medium" | "high";
 
+export type AgentStepEvaluation = {
+  score: number;
+  quality: "excellent" | "good" | "needs_improvement";
+  issues: string[];
+  improvement?: string | null;
+};
+
 export type AgentStep = {
   id: string;
   label: string;
@@ -24,6 +31,7 @@ export type AgentStep = {
   riskLevel: RiskLevel;
   result?: string;
   error?: string;
+  evaluation?: AgentStepEvaluation;
 };
 
 export type AgentPlan = {

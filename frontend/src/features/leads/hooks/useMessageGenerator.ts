@@ -13,7 +13,7 @@ export const useMessageGenerator = () => {
       const result = await messageService.generateMessage(payload);
       await aiHistoryService.save({
         type: "email",
-        prompt: payload.lead_context,
+        prompt: payload.prompt ?? payload.lead_context,
         outputText: result.message,
       });
       return result;

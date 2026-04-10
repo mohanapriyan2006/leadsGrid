@@ -29,6 +29,10 @@ def _run_service_from_request(request: Request):
     return request.app.state.agent_run_service
 
 
+def _context_enhancer_from_request(request: Request):
+    return request.app.state.context_enhancer
+
+
 @router.post("/plan", response_model=AgentPlanResponse)
 async def create_plan(
     payload: AgentPlanRequest,
@@ -37,8 +41,10 @@ async def create_plan(
 ) -> AgentPlanResponse:
     _ = user  # Reserved for scoped planning/audit.
     executor = _executor_from_request(request)
+    context_enhancer = _context_enhancer_from_request(request)
     plan = await executor.build_plan(payload.prompt, payload.leads)
-    return AgentPlanResponse(plan=plan)
+    context_preview = context_enhancer.enhance(payload.prompt, payload.leads)
+    return AgentPlanResponse(plan=plan, contextPreview=context_preview)
 
 
 @router.post("/execute", response_model=AgentActionResult)

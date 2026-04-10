@@ -44,6 +44,7 @@ export const CRMPage = () => {
   const [view, setView] = useState<"table" | "kanban">("table");
   const { leads: centralizedLeads, loading } = useCentralizedLeads();
   const [deals, setDeals] = useState<Deal[]>([]);
+  const [selectedDealIds, setSelectedDealIds] = useState<string[]>([]);
   const [isAdding, setIsAdding] = useState(false);
 
   // Modal states
@@ -57,6 +58,7 @@ export const CRMPage = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [editDraft, setEditDraft] = useState<NewDealDraft | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -100,6 +102,10 @@ export const CRMPage = () => {
     setDeals(nextDeals);
   }, [centralizedLeads]);
 
+  useEffect(() => {
+    setSelectedDealIds((prev) => prev.filter((id) => deals.some((deal) => deal.id === id)));
+  }, [deals]);
+
   const activeDeal = useMemo(() => {
     if (hoveredId) {
       return deals.find((deal) => deal.id === hoveredId) ?? null;
@@ -137,8 +143,87 @@ export const CRMPage = () => {
 
   const handleDelete = async (dealId: string) => {
     await leadService.softDeleteManageLead(dealId);
+    setSelectedDealIds((prev) => prev.filter((id) => id !== dealId));
     setConfirmDeleteId(null);
     setFeedback("Deal deleted and moved to recycle bin");
+  };
+
+  const toggleSelectDeal = (dealId: string) => {
+    setSelectedDealIds((prev) =>
+      prev.includes(dealId) ? prev.filter((id) => id !== dealId) : [...prev, dealId],
+    );
+  };
+
+  const toggleSelectAllDeals = () => {
+    setSelectedDealIds((prev) => {
+      const allSelected = deals.length > 0 && deals.every((deal) => prev.includes(deal.id));
+      if (allSelected) return [];
+      return deals.map((deal) => deal.id);
+    });
+  };
+
+  const handleBulkDeleteDeals = async () => {
+    if (selectedDealIds.length === 0) return;
+
+    await Promise.all(selectedDealIds.map((dealId) => leadService.softDeleteManageLead(dealId)));
+    setSelectedDealIds([]);
+    setFeedback(`${selectedDealIds.length} deal(s) deleted and moved to recycle bin`);
+    setConfirmBulkDeleteOpen(false);
+  };
+
+  const handleExportSelectedDealsCsv = () => {
+    if (selectedDealIds.length === 0) return;
+
+    const selectedDeals = deals.filter((deal) => selectedDealIds.includes(deal.id));
+    if (selectedDeals.length === 0) return;
+
+    const escapeCsv = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+    const headers = [
+      "Name",
+      "Company",
+      "Status",
+      "Score",
+      "Last Action",
+      "Deal Value",
+      "Email",
+      "Phone",
+      "Category",
+      "Rating",
+      "Review Count",
+      "Address",
+      "Website URL",
+      "Google Maps URL",
+      "Notes",
+    ];
+
+    const rows = selectedDeals.map((deal) => [
+      deal.name,
+      deal.company,
+      deal.status,
+      deal.score,
+      deal.lastAction,
+      deal.value,
+      deal.email,
+      deal.phone,
+      deal.category,
+      deal.rating,
+      deal.review_count,
+      deal.address,
+      deal.website_url,
+      deal.google_maps_url,
+      deal.notes,
+    ]);
+
+    const csv = [headers, ...rows].map((row) => row.map(escapeCsv).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `crm-selected-${new Date().toISOString().slice(0, 10)}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+
+    setFeedback(`Exported ${selectedDeals.length} selected deal(s) to CSV`);
   };
 
   useEffect(() => {
@@ -398,15 +483,42 @@ export const CRMPage = () => {
         {loading ? (
           <div className="glass-card p-8 text-center text-content-secondary">Loading CRM deals...</div>
         ) : view === "table" ? (
-          <CRMTableView
-            deals={deals}
-            onUpdateStatus={(dealId, status) => {
-              void updateStatus(dealId, status);
-            }}
-            onOpenDetails={openDetails}
-            onOpenEdit={openEdit}
-            onDeleteRequest={setConfirmDeleteId}
-          />
+          <>
+            <div className="glass-card-sm flex flex-wrap items-center gap-2 px-3 py-2">
+              <span className="text-xs text-content-secondary">{selectedDealIds.length} selected</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmBulkDeleteOpen(true);
+                }}
+                disabled={selectedDealIds.length === 0}
+                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2.5 py-1 text-[11px] text-danger disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Delete Selected
+              </button>
+              <button
+                type="button"
+                onClick={handleExportSelectedDealsCsv}
+                disabled={selectedDealIds.length === 0}
+                className="glass-btn px-2.5 py-1 text-[11px] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Export Selected CSV
+              </button>
+            </div>
+
+            <CRMTableView
+              deals={deals}
+              selectedDealIds={selectedDealIds}
+              onToggleSelectDeal={toggleSelectDeal}
+              onToggleSelectAllDeals={toggleSelectAllDeals}
+              onUpdateStatus={(dealId, status) => {
+                void updateStatus(dealId, status);
+              }}
+              onOpenDetails={openDetails}
+              onOpenEdit={openEdit}
+              onDeleteRequest={setConfirmDeleteId}
+            />
+          </>
         ) : (
           <DndContext
             onDragStart={() => setIsDragging(true)}
@@ -674,6 +786,18 @@ export const CRMPage = () => {
           onConfirm={() => {
             if (!confirmDeleteId) return;
             void handleDelete(confirmDeleteId);
+          }}
+        />
+
+        <ConfirmDialog
+          open={confirmBulkDeleteOpen}
+          title="Delete Selected Deals"
+          description={`Delete ${selectedDealIds.length} selected deal(s)? They will be moved to the recycle bin.`}
+          confirmLabel="Delete Selected"
+          danger
+          onCancel={() => setConfirmBulkDeleteOpen(false)}
+          onConfirm={() => {
+            void handleBulkDeleteDeals();
           }}
         />
 

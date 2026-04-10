@@ -55,6 +55,7 @@ export const ManageLeadsPage = () => {
 
   const [search, setSearch] = useState("");
   const [onlyHot, setOnlyHot] = useState(false);
+  const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
   const [insights, setInsights] = useState<ManageLeadInsights | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
@@ -74,6 +75,7 @@ export const ManageLeadsPage = () => {
   const [disableDetailsPopup, setDisableDetailsPopup] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
   const [newLead, setNewLead] = useState({
@@ -158,6 +160,10 @@ export const ManageLeadsPage = () => {
 
     return filtered;
   }, [manageLeads, debouncedSearch, onlyHot]);
+
+  useEffect(() => {
+    setSelectedLeadIds((prev) => prev.filter((id) => filteredLeads.some((lead) => lead.id === id)));
+  }, [filteredLeads]);
 
   const grouped = useMemo(
     () =>
@@ -288,6 +294,88 @@ export const ManageLeadsPage = () => {
     navigate("/crm", { state: { lead } });
   };
 
+  const toggleSelectLead = (leadId: string) => {
+    setSelectedLeadIds((prev) =>
+      prev.includes(leadId) ? prev.filter((id) => id !== leadId) : [...prev, leadId],
+    );
+  };
+
+  const toggleSelectAllLeads = () => {
+    setSelectedLeadIds((prev) => {
+      const allSelected =
+        filteredLeads.length > 0 && filteredLeads.every((lead) => prev.includes(lead.id));
+      if (allSelected) return [];
+      return filteredLeads.map((lead) => lead.id);
+    });
+  };
+
+  const handleBulkDeleteSelectedLeads = async () => {
+    if (selectedLeadIds.length === 0) return;
+
+    await Promise.all(selectedLeadIds.map((leadId) => leadService.softDeleteManageLead(leadId)));
+    setSelectedLeadIds([]);
+    await loadInsights();
+    setFeedback(`${selectedLeadIds.length} lead(s) deleted`);
+    setConfirmBulkDeleteOpen(false);
+  };
+
+  const handleExportSelectedLeadsCsv = () => {
+    if (selectedLeadIds.length === 0) return;
+
+    const selectedLeads = filteredLeads.filter((lead) => selectedLeadIds.includes(lead.id));
+    if (selectedLeads.length === 0) return;
+
+    const escapeCsv = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+    const headers = [
+      "Name",
+      "Company",
+      "Email",
+      "Phone",
+      "Stage",
+      "Score",
+      "Budget Estimate",
+      "Category",
+      "Rating",
+      "Review Count",
+      "Address",
+      "Website URL",
+      "Google Maps URL",
+      "Notes",
+      "Created At",
+      "Updated At",
+    ];
+
+    const rows = selectedLeads.map((lead) => [
+      lead.name,
+      lead.company,
+      lead.email,
+      lead.phone,
+      lead.stage,
+      lead.score,
+      lead.budget_estimate,
+      lead.category,
+      lead.rating,
+      lead.review_count,
+      lead.address,
+      lead.website_url,
+      lead.google_maps_url,
+      lead.notes,
+      lead.created_at,
+      lead.updated_at,
+    ]);
+
+    const csv = [headers, ...rows].map((row) => row.map(escapeCsv).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `manage-leads-selected-${new Date().toISOString().slice(0, 10)}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+
+    setFeedback(`Exported ${selectedLeads.length} selected lead(s) to CSV`);
+  };
+
   const uploadButton = (
     <label className="glass-btn cursor-pointer px-2 py-1 text-[11px]">
       Upload CSV
@@ -414,12 +502,39 @@ export const ManageLeadsPage = () => {
         ) : null}
 
         {manageLeadView === "table" ? (
-          <ManageLeadsTableView
-            leads={filteredLeads}
-            onOpenDetails={openDetails}
-            onOpenEdit={openEdit}
-            onDelete={setConfirmDeleteId}
-          />
+          <>
+            <div className="glass-card-sm flex flex-wrap items-center gap-2 px-3 py-2">
+              <span className="text-xs text-content-secondary">{selectedLeadIds.length} selected</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmBulkDeleteOpen(true);
+                }}
+                disabled={selectedLeadIds.length === 0}
+                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2.5 py-1 text-[11px] text-danger disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Delete Selected
+              </button>
+              <button
+                type="button"
+                onClick={handleExportSelectedLeadsCsv}
+                disabled={selectedLeadIds.length === 0}
+                className="glass-btn px-2.5 py-1 text-[11px] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Export Selected CSV
+              </button>
+            </div>
+
+            <ManageLeadsTableView
+              leads={filteredLeads}
+              selectedLeadIds={selectedLeadIds}
+              onToggleSelectLead={toggleSelectLead}
+              onToggleSelectAllLeads={toggleSelectAllLeads}
+              onOpenDetails={openDetails}
+              onOpenEdit={openEdit}
+              onDelete={setConfirmDeleteId}
+            />
+          </>
         ) : null}
 
         <LeadModal
@@ -515,6 +630,18 @@ export const ManageLeadsPage = () => {
               await loadInsights();
               setFeedback("Lead deleted");
             });
+          }}
+        />
+
+        <ConfirmDialog
+          open={confirmBulkDeleteOpen}
+          title="Delete Selected Leads"
+          description={`Delete ${selectedLeadIds.length} selected lead(s)? They will be moved to the recycle bin.`}
+          confirmLabel="Delete Selected"
+          danger
+          onCancel={() => setConfirmBulkDeleteOpen(false)}
+          onConfirm={() => {
+            void handleBulkDeleteSelectedLeads();
           }}
         />
       </ResponsivePageLayout>

@@ -3,10 +3,13 @@ import { addDoc, collection, Timestamp } from "firebase/firestore";
 import { apiClient, getStoredToken } from "../../../lib/api";
 import { db, getFirebaseAuth } from "../../../lib/firebase";
 import { askAiService } from "../../ai/services/askAiService";
+import type { AIContextPayload } from "../../ai/types/context";
 import type { HyperPersonalizedOutreachRequest, HyperPersonalizedOutreachResult } from "../types/lead";
 
 export type MessageGenerationPayload = {
+  prompt?: string;
   lead_context: string;
+  structured_context?: AIContextPayload;
   tone: "professional" | "friendly" | "direct";
   max_words: number;
 };
@@ -59,9 +62,10 @@ const buildAuthHeaders = async (): Promise<Record<string, string>> => {
 export const messageService = {
   generateMessage: async (payload: MessageGenerationPayload): Promise<MessageGenerationResult> => {
     const result = await askAiService.generateText({
-      prompt: payload.lead_context,
+      prompt: payload.prompt ?? payload.lead_context,
       tone: payload.tone,
       maxWords: payload.max_words,
+      context: payload.structured_context,
     });
 
     return {

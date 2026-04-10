@@ -88,6 +88,18 @@ export const AgentExecutionTimeline = ({
                 {step.result ? (
                   <p className="mt-0.5 text-[11px] text-content-tertiary">{step.result}</p>
                 ) : null}
+                {step.evaluation ? (
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-content-tertiary">
+                    <span className="rounded-md border border-accent/[0.08] bg-surface/60 px-1.5 py-0.5">
+                      Quality {step.evaluation.score}/100
+                    </span>
+                    {step.evaluation.issues.slice(0, 2).map((issue) => (
+                      <span key={issue} className="rounded-md border border-warning/[0.12] bg-warning/[0.05] px-1.5 py-0.5 text-warning/80">
+                        {issue}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
                 {step.error ? (
                   <p className="mt-0.5 text-[11px] text-danger/70">{step.error}</p>
                 ) : null}

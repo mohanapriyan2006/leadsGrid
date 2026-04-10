@@ -23,11 +23,6 @@ export const LeadsDiscoverySearchBar = ({ value, isFetching, onChange, onFind }:
             className="glass-input h-11 w-full pl-10 pr-10"
             value={value}
             onChange={(event) => onChange(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && canFind) {
-                onFind();
-              }
-            }}
             placeholder="Try: need crm automation for startup"
           />
           <svg

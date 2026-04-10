@@ -20,7 +20,7 @@ export const MessageLeadDetailsModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-center justify-center bg-surface/80 backdrop-blur-sm px-4"
+      className="fixed inset-0 z-[110]  flex items-center justify-center bg-surface/80 backdrop-blur-sm px-4"
       onClick={onClose}
     >
       <div
@@ -61,7 +61,7 @@ export const MessageLeadDetailsModal = ({
         </div>
 
         {lead.notes ? (
-          <div className="glass-card-sm mt-4 p-3">
+          <div className="glass-card-sm mt-4 p-3 max-h-40 overflow-y-auto">
             <p className="text-xs uppercase tracking-[0.08em] text-content-tertiary">Notes</p>
             <p className="mt-2 text-sm leading-6 text-content">{lead.notes}</p>
           </div>

@@ -16,6 +16,7 @@ import type {
   ManageLeadUrgency,
 } from "../types/manageLead";
 import { createFirestoreLead, mapDiscoveryLeadToManageInput, toFirestoreLeadPatch, toManageLead } from "./leadModel";
+import { mapDiscoveryLeadToManageInputWithAI, type DiscoveryLeadAIIntent } from "./leadModel";
 import type { DiscoveryLeadDto, DiscoveryParams } from "../types/discovery";
 import { adaptDiscoveryLead } from "./discoveryAdapter";
 
@@ -201,9 +202,14 @@ export const leadService = {
     return toManageLead(docRef.id, newLead);
   },
 
-  saveDiscoveryLeadAsManageLead: async (lead: Lead): Promise<ManageLead> => {
+  saveDiscoveryLeadAsManageLead: async (
+    lead: Lead,
+    options?: { aiIntent?: DiscoveryLeadAIIntent | null },
+  ): Promise<ManageLead> => {
     const user = getCurrentUser();
-    const candidate = mapDiscoveryLeadToManageInput(lead);
+    const candidate = options?.aiIntent
+      ? mapDiscoveryLeadToManageInputWithAI(lead, options.aiIntent)
+      : mapDiscoveryLeadToManageInput(lead);
 
     // Lightweight duplicate guard by matching canonical name+company+source.
     const existingSnap = await getDocs(

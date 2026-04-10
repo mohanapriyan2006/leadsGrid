@@ -115,6 +115,7 @@ OUTPUT FORMAT (STRICT JSON ONLY):
     "buying_signals": ["", ""],
     "decision_maker": "yes|no|unknown",
     "pain_point": "",
+    "details": "2-4 concise sentences with analysis reasoning and recommended next step",
     "category": "hiring|problem|switching|learning|discussion",
     "status": "qualified|unqualified"
 }}
@@ -301,6 +302,135 @@ Return STRICT JSON ONLY:
         if provider == "gemini":
             return await self._call_gemini(prompt)
         return await self._call_groq(prompt)
+
+    def _shorten_text(self, text: str, limit: int = 420) -> str:
+        cleaned = re.sub(r"\s+", " ", (text or "").strip())
+        if not cleaned:
+            return ""
+        if len(cleaned) <= limit:
+            return cleaned
+        return f"{cleaned[: limit - 3].rstrip()}..."
+
+    def _heuristic_advanced_intent(self, lead_text: str) -> AdvancedLeadIntentScore:
+        lowered = lead_text.lower()
+
+        high_urgency_tokens = ["urgent", "asap", "immediately", "today", "deadline", "stuck", "frustrated"]
+        medium_urgency_tokens = ["need", "looking", "issue", "problem", "help"]
+        buying_tokens = [
+            "hire",
+            "hiring",
+            "freelancer",
+            "agency",
+            "developer",
+            "looking for",
+            "need someone",
+            "recommend",
+            "budget",
+        ]
+        decision_tokens = ["i need", "we need", "founder", "owner", "ceo", "manager", "my team", "our team"]
+
+        detected_signals: list[str] = []
+        for token in buying_tokens:
+            if token in lowered:
+                detected_signals.append(token)
+
+        urgency = "low"
+        if any(token in lowered for token in high_urgency_tokens):
+            urgency = "high"
+        elif any(token in lowered for token in medium_urgency_tokens):
+            urgency = "medium"
+
+        decision_maker = "yes" if any(token in lowered for token in decision_tokens) else "unknown"
+
+        category = "discussion"
+        if any(token in lowered for token in ["hire", "hiring", "looking for", "need someone"]):
+            category = "hiring"
+        elif any(token in lowered for token in ["switch", "migrate", "replace", "current solution"]):
+            category = "switching"
+        elif any(token in lowered for token in ["problem", "issue", "broken", "frustrated", "stuck"]):
+            category = "problem"
+        elif any(token in lowered for token in ["learn", "tutorial", "course", "beginner", "how to"]):
+            category = "learning"
+
+        score = 45
+        if category in {"hiring", "problem", "switching"}:
+            score += 22
+        if urgency == "high":
+            score += 20
+        elif urgency == "medium":
+            score += 10
+        if decision_maker == "yes":
+            score += 10
+        if len(detected_signals) >= 3:
+            score += 8
+
+        score = max(0, min(100, score))
+        status = "qualified" if score >= 70 and category in {"hiring", "problem", "switching"} else "unqualified"
+
+        pain_point_source = lead_text.strip().replace("\n", " ")
+        if not pain_point_source:
+            pain_point = "Lead needs help with a business problem."
+        elif len(pain_point_source) <= 220:
+            pain_point = pain_point_source
+        else:
+            pain_point = f"{pain_point_source[:217].rstrip()}..."
+
+        unique_signals = []
+        for signal in detected_signals:
+            if signal not in unique_signals:
+                unique_signals.append(signal)
+
+        details = self._shorten_text(
+            " ".join(
+                [
+                    f"Lead classified as {category} with {urgency} urgency.",
+                    f"Signals detected: {', '.join(unique_signals[:3]) if unique_signals else 'none explicit'}.",
+                    f"Decision-maker likelihood is {decision_maker}.",
+                    f"Recommended next step: {'prioritize direct outreach' if status == 'qualified' else 'keep in nurture queue and monitor intent changes' }.",
+                ]
+            ),
+            limit=420,
+        )
+
+        return AdvancedLeadIntentScore(
+            score=score,
+            urgency=urgency,
+            buying_signals=unique_signals[:6],
+            decision_maker=decision_maker,
+            pain_point=pain_point,
+            details=details,
+            category=category,
+            status=status,
+        )
+
+    def _fallback_outreach_message(self, pain_point: str, user_skills: list[str], name: str, tone: str) -> str:
+        intro = f"Hi {name}," if name and name.strip() and name.strip().lower() != "there" else "Hi there,"
+        primary_skill = user_skills[0] if user_skills else "software automation"
+
+        if tone == "direct":
+            body = (
+                f"I noticed the issue around {pain_point.lower()}. "
+                f"I can quickly build a focused {primary_skill} workflow to fix this with minimal disruption. "
+                "If useful, I can share a short plan this week."
+            )
+        elif tone == "professional":
+            body = (
+                f"I noticed the challenge around {pain_point.lower()}. "
+                f"Using {primary_skill}, I can implement a practical workflow to resolve it and improve conversion speed. "
+                "If helpful, I can send a concise implementation approach."
+            )
+        else:
+            body = (
+                f"I saw the pain point around {pain_point.lower()}. "
+                f"I help teams solve this using {primary_skill} and lightweight automation. "
+                "If you'd like, I can share a simple approach you can review."
+            )
+
+        message = f"{intro} {body}"
+        words = [word for word in message.split(" ") if word]
+        if len(words) > 80:
+            message = " ".join(words[:80]).rstrip(" ,") + "..."
+        return message
 
     def _normalize_outreach_message(self, raw_message: str) -> str:
         message = raw_message.strip()
@@ -502,22 +632,26 @@ Return STRICT JSON ONLY:
             try:
                 response_text = await self._call_groq(prompt)
             except Exception as e:
-                raise RuntimeError(f"All AI providers failed for advanced intent analysis: {e}")
+                return self._heuristic_advanced_intent(lead_text)
 
-        data = self._extract_json_strict(
-            response_text,
-            required_keys={
-                "score",
-                "urgency",
-                "buying_signals",
-                "decision_maker",
-                "pain_point",
-                "category",
-                "status",
-            },
-        )
-
-        return AdvancedLeadIntentScore.model_validate(data)
+        try:
+            data = self._extract_json_strict(
+                response_text,
+                required_keys={
+                    "score",
+                    "urgency",
+                    "buying_signals",
+                    "decision_maker",
+                    "pain_point",
+                    "details",
+                    "category",
+                    "status",
+                },
+            )
+            data["details"] = self._shorten_text(str(data.get("details", "")), limit=420)
+            return AdvancedLeadIntentScore.model_validate(data)
+        except Exception:
+            return self._heuristic_advanced_intent(lead_text)
 
     async def validate_lead(self, lead_text: str) -> LeadValidation:
         prompt = self._build_prompt_2_filter_bad_leads(lead_text)
@@ -643,8 +777,20 @@ Return STRICT JSON ONLY:
             provider = "groq"
             try:
                 response_text = await self._call_groq(prompt)
-            except Exception as e:
-                raise RuntimeError(f"All AI providers failed for hyper-personalized outreach: {e}")
+            except Exception:
+                provider = "fallback"
+                response_text = json.dumps(
+                    {
+                        "message": self._fallback_outreach_message(
+                            pain_point=pain_point,
+                            user_skills=cleaned_skills,
+                            name=name,
+                            tone=tone,
+                        ),
+                        "personalization_score": 0.62,
+                        "has_soft_cta": True,
+                    }
+                )
 
         data = self._extract_json(response_text)
 
@@ -686,7 +832,13 @@ Return STRICT JSON ONLY:
 
         final_words = [word for word in message.split(" ") if word]
         if not final_words:
-            raise ValueError("Generated outreach message is empty")
+            message = self._fallback_outreach_message(
+                pain_point=pain_point,
+                user_skills=cleaned_skills,
+                name=name,
+                tone=tone,
+            )
+            final_words = [word for word in message.split(" ") if word]
 
         raw_score = 0.85
         if isinstance(data, dict):

@@ -219,7 +219,7 @@ export const LeadModal = ({
                   className="glass-input w-full min-h-[80px] p-2 text-xs resize-y"
                 />
               ) : (
-                <p className="text-xs text-content-secondary whitespace-pre-wrap">
+                <p className="text-xs max-h-40 overflow-y-auto text-content-secondary whitespace-pre-wrap">
                   {notes || "No notes added yet."}
                 </p>
               )}

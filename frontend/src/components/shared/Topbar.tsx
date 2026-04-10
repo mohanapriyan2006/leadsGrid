@@ -35,7 +35,7 @@ export const Topbar = ({ onOpenMobileNav }: TopbarProps) => {
 
   return (
    
-    <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-accent/10 bg-surface/70 px-3 py-2 backdrop-blur-glass sm:gap-4 sm:px-4 sm:py-3">
+    <header className="sticky top-0 z-5 flex items-center gap-3 border-b border-accent/10 bg-surface/70 px-3 py-2 backdrop-blur-glass sm:gap-4 sm:px-4 sm:py-3">
       {/* Logo - LeadsGrid only */}
       <div className="flex items-center gap-2 shrink-0 md:hidden block">
         <div className="relative flex items-center justify-center w-fit h-fit rounded-xl bg-gradient-to-br from-accent to-accent-secondary shadow-glow">

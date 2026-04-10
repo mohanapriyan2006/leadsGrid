@@ -3,6 +3,17 @@ import { Timestamp, type DocumentData } from "firebase/firestore";
 import type { Lead } from "../types/lead";
 import type { ManageLead, ManageLeadSource, ManageLeadStage } from "../types/manageLead";
 
+export type DiscoveryLeadAIIntent = {
+  score: number;
+  urgency: "low" | "medium" | "high";
+  buying_signals: string[];
+  decision_maker: "yes" | "no" | "unknown";
+  pain_point: string;
+  details: string;
+  category: "hiring" | "problem" | "switching" | "learning" | "discussion";
+  status: "qualified" | "unqualified";
+};
+
 export type LeadStatus = "new" | "contacted" | "proposal" | "won" | "lost";
 
 export type FirestoreLead = {
@@ -282,5 +293,38 @@ export const mapDiscoveryLeadToManageInput = (lead: Lead): CreateManageLeadInput
     notes: notes || null,
     score,
     urgency: toUrgencyFromScore(score),
+  };
+};
+
+export const mapDiscoveryLeadToManageInputWithAI = (
+  lead: Lead,
+  aiIntent?: DiscoveryLeadAIIntent | null,
+): CreateManageLeadInput => {
+  const base = mapDiscoveryLeadToManageInput(lead);
+  if (!aiIntent) {
+    return base;
+  }
+
+  const score = Math.max(1, Math.min(Math.round(aiIntent.score), 100));
+  const aiNotes = [
+    base.notes,
+    `AI Qualification: ${aiIntent.status}`,
+    `AI Category: ${aiIntent.category}`,
+    `AI Urgency: ${aiIntent.urgency}`,
+    `AI Pain Point: ${aiIntent.pain_point}`,
+    aiIntent.details ? `AI Details: ${aiIntent.details}` : null,
+    aiIntent.buying_signals.length ? `AI Buying Signals: ${aiIntent.buying_signals.join(", ")}` : null,
+    `AI Decision Maker: ${aiIntent.decision_maker}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
+  return {
+    ...base,
+    stage: aiIntent.status === "qualified" ? "QUALIFIED" : "NEW",
+    score,
+    urgency: aiIntent.urgency,
+    category: aiIntent.category,
+    notes: aiNotes || base.notes,
   };
 };

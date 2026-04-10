@@ -1,9 +1,12 @@
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+
 import type { ToneType } from "../../common/types/ui";
 import type { AdvancedLeadIntent } from "../services/leadAnalysisService";
 import type { HyperPersonalizedOutreachResult, Lead } from "../types/lead";
 import { AIIcon, initials } from "./leadsPagePrimitives";
 
-type LeadsDiscoveryDraftPanelProps = {
+type LeadsDiscoveryInsightPanelProps = {
   tone: ToneType;
   selectedLead: Lead | null;
   selectedIntent: AdvancedLeadIntent | null;
@@ -15,13 +18,16 @@ type LeadsDiscoveryDraftPanelProps = {
   canGenerateOutreach: boolean;
   isGenerating: boolean;
   isGeneratingOutreach: boolean;
+  isSavingLead?: boolean;
+  isLeadSaved?: boolean;
   onToneChange: (tone: ToneType) => void;
   onPainPointChange: (value: string) => void;
   onUserSkillsChange: (value: string) => void;
   onPortfolioSummaryChange: (value: string) => void;
   onAnalyze: () => void;
+  onSaveLead?: () => void;
   onGenerateOutreach: () => void;
-  onCopyInsights: () => Promise<void>;
+  onCopyInsights: (value: string) => Promise<void>;
   onCopyOutreach: () => Promise<void>;
   onOpenSource: () => void;
 };
@@ -41,7 +47,8 @@ const buildLeadSignals = (lead: Lead) => {
   if (lead.budget) signals.push("Budget signal detected");
   if (lead.email) signals.push("Contact channel available");
   if (lead.tags.length > 0) signals.push(`${lead.tags.length} topical tags`);
-  if (lead.decision_maker) signals.push(`Decision maker: ${lead.decision_maker}`);
+  if (lead.decision_maker)
+    signals.push(`Decision maker: ${lead.decision_maker}`);
   if (lead.status) signals.push(`Qualification: ${lead.status}`);
   if (lead.category) signals.push(`Category: ${lead.category}`);
   return signals.length > 0 ? signals : ["Needs deeper qualification"];
@@ -56,7 +63,31 @@ const toInsightBullets = (text: string) => {
     .slice(0, 5);
 };
 
-export const LeadsDiscoveryDraftPanel = ({
+const toAnalyzedInsightBullets = (intent: AdvancedLeadIntent | null) => {
+  if (!intent) return [];
+
+  const bullets = [
+    `Qualification: ${intent.status.toUpperCase()} (${intent.category})`,
+    `Intent score: ${intent.score} with ${intent.urgency} urgency`,
+    `Decision maker likelihood: ${intent.decision_maker}`,
+    `Pain point: ${intent.pain_point}`,
+  ];
+
+  if (intent.buying_signals.length > 0) {
+    bullets.push(`Buying signals: ${intent.buying_signals.join(", ")}`);
+  }
+
+  return bullets.slice(0, 5);
+};
+
+const shortenText = (value: string, limit = 360) => {
+  const cleaned = value.trim();
+  if (!cleaned) return "";
+  if (cleaned.length <= limit) return cleaned;
+  return `${cleaned.slice(0, limit - 3).trimEnd()}...`;
+};
+
+export const LeadsDiscoveryInsightPanel = ({
   tone,
   selectedLead,
   selectedIntent,
@@ -68,17 +99,27 @@ export const LeadsDiscoveryDraftPanel = ({
   canGenerateOutreach,
   isGenerating,
   isGeneratingOutreach,
+  isSavingLead = false,
+  isLeadSaved = false,
   onToneChange,
   onPainPointChange,
   onUserSkillsChange,
   onPortfolioSummaryChange,
   onAnalyze,
+  onSaveLead,
   onGenerateOutreach,
   onCopyInsights,
   onCopyOutreach,
   onOpenSource,
-}: LeadsDiscoveryDraftPanelProps) => {
+}: LeadsDiscoveryInsightPanelProps) => {
+  const [searchParams] = useSearchParams();
+  const isPageFocused = searchParams.get("focus") === "1";
+  const [showScrapedDetails, setShowScrapedDetails] = useState(false);
   const insightBullets = toInsightBullets(insightsText);
+  const analyzedInsightBullets = toAnalyzedInsightBullets(selectedIntent);
+  const displayInsightBullets =
+    insightBullets.length > 0 ? insightBullets : analyzedInsightBullets;
+  const analysisDetails = shortenText(selectedIntent?.details ?? "", 360);
   const leadSignals = selectedLead ? buildLeadSignals(selectedLead) : [];
   const skillsCount = userSkillsInput
     .split(",")
@@ -93,19 +134,30 @@ export const LeadsDiscoveryDraftPanel = ({
         : "Needs polish"
     : null;
 
+  useEffect(() => {
+    setShowScrapedDetails(false);
+  }, [selectedLead?.id]);
+
+  const stickyTopClass = isPageFocused
+    ? "lg:top-0 lg:max-h-[calc(100dvh-2rem)]"
+    : "lg:top-0 lg:max-h-[calc(100dvh-6rem)]";
+
   return (
-    <aside className="glass-card overflow-y-auto h-[calc(100vh-150px)] min-w-0 space-y-4 p-5 xl:sticky xl:top-0">
+    <aside
+      className={`glass-card min-w-0 space-y-4 self-start p-5 lg:sticky lg:overflow-y-auto ${stickyTopClass}`}
+    >
       <div className="border-b border-accent/10 pb-3">
         <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-content">
           <AIIcon />
-          Lead Intelligence
+          Lead Insight Console
           <span className="rounded bg-accent/20 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-accent">
             Connected
           </span>
         </div>
 
         <p className="mb-3 text-xs text-content-secondary">
-          Analyze lead signals and generate AI insights to prioritize outreach and personalize messaging.
+          Analyze lead signals and generate AI insights to prioritize outreach
+          and personalize messaging.
         </p>
       </div>
 
@@ -116,8 +168,12 @@ export const LeadsDiscoveryDraftPanel = ({
               {initials(selectedLead.author || selectedLead.id)}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-content">{selectedLead.author || selectedLead.id}</p>
-              <p className="truncate text-xs text-content-secondary">{selectedLead.title ?? "Unknown Role"}</p>
+              <p className="truncate text-sm font-semibold text-content">
+                {selectedLead.author || selectedLead.id}
+              </p>
+              <p className="truncate text-xs text-content-secondary">
+                {selectedLead.title ?? "Unknown Role"}
+              </p>
             </div>
             <span className="ml-auto rounded-lg border border-accent-secondary/30 bg-accent-secondary/10 px-2 py-1 text-sm font-bold text-accent-secondary">
               {selectedLead.score}
@@ -126,27 +182,85 @@ export const LeadsDiscoveryDraftPanel = ({
 
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="rounded-lg border border-accent/10 bg-surface/35 px-2 py-1.5 text-content-secondary">
-              Source: <span className="text-content">{sourceLabel[selectedLead.source]}</span>
+              Source:{" "}
+              <span className="text-content">
+                {sourceLabel[selectedLead.source]}
+              </span>
             </div>
             <div className="rounded-lg border border-accent/10 bg-surface/35 px-2 py-1.5 text-content-secondary">
-              Date: <span className="text-content">{new Date(selectedLead.created_at).toLocaleDateString()}</span>
+              Date:{" "}
+              <span className="text-content">
+                {new Date(selectedLead.created_at).toLocaleDateString()}
+              </span>
             </div>
             <div className="rounded-lg border border-accent/10 bg-surface/35 px-2 py-1.5 text-content-secondary">
-              Email: <span className="text-content">{selectedLead.email ? "Available" : "N/A"}</span>
+              Email:{" "}
+              <span className="text-content">
+                {selectedLead.email ? "Available" : "N/A"}
+              </span>
             </div>
             <div className="rounded-lg border border-accent/10 bg-surface/35 px-2 py-1.5 text-content-secondary">
-              Location: <span className="text-content">{selectedLead.location || "Unknown"}</span>
+              Location:{" "}
+              <span className="text-content">
+                {selectedLead.location || "Unknown"}
+              </span>
             </div>
           </div>
 
           <div>
-            <p className="mb-1 text-[11px] uppercase tracking-[0.08em] text-content-tertiary">Intent Summary</p>
-            <p className="text-xs leading-5 text-content-secondary">{selectedLead.summary}</p>
+            <p className="mb-1 text-[11px] uppercase tracking-[0.08em] text-content-tertiary">
+              Intent Summary
+            </p>
+            <p className="text-xs leading-5 text-content-secondary">
+              {selectedLead.summary}
+            </p>
           </div>
+
+          <button
+            type="button"
+            className="glass-btn w-full px-2 py-2 text-xs"
+            onClick={() => setShowScrapedDetails((prev) => !prev)}
+          >
+            {showScrapedDetails ? "Hide Scraped Details" : "More Details"}
+          </button>
+
+          {showScrapedDetails ? (
+            <div className="space-y-2 rounded-lg border border-accent/15 bg-surface/40 p-2.5 text-xs text-content-secondary">
+              <p className="text-[11px] uppercase tracking-[0.08em] text-content-tertiary">
+                Scraped Details
+              </p>
+              <p>
+                <span className="text-content-tertiary">Title:</span>{" "}
+                {selectedLead.title || "N/A"}
+              </p>
+              <p>
+                <span className="text-content-tertiary">Author:</span>{" "}
+                {selectedLead.author || "N/A"}
+              </p>
+              <p>
+                <span className="text-content-tertiary">URL:</span>{" "}
+                {selectedLead.permalink || "N/A"}
+              </p>
+              <p>
+                <span className="text-content-tertiary">Source ID:</span>{" "}
+                {selectedLead.id}
+              </p>
+              <div>
+                <p className="mb-1 text-content-tertiary">Raw snippet</p>
+                <div className="max-h-40 overflow-y-auto whitespace-pre-wrap rounded border border-accent/10 bg-surface/50 p-2 leading-5 text-content-secondary">
+                  {selectedLead.content ||
+                    selectedLead.summary ||
+                    "No scraped text available."}
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           {selectedIntent ? (
             <div className="rounded-lg border border-accent-secondary/20 bg-accent-secondary/10 p-2.5">
-              <p className="mb-1 text-[11px] uppercase tracking-[0.08em] text-content-tertiary">Advanced Qualification</p>
+              <p className="mb-1 text-[11px] uppercase tracking-[0.08em] text-content-tertiary">
+                Advanced Qualification
+              </p>
               <div className="flex flex-wrap gap-1.5">
                 <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
                   {selectedIntent.status}
@@ -161,9 +275,13 @@ export const LeadsDiscoveryDraftPanel = ({
                   Urgency: {selectedIntent.urgency}
                 </span>
               </div>
-              <p className="mt-2 text-xs text-content-secondary">Pain: {selectedIntent.pain_point}</p>
+              <p className="mt-2 text-xs text-content-secondary">
+                Pain: {selectedIntent.pain_point}
+              </p>
               {selectedIntent.buying_signals.length > 0 ? (
-                <p className="mt-1 text-xs text-content-secondary">Signals: {selectedIntent.buying_signals.join(" • ")}</p>
+                <p className="mt-1 text-xs text-content-secondary">
+                  Signals: {selectedIntent.buying_signals.join(" • ")}
+                </p>
               ) : null}
             </div>
           ) : null}
@@ -188,11 +306,20 @@ export const LeadsDiscoveryDraftPanel = ({
       )}
 
       <div>
-        <p className="mb-2 text-xs uppercase tracking-[0.1em] text-content-tertiary">AI Insights</p>
-        <div className={`glass-input min-h-[180px] w-full p-3 text-sm ${isGenerating ? "opacity-80" : ""}`}>
-          {insightBullets.length > 0 ? (
+        <p className="mb-2 text-xs uppercase tracking-[0.1em] text-content-tertiary">
+          AI Insights
+        </p>
+        <div
+          className={`glass-input min-h-[180px] w-full p-3 text-sm ${isGenerating ? "opacity-80" : ""}`}
+        >
+          {analysisDetails ? (
+            <p className="mb-3 rounded-lg border border-accent/15 bg-accent/5 p-2 text-xs leading-5 text-content-secondary">
+              {analysisDetails}
+            </p>
+          ) : null}
+          {displayInsightBullets.length > 0 ? (
             <ul className="space-y-2 text-content-secondary">
-              {insightBullets.map((line, index) => (
+              {displayInsightBullets.map((line, index) => (
                 <li key={`${line}-${index}`} className="leading-6">
                   {line}
                 </li>
@@ -200,17 +327,62 @@ export const LeadsDiscoveryDraftPanel = ({
             </ul>
           ) : (
             <p className="text-content-tertiary">
-              Run AI analysis to extract pain points, buying signals, and the best next action.
+              Run AI analysis to extract pain points, buying signals, and the
+              best next action.
             </p>
           )}
         </div>
       </div>
 
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <button
+          type="button"
+          className="accent-btn px-2 py-2 text-xs"
+          onClick={onAnalyze}
+          disabled={!selectedLead || isGenerating}
+        >
+          Analyze Lead
+        </button>
+        <button
+          type="button"
+          className="glass-btn px-2 py-2 text-xs"
+          onClick={onSaveLead}
+          disabled={!selectedLead || isSavingLead || isLeadSaved}
+        >
+          {isLeadSaved ? "Saved" : isSavingLead ? "Saving..." : "Save Lead"}
+        </button>
+        <button
+          type="button"
+          className="glass-btn px-2 py-2 text-xs"
+          onClick={() => {
+            const textToCopy = [analysisDetails, ...displayInsightBullets]
+              .filter(Boolean)
+              .join("\n");
+            void onCopyInsights(textToCopy);
+          }}
+          disabled={!analysisDetails && displayInsightBullets.length === 0}
+        >
+          Copy Insights
+        </button>
+        <button
+          type="button"
+          className="glass-btn px-2 py-2 text-xs"
+          onClick={onOpenSource}
+          disabled={!selectedLead?.permalink}
+        >
+          Open Source
+        </button>
+      </div>
+
       <div className="space-y-2 rounded-xl border border-accent/10 bg-surface/40 p-3">
-        <p className="text-xs uppercase tracking-[0.1em] text-content-tertiary">Hyper-Personalized Outreach</p>
+        <p className="text-xs uppercase tracking-[0.1em] text-content-tertiary">
+          Hyper-Personalized Outreach
+        </p>
 
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-[0.08em] text-content-tertiary">Pain Point</label>
+          <label className="text-[11px] uppercase tracking-[0.08em] text-content-tertiary">
+            Pain Point
+          </label>
           <textarea
             value={painPointInput}
             onChange={(event) => onPainPointChange(event.target.value)}
@@ -221,18 +393,24 @@ export const LeadsDiscoveryDraftPanel = ({
         </div>
 
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-[0.08em] text-content-tertiary">Your Skills</label>
+          <label className="text-[11px] uppercase tracking-[0.08em] text-content-tertiary">
+            Your Skills
+          </label>
           <input
             value={userSkillsInput}
             onChange={(event) => onUserSkillsChange(event.target.value)}
             placeholder="FastAPI, React, CRM automation"
             className="glass-input w-full px-2 py-2 text-xs text-content"
           />
-          <p className="text-[11px] text-content-tertiary">{skillsCount} skills detected</p>
+          <p className="text-[11px] text-content-tertiary">
+            {skillsCount} skills detected
+          </p>
         </div>
 
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-[0.08em] text-content-tertiary">Portfolio Summary</label>
+          <label className="text-[11px] uppercase tracking-[0.08em] text-content-tertiary">
+            Portfolio Summary
+          </label>
           <textarea
             value={portfolioSummaryInput}
             onChange={(event) => onPortfolioSummaryChange(event.target.value)}
@@ -240,7 +418,9 @@ export const LeadsDiscoveryDraftPanel = ({
             placeholder="Relevant outcomes you've delivered"
             className="glass-input w-full resize-none px-2 py-2 text-xs text-content"
           />
-          <p className="text-[11px] text-content-tertiary">{portfolioSummaryInput.trim().length}/2000 chars</p>
+          <p className="text-[11px] text-content-tertiary">
+            {portfolioSummaryInput.trim().length}/2000 chars
+          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
@@ -248,7 +428,9 @@ export const LeadsDiscoveryDraftPanel = ({
             type="button"
             className="accent-btn px-2 py-2 text-xs"
             onClick={onGenerateOutreach}
-            disabled={!selectedLead || isGeneratingOutreach || !canGenerateOutreach}
+            disabled={
+              !selectedLead || isGeneratingOutreach || !canGenerateOutreach
+            }
           >
             {isGeneratingOutreach ? "Generating..." : "Generate Outreach"}
           </button>
@@ -271,16 +453,31 @@ export const LeadsDiscoveryDraftPanel = ({
                 {qualityLabel}
               </span>
               {outreachResult.metadata.rewritten ? (
-                <span className="text-[10px] uppercase tracking-[0.08em] text-content-secondary">Auto-polished</span>
+                <span className="text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                  Auto-polished
+                </span>
               ) : null}
             </div>
-            <p className="text-xs leading-5 text-content">{outreachResult.message}</p>
+            <p className="text-xs leading-5 text-content">
+              {outreachResult.message}
+            </p>
             <div className="grid grid-cols-2 gap-1 text-[11px] text-content-secondary">
               <span>Provider: {outreachResult.metadata.provider}</span>
-              <span>Score: {Math.round(outreachResult.metadata.personalization_score * 100)}%</span>
-              <span>Compliance: {Math.round(outreachResult.metadata.compliance_score * 100)}%</span>
+              <span>
+                Score:{" "}
+                {Math.round(
+                  outreachResult.metadata.personalization_score * 100,
+                )}
+                %
+              </span>
+              <span>
+                Compliance:{" "}
+                {Math.round(outreachResult.metadata.compliance_score * 100)}%
+              </span>
               <span>Words: {outreachResult.metadata.word_count}</span>
-              <span>Soft CTA: {outreachResult.metadata.has_soft_cta ? "Yes" : "No"}</span>
+              <span>
+                Soft CTA: {outreachResult.metadata.has_soft_cta ? "Yes" : "No"}
+              </span>
             </div>
             {outreachResult.metadata.violations.length > 0 ? (
               <div className="rounded border border-warning/25 bg-warning/10 p-2 text-[11px] text-warning">
@@ -297,7 +494,9 @@ export const LeadsDiscoveryDraftPanel = ({
 
       {selectedLead ? (
         <div>
-          <p className="mb-2 text-xs uppercase tracking-[0.1em] text-content-tertiary">Signal Highlights</p>
+          <p className="mb-2 text-xs uppercase tracking-[0.1em] text-content-tertiary">
+            Signal Highlights
+          </p>
           <div className="space-y-1.5">
             {leadSignals.map((signal) => (
               <div
@@ -311,37 +510,9 @@ export const LeadsDiscoveryDraftPanel = ({
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <button
-          type="button"
-          className="accent-btn px-2 py-2 text-xs"
-          onClick={onAnalyze}
-          disabled={!selectedLead || isGenerating}
-        >
-          Analyze Lead
-        </button>
-        <button
-          type="button"
-          className="glass-btn px-2 py-2 text-xs"
-          onClick={() => {
-            void onCopyInsights();
-          }}
-          disabled={!insightsText}
-        >
-          Copy Insights
-        </button>
-        <button
-          type="button"
-          className="glass-btn px-2 py-2 text-xs"
-          onClick={onOpenSource}
-          disabled={!selectedLead?.permalink}
-        >
-          Open Source
-        </button>
-      </div>
-
       <div className="rounded-xl border border-accent-tertiary/20 bg-accent-tertiary/10 px-3 py-2 text-xs text-content-secondary">
-        <strong className="text-accent-tertiary">Tip:</strong> Validate AI suggestions against the source post before CRM outreach.
+        <strong className="text-accent-tertiary">Tip:</strong> Validate AI
+        suggestions against the source post before CRM outreach.
       </div>
     </aside>
   );

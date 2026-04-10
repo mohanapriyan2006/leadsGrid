@@ -205,6 +205,17 @@
     min-height: 100dvh;
   }
 
+  .focus-shell .page-with-bg {
+    min-height: 100dvh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .focus-shell .page-scroll-container {
+    min-height: 100dvh;
+    height: 100dvh;
+  }
+
   .focus-shell .focus-fill-height {
     min-height: 100dvh;
   }

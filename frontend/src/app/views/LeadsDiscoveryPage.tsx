@@ -4,7 +4,7 @@ import bgConnecting from "../../assets/bg-images/connecting-teams.svg";
 import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButton";
 import { PageBackground } from "../../components/ui/PageBackground";
 import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
-import { LeadsDiscoveryDraftPanel } from "../../features/leads/components/LeadsDiscoveryDraftPanel";
+import { LeadsDiscoveryInsightPanel } from "../../features/leads/components/LeadsDiscoveryDraftPanel";
 import { LeadsDiscoveryFilters } from "../../features/leads/components/LeadsDiscoveryFilters";
 import { LeadsDiscoveryResultCard } from "../../features/leads/components/LeadsDiscoveryResultCard";
 import { LeadsDiscoverySearchBar } from "../../features/leads/components/LeadsDiscoverySearchBar";
@@ -44,6 +44,7 @@ export const LeadsDiscoveryPage = () => {
   const [draftError, setDraftError] = useState<string | null>(null);
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
   const [savingLeadId, setSavingLeadId] = useState<string | null>(null);
+  const [savedLeadIds, setSavedLeadIds] = useState<Record<string, true>>({});
   const [analyzingLeadId, setAnalyzingLeadId] = useState<string | null>(null);
   const [isBulkAnalyzing, setIsBulkAnalyzing] = useState(false);
   const [bulkAnalyzeProgress, setBulkAnalyzeProgress] = useState(0);
@@ -54,11 +55,12 @@ export const LeadsDiscoveryPage = () => {
     "I build lead-generation and outreach systems that help sales teams convert qualified prospects faster.",
   );
   const [submittedQuery, setSubmittedQuery] = useState("");
+  const [submittedSources, setSubmittedSources] = useState<Lead["source"][]>(sources);
   const [advancedIntentByLeadId, setAdvancedIntentByLeadId] = useState<Record<string, AdvancedLeadIntent>>({});
 
   const { leads, isLoading, isFetching, error } = useLeads({
     query: submittedQuery,
-    selectedSources: sources,
+    selectedSources: submittedSources,
     limit: 16,
   });
 
@@ -216,11 +218,11 @@ export const LeadsDiscoveryPage = () => {
     return { all, hotQualified, highUrgency, needsNurture };
   }, [advancedIntentByLeadId, sortedLeads]);
 
-  const draftText = isGenerating
-    ? "Generating..."
-    : typeof generatedMessage === "string"
-      ? generatedMessage
-      : generatedMessage?.message ?? "";
+  // const draftText = isGenerating
+  //   ? "Generating..."
+  //   : typeof generatedMessage === "string"
+  //     ? generatedMessage
+  //     : generatedMessage?.message ?? "";
 
   const analyzeLeadIntent = async (lead: Lead, force = false): Promise<AdvancedLeadIntent> => {
     const cached = advancedIntentByLeadId[lead.id];
@@ -322,10 +324,10 @@ export const LeadsDiscoveryPage = () => {
     }
   };
 
-  const handleCopyDraft = async () => {
-    if (!draftText) return;
+  const handleCopyText = async (text : string) => {
+    if (!text) return;
     try {
-      await navigator.clipboard.writeText(draftText);
+      await navigator.clipboard.writeText(text);
     } catch {
       // no-op
     }
@@ -410,17 +412,37 @@ export const LeadsDiscoveryPage = () => {
   };
 
   const handleSaveLead = async (lead: Lead) => {
+    if (savedLeadIds[lead.id]) {
+      return;
+    }
+
     setSavingLeadId(lead.id);
     setSaveFeedback(null);
+
+    let advancedIntent: AdvancedLeadIntent | null = null;
     try {
-      const advancedIntent = await analyzeLeadIntent(lead);
-      if (advancedIntent.status !== "qualified") {
+      try {
+        advancedIntent = await analyzeLeadIntent(lead);
+      } catch {
+        advancedIntent = null;
+      }
+
+      if (advancedIntent && advancedIntent.status !== "qualified") {
         setSaveFeedback(`Not saved: lead marked ${advancedIntent.status} (${advancedIntent.category}).`);
         return;
       }
 
-      const saved = await leadService.saveDiscoveryLeadAsManageLead(lead);
-      setSaveFeedback(`Saved ${saved.name} to Manage Leads (${advancedIntent.category}, score ${advancedIntent.score}).`);
+      const saved = await leadService.saveDiscoveryLeadAsManageLead(lead, {
+        aiIntent: advancedIntent,
+      });
+
+      setSavedLeadIds((prev) => ({ ...prev, [lead.id]: true }));
+
+      if (advancedIntent) {
+        setSaveFeedback(`Saved ${saved.name} to Manage Leads (${advancedIntent.category}, score ${advancedIntent.score}).`);
+      } else {
+        setSaveFeedback(`Saved ${saved.name} to Manage Leads using fallback rules.`);
+      }
     } catch (error) {
       setAnalyzingLeadId(null);
       const reason = error instanceof Error ? error.message : "Unknown save error";
@@ -436,9 +458,11 @@ export const LeadsDiscoveryPage = () => {
     setSelectedLeadId(null);
     setTriageQueue("all");
     setAdvancedIntentByLeadId({});
+    setSavedLeadIds({});
     setDraftError(null);
     setOutreachError(null);
     setSaveFeedback(null);
+    setSubmittedSources(sources);
     setSubmittedQuery(trimmed);
   };
 
@@ -446,10 +470,10 @@ export const LeadsDiscoveryPage = () => {
     <>
       <PageBackground image={bgConnecting} tint="rgba(52, 191, 251, 0.66)" />
       <ResponsivePageLayout
-        contentClassName="w-full min-w-0 overflow-x-hidden space-y-4"
+        contentClassName="w-full h-screen min-w-0 overflow-x-hidden space-y-4"
       >
         <header className="glass-card-lg p-5">
-          <div className="flex flex-wrap items-start justify-between gap-5">
+          <div className="flex items-start justify-between gap-5">
             <div>
               <p className="text-[11px] uppercase tracking-[0.14em] text-content-tertiary">Lead Intelligence</p>
               <h2 className="mt-1 text-2xl font-semibold text-content sm:text-3xl">
@@ -541,9 +565,9 @@ export const LeadsDiscoveryPage = () => {
               <button
                 type="button"
                 onClick={() => setTriageQueue("all")}
-                className={`rounded-lg border px-3 py-2 text-left text-xs transition ${triageQueue === "all"
-                    ? "border-accent/30 bg-accent/10 text-content"
-                    : "border-accent/10 bg-surface/40 text-content-secondary hover:border-accent/20"
+                className={`rounded-lg border px-3 py-2 text-left text-xs  transition ${triageQueue === "all"
+                    ? "border-accent/50 bg-accent/50 text-content"
+                    : "border-accent/40 bg-surface/60 text-content-secondary hover:border-accent/50"
                   }`}
               >
                 <p className="uppercase tracking-[0.08em]">All Leads</p>
@@ -552,9 +576,9 @@ export const LeadsDiscoveryPage = () => {
               <button
                 type="button"
                 onClick={() => setTriageQueue("hot_qualified")}
-                className={`rounded-lg border px-3 py-2 text-left text-xs transition ${triageQueue === "hot_qualified"
-                    ? "border-success/35 bg-success/10 text-content"
-                    : "border-accent/10 bg-surface/40 text-content-secondary hover:border-accent/20"
+                className={`rounded-lg border px-3 py-2 text-left text-xs  transition ${triageQueue === "hot_qualified"
+                    ? "border-success/50 bg-success/50 text-content"
+                    : "border-accent/40 bg-surface/60 text-content-secondary hover:border-accent/50"
                   }`}
               >
                 <p className="uppercase tracking-[0.08em]">Hot Qualified</p>
@@ -564,8 +588,8 @@ export const LeadsDiscoveryPage = () => {
                 type="button"
                 onClick={() => setTriageQueue("high_urgency")}
                 className={`rounded-lg border px-3 py-2 text-left text-xs transition ${triageQueue === "high_urgency"
-                    ? "border-warning/35 bg-warning/10 text-content"
-                    : "border-accent/10 bg-surface/40 text-content-secondary hover:border-accent/20"
+                    ? "border-warning/50 bg-warning/50 text-content"
+                    : "border-accent/40 bg-surface/60 text-content-secondary hover:border-accent/50"
                   }`}
               >
                 <p className="uppercase tracking-[0.08em]">High Urgency</p>
@@ -575,8 +599,8 @@ export const LeadsDiscoveryPage = () => {
                 type="button"
                 onClick={() => setTriageQueue("needs_nurture")}
                 className={`rounded-lg border px-3 py-2 text-left text-xs transition ${triageQueue === "needs_nurture"
-                    ? "border-info/35 bg-info/10 text-content"
-                    : "border-accent/10 bg-surface/40 text-content-secondary hover:border-accent/20"
+                    ? "border-info/50 bg-info/50 text-content"
+                    : "border-accent/40 bg-surface/60 text-content-secondary hover:border-accent/50"
                   }`}
               >
                 <p className="uppercase tracking-[0.08em]">Needs Nurture</p>
@@ -660,11 +684,11 @@ export const LeadsDiscoveryPage = () => {
             </div>
           </section>
 
-          <LeadsDiscoveryDraftPanel
+          <LeadsDiscoveryInsightPanel
             tone={tone}
             selectedLead={selectedLead}
             selectedIntent={selectedIntent}
-            insightsText={draftText}
+            insightsText={""}
             outreachResult={outreachResult}
             painPointInput={painPointInput}
             userSkillsInput={userSkillsInput}
@@ -672,6 +696,8 @@ export const LeadsDiscoveryPage = () => {
             canGenerateOutreach={canGenerateOutreach}
             isGenerating={isGenerating}
             isGeneratingOutreach={isGeneratingHyperOutreach}
+            isSavingLead={Boolean(selectedLead && savingLeadId === selectedLead.id)}
+            isLeadSaved={Boolean(selectedLead && savedLeadIds[selectedLead.id])}
             onToneChange={setTone}
             onPainPointChange={setPainPointInput}
             onUserSkillsChange={setUserSkillsInput}
@@ -681,10 +707,15 @@ export const LeadsDiscoveryPage = () => {
                 void handleAnalyzeLead(selectedLead);
               }
             }}
+            onSaveLead={() => {
+              if (selectedLead) {
+                void handleSaveLead(selectedLead);
+              }
+            }}
             onGenerateOutreach={() => {
               void handleGenerateOutreach();
             }}
-            onCopyInsights={handleCopyDraft}
+            onCopyInsights={(text : string) => handleCopyText(text)}
             onCopyOutreach={handleCopyOutreach}
             onOpenSource={handleOpenSource}
           />

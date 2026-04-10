@@ -16,6 +16,7 @@ export type AdvancedLeadIntent = {
   buying_signals: string[];
   decision_maker: "yes" | "no" | "unknown";
   pain_point: string;
+  details: string;
   category: "hiring" | "problem" | "switching" | "learning" | "discussion";
   status: "qualified" | "unqualified";
 };

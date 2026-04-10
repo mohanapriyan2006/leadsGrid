@@ -141,3 +141,25 @@ def test_generate_hyper_personalized_outreach_rewrite_pass() -> None:
     assert result.metadata.rewritten is True
     assert result.metadata.word_count <= 80
     assert "Dear Sir" not in result.message
+
+
+def test_generate_hyper_personalized_outreach_fallback_when_providers_fail() -> None:
+    service = AIPromptsService()
+
+    with patch.object(service, "_call_gemini", new=AsyncMock(side_effect=RuntimeError("gemini down"))), patch.object(
+        service,
+        "_call_groq",
+        new=AsyncMock(side_effect=RuntimeError("groq down")),
+    ):
+        result = asyncio.run(service.generate_hyper_personalized_outreach(
+            lead_text="Need a better conversion process for demo leads.",
+            pain_point="Lead-to-demo conversion is low.",
+            user_skills=["CRM automation", "FastAPI"],
+            portfolio_summary="Built sales workflows that improve conversion.",
+            name="Ava",
+            tone="professional",
+        ))
+
+    assert result.message
+    assert result.metadata.provider == "fallback"
+    assert result.metadata.word_count <= 80

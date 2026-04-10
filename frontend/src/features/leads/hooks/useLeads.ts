@@ -21,6 +21,9 @@ export const useLeads = (params: { query: string; selectedSources: Lead["source"
       return leadList;
     },
     staleTime: 20_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
   });
 
   return {

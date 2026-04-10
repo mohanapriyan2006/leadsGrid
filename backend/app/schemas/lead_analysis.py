@@ -16,6 +16,7 @@ class AdvancedLeadIntentScore(BaseModel):
     buying_signals: list[str] = Field(default_factory=list)
     decision_maker: str = Field(..., pattern="^(yes|no|unknown)$")
     pain_point: str = Field(..., min_length=1, max_length=500)
+    details: str = Field(..., min_length=1, max_length=1200)
     category: str = Field(..., pattern="^(hiring|problem|switching|learning|discussion)$")
     status: str = Field(..., pattern="^(qualified|unqualified)$")
 

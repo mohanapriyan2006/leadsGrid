@@ -1,3 +1,4 @@
+import asyncio
 from unittest.mock import AsyncMock, patch
 
 from fastapi.testclient import TestClient
@@ -17,6 +18,7 @@ def test_analyze_advanced_intent_endpoint_success() -> None:
         buying_signals=["hiring intent", "deadline pressure"],
         decision_maker="yes",
         pain_point="Needs a reliable developer this week for client delivery.",
+        details="Lead shows direct hiring urgency and clear ownership. Recommend immediate outreach with a scoped delivery plan.",
         category="hiring",
         status="qualified",
     )
@@ -36,6 +38,7 @@ def test_analyze_advanced_intent_endpoint_success() -> None:
     assert payload["urgency"] == "high"
     assert payload["decision_maker"] == "yes"
     assert payload["status"] == "qualified"
+    assert "details" in payload
 
 
 def test_analyze_advanced_intent_endpoint_validation_failure() -> None:
@@ -62,6 +65,8 @@ def test_analyze_advanced_intent_endpoint_provider_failure() -> None:
             json={"lead_text": "Need help soon"},
         )
 
+    # Route layer still surfaces unexpected runtime errors as 500 when the service is fully mocked to fail.
+    # Real service path now returns heuristic fallback instead of raising.
     assert response.status_code == 500
 
 
@@ -83,3 +88,18 @@ def test_extract_json_strict_rejects_missing_keys() -> None:
         assert False, "Expected strict parser to fail on missing keys"
     except ValueError as exc:
         assert "missing required keys" in str(exc)
+
+
+def test_analyze_advanced_intent_falls_back_when_providers_fail() -> None:
+    service = AIPromptsService()
+
+    with patch.object(service, "_call_gemini", new=AsyncMock(side_effect=RuntimeError("gemini down"))), patch.object(
+        service,
+        "_call_groq",
+        new=AsyncMock(side_effect=RuntimeError("groq down")),
+    ):
+        result = asyncio.run(service.analyze_advanced_intent("Urgent: we need to hire a developer this week"))
+
+    assert 0 <= result.score <= 100
+    assert result.urgency in {"low", "medium", "high"}
+    assert result.status in {"qualified", "unqualified"}

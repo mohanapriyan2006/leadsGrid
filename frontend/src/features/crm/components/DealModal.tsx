@@ -45,6 +45,33 @@ const getProgress = (status: DealStatus) => {
   }
 };
 
+const getHealthLabel = (score: number, daysInStage: number) => {
+  if (score >= 80 && daysInStage <= 10) return "Excellent";
+  if (score >= 65 && daysInStage <= 20) return "Healthy";
+  if (score >= 50) return "Watch";
+  return "At Risk";
+};
+
+const getRiskLabel = (score: number, daysInStage: number) => {
+  if (score < 50 || daysInStage > 30) return "High";
+  if (score < 70 || daysInStage > 14) return "Medium";
+  return "Low";
+};
+
+const getRecommendedAction = (status: DealStatus, daysInStage: number) => {
+  if (status === "negotiation") return daysInStage > 7 ? "Send follow-up with clear timeline" : "Confirm priorities and scope";
+  if (status === "contracted") return "Share proposal and remove blockers";
+  if (status === "in-progress") return "Collect feedback and secure close plan";
+  return "Send handoff summary and request referral";
+};
+
+const getStagePlaybook = (status: DealStatus) => {
+  if (status === "negotiation") return ["Validate decision maker", "Clarify business pain", "Schedule proposal review"];
+  if (status === "contracted") return ["Confirm pricing terms", "Set approval deadline", "Prepare onboarding checklist"];
+  if (status === "in-progress") return ["Track delivery milestones", "Share status updates", "Define success metrics"];
+  return ["Document outcomes", "Capture testimonial", "Identify upsell path"];
+};
+
 export const DealModal = ({
   deal,
   open,
@@ -69,6 +96,11 @@ export const DealModal = ({
       }
     : { right: 24, top: 96 };
 
+  const health = getHealthLabel(deal.score, deal.daysInStage);
+  const risk = getRiskLabel(deal.score, deal.daysInStage);
+  const recommendation = getRecommendedAction(deal.status, deal.daysInStage);
+  const playbook = getStagePlaybook(deal.status);
+
   return (
     <AnimatePresence>
       {open ? (
@@ -85,7 +117,7 @@ export const DealModal = ({
           onClick={isHover ? undefined : onClose}
         >
           <motion.section
-            className={`glass-card-lg w-full p-4 ${isHover ? "max-w-sm" : "max-w-md"}`}
+            className={`glass-card-lg w-full p-4 ${isHover ? "max-w-sm" : "max-w-2xl"}`}
             drag
             dragMomentum={false}
             initial={{ opacity: 0, y: 10, scale: 0.985 }}
@@ -130,11 +162,13 @@ export const DealModal = ({
                 Status {deal.status}
               </span>
               <span className="badge-accent">Value {deal.value}</span>
+              <span className="badge-warning">Health {health}</span>
+              <span className="badge-danger">Risk {risk}</span>
             </div>
 
             <div className="glass-card-sm mt-4 p-3 text-xs">
               <p className="text-content-tertiary uppercase tracking-[0.08em] mb-2">Contact Info</p>
-              <div className="grid gap-1 text-content-secondary">
+              <div className="grid gap-1 text-content-secondary md:grid-cols-2">
                 {deal.email && <p>📧 {deal.email}</p>}
                 {deal.phone && <p>📱 {deal.phone}</p>}
                 <p>📅 Last Action: {deal.lastAction}</p>
@@ -142,7 +176,7 @@ export const DealModal = ({
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4">
               <div className="glass-card-sm p-2 text-center">
                 <p className="text-[10px] text-content-tertiary uppercase tracking-[0.08em]">Deal Value</p>
                 <p className="text-sm font-semibold text-success">{deal.value}</p>
@@ -150,6 +184,29 @@ export const DealModal = ({
               <div className="glass-card-sm p-2 text-center">
                 <p className="text-[10px] text-content-tertiary uppercase tracking-[0.08em]">Quality Score</p>
                 <p className="text-sm font-semibold text-accent">{deal.score}/100</p>
+              </div>
+              <div className="glass-card-sm p-2 text-center">
+                <p className="text-[10px] text-content-tertiary uppercase tracking-[0.08em]">Progress</p>
+                <p className="text-sm font-semibold text-info">{getProgress(deal.status)}%</p>
+              </div>
+              <div className="glass-card-sm p-2 text-center">
+                <p className="text-[10px] text-content-tertiary uppercase tracking-[0.08em]">Stage Time</p>
+                <p className="text-sm font-semibold text-warning">{deal.daysInStage}d</p>
+              </div>
+            </div>
+
+            <div className="glass-card-sm mt-4 p-3 text-xs">
+              <p className="text-content-tertiary uppercase tracking-[0.08em] mb-2">Deal Intelligence</p>
+              <div className="grid gap-2 text-content-secondary md:grid-cols-2">
+                <p>Recommended Next Step: <span className="text-content">{recommendation}</span></p>
+                <p>Current Health: <span className="text-content">{health}</span></p>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {playbook.map((item) => (
+                  <span key={item} className="badge-accent">
+                    {item}
+                  </span>
+                ))}
               </div>
             </div>
 

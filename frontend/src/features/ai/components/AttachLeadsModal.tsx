@@ -43,6 +43,22 @@ export const AttachLeadsModal = ({
     });
   }, [leads, search]);
 
+  const filteredLeadIds = useMemo(() => filteredLeads.map((lead) => lead.id), [filteredLeads]);
+  const allFilteredSelected =
+    filteredLeadIds.length > 0 && filteredLeadIds.every((leadId) => draftSelection.includes(leadId));
+
+  const toggleSelectAllFiltered = () => {
+    if (filteredLeadIds.length === 0) return;
+
+    setDraftSelection((prev) => {
+      if (allFilteredSelected) {
+        return prev.filter((id) => !filteredLeadIds.includes(id));
+      }
+
+      return Array.from(new Set([...prev, ...filteredLeadIds]));
+    });
+  };
+
   const toggleLead = (leadId: string) => {
     setDraftSelection((prev) =>
       prev.includes(leadId) ? prev.filter((id) => id !== leadId) : [...prev, leadId],
@@ -111,8 +127,16 @@ export const AttachLeadsModal = ({
           <span className="text-xs text-content-secondary">{draftSelection.length} selected</span>
           <button
             type="button"
+            onClick={toggleSelectAllFiltered}
+            disabled={filteredLeadIds.length === 0}
+            className="ml-auto rounded-lg border border-accent/[0.1] px-2.5 py-1 text-xs text-content-secondary transition hover:text-content disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {allFilteredSelected ? "Unselect All" : "Select All"}
+          </button>
+          <button
+            type="button"
             onClick={() => setDraftSelection([])}
-            className="ml-auto rounded-lg border border-accent/[0.1] px-2.5 py-1 text-xs text-content-secondary transition hover:text-content"
+            className="rounded-lg border border-accent/[0.1] px-2.5 py-1 text-xs text-content-secondary transition hover:text-content"
           >
             Clear
           </button>

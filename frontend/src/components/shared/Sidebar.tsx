@@ -22,9 +22,11 @@ const AIIcon = ({ isActive }: { isActive: boolean }) => (
       : "bg-gradient-to-br from-purple-500/20 to-violet-600/20 group-hover:shadow-[0_0_15px_rgba(139,92,246,0.4)]"
     }`}>
     <Brain className={`w-4 h-4 ${isActive ? "text-white" : "text-purple-400"}`} />
+    {/* Sparkle effects */}
+    <Sparkles className={`absolute -top-1 -right-1 w-3 h-3 text-yellow-400 animate-pulse `} />
     {/* Pulsing glow rings */}
-    <span className={`absolute inset-0 rounded-lg animate-ping bg-purple-500/20 `} />
-    <span className={`absolute -inset-1 rounded-xl blur-sm ${isActive ? "bg-gradient-to-r from-purple-600 to-violet-600 animate-pulse" : "hidden"}`} />
+    <span className={`absolute inset-0 rounded-lg animate-ping bg-purple-500/40 `} />
+    <span className={`absolute -inset-1 rounded-xl blur-sm ${isActive ? "bg-gradient-to-r from-purple-600/40 to-violet-600/40 animate-pulse" : "hidden"}`} />
   </div>
 );
 

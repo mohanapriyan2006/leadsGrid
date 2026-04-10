@@ -55,11 +55,19 @@ export const CRMPage = () => {
   const [disableDetailsPopup, setDisableDetailsPopup] = useState(false);
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [editDraft, setEditDraft] = useState<NewDealDraft | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   const [newDeal, setNewDeal] = useState<NewDealDraft>({ ...INITIAL_NEW_DEAL });
+
+  const NEXT_DEAL_STATUS: Record<DealStatus, DealStatus | null> = {
+    negotiation: "contracted",
+    contracted: "in-progress",
+    "in-progress": "closed",
+    closed: null,
+  };
 
   useEffect(() => {
     const nextDeals = centralizedLeads
@@ -79,6 +87,13 @@ export const CRMPage = () => {
           value: formatCurrency(lead.budget_estimate),
           email: lead.email,
           phone: lead.phone,
+          category: lead.category,
+          rating: lead.rating,
+          review_count: lead.review_count,
+          address: lead.address,
+          website_url: lead.website_url,
+          google_maps_url: lead.google_maps_url,
+          notes: lead.notes,
         } satisfies Deal;
       });
 
@@ -126,19 +141,53 @@ export const CRMPage = () => {
     setFeedback("Deal deleted and moved to recycle bin");
   };
 
-  const handleSaveEdit = async (updated: NewDealDraft) => {
-    if (!selectedDealId) return;
+  useEffect(() => {
+    if (!editOpen || !activeDeal) return;
+    setEditDraft({
+      name: activeDeal.name,
+      company: activeDeal.company,
+      status: activeDeal.status,
+      score: activeDeal.score,
+      lastAction: activeDeal.lastAction,
+      daysInStage: activeDeal.daysInStage,
+      value: activeDeal.value,
+      email: activeDeal.email ?? null,
+      phone: activeDeal.phone ?? null,
+      category: activeDeal.category ?? null,
+      rating: activeDeal.rating ?? null,
+      review_count: activeDeal.review_count ?? null,
+      address: activeDeal.address ?? null,
+      website_url: activeDeal.website_url ?? null,
+      google_maps_url: activeDeal.google_maps_url ?? null,
+      notes: activeDeal.notes ?? null,
+    });
+  }, [editOpen, activeDeal]);
+
+  const handleSaveEdit = async () => {
+    if (!selectedDealId || !editDraft) return;
     if (!window.confirm("Are you sure you want to update this deal?")) return;
 
     await leadService.updateManageLead(selectedDealId, {
-      name: updated.name,
-      company: updated.company,
-      stage: STATUS_TO_STAGE[updated.status],
-      score: updated.score,
-      budget_estimate: parseCurrency(updated.value),
+      name: editDraft.name,
+      company: editDraft.company,
+      email: editDraft.email || undefined,
+      phone: editDraft.phone || undefined,
+      stage: STATUS_TO_STAGE[editDraft.status],
+      score: editDraft.score,
+      budget_estimate: parseCurrency(editDraft.value),
+      notes: editDraft.notes || undefined,
+      category: editDraft.category ?? null,
+      rating: editDraft.rating ?? null,
+      review_count: editDraft.review_count ?? null,
+      address: editDraft.address ?? null,
+      website_url: editDraft.website_url ?? null,
+      google_maps_url: editDraft.google_maps_url ?? null,
     });
 
+    setDeals((current) => current.map((deal) => (deal.id === selectedDealId ? { ...deal, ...editDraft } : deal)));
+
     setEditOpen(false);
+    setEditDraft(null);
     setFeedback("Deal updated successfully");
   };
 
@@ -172,6 +221,48 @@ export const CRMPage = () => {
     await leadService.updateManageLead(id, {
       stage: STATUS_TO_STAGE[status],
     });
+  };
+
+  const handleDealSendMessage = () => {
+    if (!activeDeal) return;
+    if (!activeDeal.email) {
+      setFeedback("No email available for this deal.");
+      return;
+    }
+
+    window.open(`mailto:${activeDeal.email}`, "_blank", "noopener,noreferrer");
+    setFeedback(`Opened email draft for ${activeDeal.email}`);
+  };
+
+  const handleDealScheduleCall = () => {
+    if (!activeDeal) return;
+    if (!activeDeal.phone) {
+      setFeedback("No phone number available for this deal.");
+      return;
+    }
+
+    window.open(`tel:${activeDeal.phone}`, "_blank", "noopener,noreferrer");
+    setFeedback(`Initiated call action for ${activeDeal.phone}`);
+  };
+
+  const handleDealMoveNext = async () => {
+    if (!activeDeal) return;
+    const nextStatus = NEXT_DEAL_STATUS[activeDeal.status];
+    if (!nextStatus) {
+      setFeedback("Deal is already in the final stage.");
+      return;
+    }
+
+    await updateStatus(activeDeal.id, nextStatus);
+    setFeedback(`Moved ${activeDeal.name} to ${nextStatus}`);
+  };
+
+  const handleDealNotesUpdate = async (notes: string) => {
+    if (!activeDeal) return;
+
+    await leadService.updateManageLead(activeDeal.id, { notes });
+    setDeals((current) => current.map((deal) => (deal.id === activeDeal.id ? { ...deal, notes } : deal)));
+    setFeedback("Deal notes updated");
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -393,6 +484,14 @@ export const CRMPage = () => {
             if (!activeDeal) return;
             setConfirmDeleteId(activeDeal.id);
           }}
+          onSendMessage={handleDealSendMessage}
+          onScheduleCall={handleDealScheduleCall}
+          onMoveNext={() => {
+            void handleDealMoveNext();
+          }}
+          onNotesUpdate={(notes) => {
+            void handleDealNotesUpdate(notes);
+          }}
           onEdit={view === "table" ? () => setEditOpen(true) : undefined}
         />
 
@@ -414,15 +513,7 @@ export const CRMPage = () => {
                 transition={{ duration: 0.16 }}
                 onSubmit={(e) => {
                   e.preventDefault();
-                  handleSaveEdit({
-                    name: activeDeal.name,
-                    company: activeDeal.company,
-                    status: activeDeal.status,
-                    score: activeDeal.score,
-                    lastAction: activeDeal.lastAction,
-                    daysInStage: activeDeal.daysInStage,
-                    value: activeDeal.value,
-                  });
+                  void handleSaveEdit();
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
@@ -431,21 +522,40 @@ export const CRMPage = () => {
                   <label className="text-xs text-content-secondary">
                     Name
                     <input
-                      defaultValue={activeDeal.name}
+                      value={editDraft?.name ?? ""}
+                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, name: event.target.value } : prev))}
                       className="glass-input mt-1"
                     />
                   </label>
                   <label className="text-xs text-content-secondary">
                     Company
                     <input
-                      defaultValue={activeDeal.company}
+                      value={editDraft?.company ?? ""}
+                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, company: event.target.value } : prev))}
+                      className="glass-input mt-1"
+                    />
+                  </label>
+                  <label className="text-xs text-content-secondary">
+                    Email
+                    <input
+                      value={editDraft?.email ?? ""}
+                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, email: event.target.value || null } : prev))}
+                      className="glass-input mt-1"
+                    />
+                  </label>
+                  <label className="text-xs text-content-secondary">
+                    Phone
+                    <input
+                      value={editDraft?.phone ?? ""}
+                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, phone: event.target.value || null } : prev))}
                       className="glass-input mt-1"
                     />
                   </label>
                   <label className="text-xs text-content-secondary">
                     Status
                     <select
-                      defaultValue={activeDeal.status}
+                      value={editDraft?.status ?? "negotiation"}
+                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, status: event.target.value as DealStatus } : prev))}
                       className="glass-input mt-1"
                     >
                       <option value="negotiation" className="bg-surface-tertiary">negotiation</option>
@@ -458,7 +568,78 @@ export const CRMPage = () => {
                     Score
                     <input
                       type="number"
-                      defaultValue={activeDeal.score}
+                      value={editDraft?.score ?? 0}
+                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, score: Number(event.target.value) || 0 } : prev))}
+                      className="glass-input mt-1"
+                    />
+                  </label>
+                  <label className="text-xs text-content-secondary">
+                    Deal Value
+                    <input
+                      value={editDraft?.value ?? "$0"}
+                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, value: event.target.value } : prev))}
+                      className="glass-input mt-1"
+                    />
+                  </label>
+                  <label className="text-xs text-content-secondary">
+                    Category
+                    <input
+                      value={editDraft?.category ?? ""}
+                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, category: event.target.value || null } : prev))}
+                      className="glass-input mt-1"
+                    />
+                  </label>
+                  <label className="text-xs text-content-secondary">
+                    Rating
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="5"
+                      value={editDraft?.rating ?? ""}
+                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, rating: event.target.value ? Number(event.target.value) : null } : prev))}
+                      className="glass-input mt-1"
+                    />
+                  </label>
+                  <label className="text-xs text-content-secondary">
+                    Review Count
+                    <input
+                      type="number"
+                      value={editDraft?.review_count ?? ""}
+                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, review_count: event.target.value ? Number(event.target.value) : null } : prev))}
+                      className="glass-input mt-1"
+                    />
+                  </label>
+                  <label className="text-xs text-content-secondary md:col-span-2">
+                    Address
+                    <input
+                      value={editDraft?.address ?? ""}
+                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, address: event.target.value || null } : prev))}
+                      className="glass-input mt-1"
+                    />
+                  </label>
+                  <label className="text-xs text-content-secondary md:col-span-2">
+                    Website URL
+                    <input
+                      value={editDraft?.website_url ?? ""}
+                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, website_url: event.target.value || null } : prev))}
+                      className="glass-input mt-1"
+                    />
+                  </label>
+                  <label className="text-xs text-content-secondary md:col-span-2">
+                    Google Maps URL
+                    <input
+                      value={editDraft?.google_maps_url ?? ""}
+                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, google_maps_url: event.target.value || null } : prev))}
+                      className="glass-input mt-1"
+                    />
+                  </label>
+                  <label className="text-xs text-content-secondary md:col-span-2">
+                    Notes
+                    <textarea
+                      rows={4}
+                      value={editDraft?.notes ?? ""}
+                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, notes: event.target.value || null } : prev))}
                       className="glass-input mt-1"
                     />
                   </label>
@@ -467,7 +648,10 @@ export const CRMPage = () => {
                   <button
                     type="button"
                     className="glass-btn px-3 py-1.5 text-xs"
-                    onClick={() => setEditOpen(false)}
+                    onClick={() => {
+                      setEditOpen(false);
+                      setEditDraft(null);
+                    }}
                   >
                     Cancel
                   </button>

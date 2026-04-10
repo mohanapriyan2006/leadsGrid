@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 import type { DealStatus } from "../../common/types/ui";
 import type { Deal } from "../types/crm";
@@ -10,6 +11,10 @@ type DealModalProps = {
   position?: { x: number; y: number } | null;
   onClose: () => void;
   onDelete: () => void;
+  onSendMessage?: () => void;
+  onScheduleCall?: () => void;
+  onMoveNext?: () => void;
+  onNotesUpdate?: (notes: string) => void;
   onEdit?: () => void;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
@@ -79,6 +84,10 @@ export const DealModal = ({
   position,
   onClose,
   onDelete,
+  onSendMessage,
+  onScheduleCall,
+  onMoveNext,
+  onNotesUpdate,
   onEdit,
   onMouseEnter,
   onMouseLeave,
@@ -100,6 +109,19 @@ export const DealModal = ({
   const risk = getRiskLabel(deal.score, deal.daysInStage);
   const recommendation = getRecommendedAction(deal.status, deal.daysInStage);
   const playbook = getStagePlaybook(deal.status);
+  const isFinalStage = deal.status === "closed";
+  const [notes, setNotes] = useState(deal.notes || "");
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+
+  useEffect(() => {
+    setNotes(deal.notes || "");
+    setIsEditingNotes(false);
+  }, [deal.id, deal.notes]);
+
+  const handleSaveNotes = () => {
+    onNotesUpdate?.(notes);
+    setIsEditingNotes(false);
+  };
 
   return (
     <AnimatePresence>
@@ -117,7 +139,7 @@ export const DealModal = ({
           onClick={isHover ? undefined : onClose}
         >
           <motion.section
-            className={`glass-card-lg w-full p-4 ${isHover ? "max-w-sm" : "max-w-2xl"}`}
+            className={`glass-card-lg max-h-[80vh] overflow-auto w-full p-4 ${isHover ? "max-w-sm" : "max-w-2xl"}`}
             drag
             dragMomentum={false}
             initial={{ opacity: 0, y: 10, scale: 0.985 }}
@@ -210,7 +232,70 @@ export const DealModal = ({
               </div>
             </div>
 
+            <div className="glass-card-sm mt-4 p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-content-tertiary uppercase tracking-[0.08em] text-xs">Notes</p>
+                {!isEditingNotes ? (
+                  <button type="button" onClick={() => setIsEditingNotes(true)} className="text-[10px] text-accent hover:text-accent-secondary">
+                    Edit
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={handleSaveNotes} className="text-[10px] text-success hover:text-success">
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNotes(deal.notes || "");
+                        setIsEditingNotes(false);
+                      }}
+                      className="text-[10px] text-danger hover:text-danger"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </div>
+              {isEditingNotes ? (
+                <textarea
+                  value={notes}
+                  onChange={(event) => setNotes(event.target.value)}
+                  placeholder="Add deal notes..."
+                  className="glass-input min-h-[90px] w-full resize-y p-2 text-xs"
+                />
+              ) : (
+                <p className="max-h-36 overflow-y-auto whitespace-pre-wrap text-xs text-content-secondary">
+                  {notes || "No notes added yet."}
+                </p>
+              )}
+            </div>
+
             <div className="mt-4 flex flex-wrap items-center gap-2">
+              {onSendMessage ? (
+                <button type="button" onClick={onSendMessage} className="glass-btn px-3 py-1.5 text-xs">
+                  Send Message
+                </button>
+              ) : null}
+              {onScheduleCall ? (
+                <button type="button" onClick={onScheduleCall} className="glass-btn px-3 py-1.5 text-xs">
+                  Call
+                </button>
+              ) : null}
+              {onMoveNext ? (
+                <button
+                  type="button"
+                  onClick={onMoveNext}
+                  disabled={isFinalStage}
+                  className={`rounded-glass-sm px-3 py-1.5 text-xs font-semibold transition ${
+                    isFinalStage
+                      ? "cursor-not-allowed border border-accent/10 bg-surface-secondary/80 text-content-tertiary"
+                      : "accent-btn"
+                  }`}
+                >
+                  Move Next{isFinalStage ? " (Final Stage)" : ""}
+                </button>
+              ) : null}
               {onEdit && (
                 <button type="button" onClick={onEdit} className="glass-btn px-3 py-1.5 text-xs">
                   ✏️ Edit

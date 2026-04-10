@@ -20,6 +20,9 @@ export const MessagesPage = () => {
 
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [tone, setTone] = useState<ToneType>("professional");
+  const [customContext, setCustomContext] = useState(
+    "Keep the email concise, personalized, and focused on a clear business outcome.",
+  );
   const [localDraft, setLocalDraft] = useState("");
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
@@ -76,8 +79,19 @@ export const MessagesPage = () => {
     setSendError(null);
     setSent(false);
     try {
+      const promptSections = [
+        "You are generating a high-converting outreach email.",
+        `Lead company: ${selectedLead.company}`,
+        `Contact name: ${selectedLead.name}`,
+        `Lead stage: ${selectedLead.stage}`,
+        `Lead score: ${selectedLead.score}`,
+        `Lead notes: ${selectedLead.notes || "N/A"}`,
+        `User context: ${customContext.trim() || "No extra context provided"}`,
+        "Output: one professional outreach email draft with a clear CTA.",
+      ];
+
       const result = await generateMessage({
-        lead_context: `Company: ${selectedLead.company}\nContact: ${selectedLead.name}\nNotes: ${selectedLead.notes || 'N/A'}`,
+        lead_context: promptSections.join("\n"),
         tone,
         max_words: 130,
       });
@@ -153,6 +167,7 @@ export const MessagesPage = () => {
           <MessageComposerPanel
             tone={tone}
             confidence={generatedMessage?.confidence ?? null}
+            customContext={customContext}
             email={email}
             subject={subject}
             localDraft={localDraft}
@@ -162,6 +177,14 @@ export const MessagesPage = () => {
             sendError={sendError}
             selectedLeadName={selectedLead?.name}
             onToneChange={setTone}
+            onCustomContextChange={setCustomContext}
+            onApplyContextPreset={(value) => {
+              setCustomContext((current) => {
+                if (!current.trim()) return value;
+                if (current.includes(value)) return current;
+                return `${current.trim()}\n- ${value}`;
+              });
+            }}
             onEmailChange={setEmail}
             onSubjectChange={setSubject}
             onDraftChange={setLocalDraft}

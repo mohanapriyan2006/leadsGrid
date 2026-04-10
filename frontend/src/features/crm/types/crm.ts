@@ -17,6 +17,13 @@ export type Deal = {
   value: string;
   email?: string | null;
   phone?: string | null;
+  category?: string | null;
+  rating?: number | null;
+  review_count?: number | null;
+  address?: string | null;
+  website_url?: string | null;
+  google_maps_url?: string | null;
+  notes?: string | null;
 };
 
 export type NewDealDraft = Omit<Deal, "id">;

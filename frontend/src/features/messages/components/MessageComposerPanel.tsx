@@ -5,6 +5,7 @@ import { TONES } from "../constants/messages";
 type MessageComposerPanelProps = {
   tone: ToneType;
   confidence: number | null;
+  customContext: string;
   email: string;
   subject: string;
   localDraft: string;
@@ -14,6 +15,8 @@ type MessageComposerPanelProps = {
   sendError: string | null;
   selectedLeadName?: string;
   onToneChange: (tone: ToneType) => void;
+  onCustomContextChange: (value: string) => void;
+  onApplyContextPreset: (value: string) => void;
   onEmailChange: (value: string) => void;
   onSubjectChange: (value: string) => void;
   onDraftChange: (value: string) => void;
@@ -24,6 +27,7 @@ type MessageComposerPanelProps = {
 export const MessageComposerPanel = ({
   tone,
   confidence,
+  customContext,
   email,
   subject,
   localDraft,
@@ -33,12 +37,20 @@ export const MessageComposerPanel = ({
   sendError,
   selectedLeadName,
   onToneChange,
+  onCustomContextChange,
+  onApplyContextPreset,
   onEmailChange,
   onSubjectChange,
   onDraftChange,
   onSend,
   onCopy,
 }: MessageComposerPanelProps) => {
+  const contextPresets = [
+    "Focus on ROI and measurable outcomes.",
+    "Keep it concise and ask for a 10-minute call.",
+    "Highlight trust, delivery quality, and timeline clarity.",
+  ];
+
   return (
     <section className="glass-card p-4">
       <div className="mb-3 flex items-center gap-2">
@@ -62,6 +74,31 @@ export const MessageComposerPanel = ({
           ) : (
             "Draft not generated"
           )}
+        </div>
+      </div>
+
+      <div className="mb-3 space-y-2">
+        <label className="text-xs tracking-[0.1em] text-content-tertiary" htmlFor="your-context">
+          YOUR CONTEXT FOR AI
+        </label>
+        <textarea
+          id="your-context"
+          value={customContext}
+          onChange={(event) => onCustomContextChange(event.target.value)}
+          placeholder="Example: Mention we helped a SaaS team increase reply rate by 34%, and keep tone confident but warm."
+          className="glass-input min-h-[92px] resize-y p-3 text-sm leading-6"
+        />
+        <div className="flex flex-wrap gap-2">
+          {contextPresets.map((preset) => (
+            <button
+              key={preset}
+              type="button"
+              onClick={() => onApplyContextPreset(preset)}
+              className="rounded-glass-sm border border-accent/20 bg-accent/5 px-2 py-1 text-[10px] uppercase tracking-[0.08em] text-content-secondary transition hover:border-accent/40 hover:text-content"
+            >
+              Quick Context
+            </button>
+          ))}
         </div>
       </div>
 
@@ -92,7 +129,7 @@ export const MessageComposerPanel = ({
       <textarea
         value={localDraft}
         onChange={(event) => onDraftChange(event.target.value)}
-        className="glass-input min-h-[360px] resize-y p-3 text-sm leading-7"
+        className="glass-input min-h-[200px] resize-y p-3 text-sm leading-7"
       />
 
       <div className="mt-3 flex items-center justify-between">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { PageBackground } from "../../components/ui/PageBackground";
@@ -7,20 +7,37 @@ import bgDataAtWork from "../../assets/bg-images/data-at-work.svg";
 import { useAuth } from "../../features/auth/AuthContext";
 import { getFirebaseAuth } from "../../lib/firebase";
 import { signInWithEmailAndPassword, deleteUser, type User } from "firebase/auth";
-
-import { SETTINGS_DEFAULTS } from "../../features/settings/constants/settingsDefaults";
-import {
-  AI_ENGINE_ITEMS,
-  NOTIFICATION_ITEMS,
-  type ToggleSettingKey,
-} from "../../features/settings/constants/settingsOptions";
-import { SettingsIntervalSection } from "../../features/settings/components/SettingsIntervalSection";
-import { SettingsToggleSection } from "../../features/settings/components/SettingsToggleSection";
+import { leadService } from "../../features/leads/services/leadService";
+import { SETTINGS_TABS } from "../../features/settings/constants/settingsOptions";
+import { useSettingsState } from "../../features/settings/hooks/useSettingsState";
+import { SettingsDeleteAccountModal } from "../../features/settings/components/SettingsDeleteAccountModal";
+import { SettingsLogoutModal } from "../../features/settings/components/SettingsLogoutModal";
+import { SettingsTabNav } from "../../features/settings/components/SettingsTabNav";
+import { AISettingsSection } from "../../features/settings/components/sections/AISettingsSection";
+import { BillingSettingsSection } from "../../features/settings/components/sections/BillingSettingsSection";
+import { IntegrationsSettingsSection } from "../../features/settings/components/sections/IntegrationsSettingsSection";
+import { LeadsScoringSettingsSection } from "../../features/settings/components/sections/LeadsScoringSettingsSection";
+import { MessagingSettingsSection } from "../../features/settings/components/sections/MessagingSettingsSection";
+import { NotificationsSettingsSection } from "../../features/settings/components/sections/NotificationsSettingsSection";
+import { PrivacyDataSettingsSection } from "../../features/settings/components/sections/PrivacyDataSettingsSection";
+import { ProfileSettingsSection } from "../../features/settings/components/sections/ProfileSettingsSection";
+import { WorkspaceSettingsSection } from "../../features/settings/components/sections/WorkspaceSettingsSection";
+import type { SettingsTabKey } from "../../features/settings/types/settings";
 
 export const SettingsPage = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const [settings, setSettings] = useState(SETTINGS_DEFAULTS);
+  const [activeTab, setActiveTab] = useState<SettingsTabKey>("profile");
+  const {
+    settings,
+    loading,
+    saving,
+    saveError,
+    saveMessage,
+    isDirty,
+    updateSettings,
+    saveSettings,
+  } = useSettingsState(user?.email);
 
   // Logout confirmation modal
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
@@ -31,10 +48,6 @@ export const SettingsPage = () => {
   const [confirmText, setConfirmText] = useState("");
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
-
-  const toggle = (key: ToggleSettingKey) => {
-    setSettings((current) => ({ ...current, [key]: !current[key] }));
-  };
 
   const handleLogout = async () => {
     await signOut();
@@ -97,217 +110,220 @@ export const SettingsPage = () => {
     setDeleteStep(1);
   };
 
+  const handleExportLeads = async () => {
+    try {
+      const leads = await leadService.listManageLeads({});
+      const headers = ["Name", "Company", "Email", "Phone", "Stage", "Score"];
+      const escapeCsv = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+      const rows = leads.map((lead) => [lead.name, lead.company, lead.email, lead.phone, lead.stage, lead.score]);
+      const csv = [headers, ...rows].map((row) => row.map(escapeCsv).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `leadsgrid-export-${new Date().toISOString().slice(0, 10)}.csv`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // Keep silent here: the global save/error status communicates page-level failures.
+    }
+  };
+
+  const optimizationScore = useMemo(() => {
+    const checks = [
+      Boolean(settings.profile.name.trim()),
+      Boolean(settings.profile.skills.length > 0),
+      settings.integrations.gmail === "connected" || settings.integrations.outlook === "connected",
+      settings.ai.personalization !== "low",
+      Boolean(settings.messaging.fallbackEmail.trim()),
+      settings.privacy.complianceConsent,
+    ];
+    const met = checks.filter(Boolean).length;
+    return Math.round((met / checks.length) * 100);
+  }, [settings]);
+
+  const activeTabConfig = SETTINGS_TABS.find((tab) => tab.key === activeTab);
+
+  const renderActiveSection = () => {
+    switch (activeTab) {
+      case "profile":
+        return (
+          <ProfileSettingsSection
+            profile={settings.profile}
+            onChange={(profile) => updateSettings((current) => ({ ...current, profile }))}
+          />
+        );
+      case "workspace":
+        return (
+          <WorkspaceSettingsSection
+            workspace={settings.workspace}
+            onChange={(workspace) => updateSettings((current) => ({ ...current, workspace }))}
+          />
+        );
+      case "leads-scoring":
+        return (
+          <LeadsScoringSettingsSection
+            leadsScoring={settings.leadsScoring}
+            onChange={(leadsScoring) => updateSettings((current) => ({ ...current, leadsScoring }))}
+          />
+        );
+      case "messaging":
+        return (
+          <MessagingSettingsSection
+            messaging={settings.messaging}
+            onChange={(messaging) => updateSettings((current) => ({ ...current, messaging }))}
+          />
+        );
+      case "integrations":
+        return (
+          <IntegrationsSettingsSection
+            integrations={settings.integrations}
+            onChange={(integrations) => updateSettings((current) => ({ ...current, integrations }))}
+          />
+        );
+      case "ai-settings":
+        return (
+          <AISettingsSection
+            ai={settings.ai}
+            onChange={(ai) => updateSettings((current) => ({ ...current, ai }))}
+          />
+        );
+      case "notifications":
+        return (
+          <NotificationsSettingsSection
+            notifications={settings.notifications}
+            onChange={(notifications) => updateSettings((current) => ({ ...current, notifications }))}
+          />
+        );
+      case "billing":
+        return (
+          <BillingSettingsSection
+            billing={settings.billing}
+            onChange={(billing) => updateSettings((current) => ({ ...current, billing }))}
+          />
+        );
+      case "privacy-data":
+        return (
+          <PrivacyDataSettingsSection
+            privacy={settings.privacy}
+            onChange={(privacy) => updateSettings((current) => ({ ...current, privacy }))}
+            onOpenDeleteFlow={openDeleteFlow}
+            onOpenLogoutConfirm={() => setLogoutConfirmOpen(true)}
+            onExportLeads={() => {
+              void handleExportLeads();
+            }}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <>
       <PageBackground image={bgDataAtWork} tint="rgba(159, 175, 12, 0.49)" />
-      <ResponsivePageLayout contentClassName="space-y-4"  >
-
+      <ResponsivePageLayout contentClassName="space-y-4">
         <header className="glass-card p-5">
-          <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-2xl font-semibold text-transparent sm:text-3xl">System Configuration</h2>
-          <p className="mt-1 text-sm text-content-secondary">Configure outreach engine behavior and signal cadence.</p>
+          <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-2xl font-semibold text-transparent sm:text-3xl">
+            AI Sales Engine Control Center
+          </h2>
+          <p className="mt-1 text-sm text-content-secondary">
+            Configure profile, automation, scoring, and compliance from one command surface.
+          </p>
         </header>
 
-        {/* User Profile Section */}
-        <div className="glass-card p-5 space-y-4">
-          <h3 className="text-sm font-semibold tracking-[0.1em] text-content-tertiary uppercase">User Profile</h3>
-          <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-            <div className="h-14 w-14 rounded-full bg-accent/20 flex items-center justify-center text-xl font-bold text-accent">
-              {user?.email?.[0].toUpperCase() || "U"}
-            </div>
-            <div>
-              <p className="text-sm font-medium text-content">{user?.email || "Not signed in"}</p>
-              <p className="text-xs text-content-secondary">Account created: {user?.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString() : "N/A"}</p>
+        <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+          <div className="space-y-4">
+            <SettingsTabNav activeTab={activeTab} onChange={setActiveTab} />
+            <div className="glass-card-sm p-4">
+              <p className="text-xs uppercase tracking-[0.1em] text-content-tertiary">AI Optimization Score</p>
+              <p className="mt-1 text-2xl font-semibold text-content">{optimizationScore}%</p>
+              <p className="mt-2 text-xs text-content-secondary">
+                Improve your setup by connecting email, adding skills, and increasing personalization.
+              </p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-3 pt-2">
-            <button
-              type="button"
-              onClick={() => setLogoutConfirmOpen(true)}
-              className="rounded-lg border border-accent/20 px-4 py-2 text-sm text-content-secondary transition hover:border-accent/40 hover:text-content"
-            >
-              Log Out
-            </button>
-            <button
-              type="button"
-              onClick={openDeleteFlow}
-              className="rounded-lg border border-danger/30 px-4 py-2 text-sm text-danger transition hover:bg-danger/10"
-            >
-              Delete Account
-            </button>
+
+          <div className="space-y-4">
+            <div className="glass-card-sm border border-accent/15 p-4">
+              <p className="text-xs uppercase tracking-[0.1em] text-content-tertiary">Active Section</p>
+              <h3 className="mt-1 text-lg font-semibold text-content">{activeTabConfig?.label}</h3>
+              <p className="text-sm text-content-secondary">{activeTabConfig?.description}</p>
+            </div>
+
+            {loading ? (
+              <div className="glass-card p-6 text-sm text-content-secondary">Loading settings...</div>
+            ) : (
+              renderActiveSection()
+            )}
+
+            <div className="glass-card-sm flex flex-col gap-2 border border-accent/15 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-content">Automation Preview</p>
+                <p className="text-xs text-content-secondary">
+                  AI runs in {settings.ai.mode} mode with {settings.ai.personalization} personalization and a
+                  minimum lead score of {settings.leadsScoring.minimumLeadScore}.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  void saveSettings();
+                }}
+                disabled={!isDirty || saving}
+                className="accent-btn px-5 py-2 text-xs font-bold tracking-[0.1em] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {saving ? "SAVING..." : "SAVE CONFIGURATION"}
+              </button>
+            </div>
+
+            {saveMessage ? (
+              <div className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-2 text-sm text-success">
+                {saveMessage}
+              </div>
+            ) : null}
+
+            {saveError ? (
+              <div className="rounded-glass-sm border border-danger/30 bg-danger-soft px-3 py-2 text-sm text-danger">
+                {saveError}
+              </div>
+            ) : null}
+
+            <div>
+              <p className="text-xs text-content-tertiary">
+                Signed in as {user?.email || "unknown user"}. Your data is saved locally in this implementation slice.
+              </p>
+            </div>
           </div>
         </div>
 
-        <SettingsToggleSection
-          title="NOTIFICATIONS"
-          items={NOTIFICATION_ITEMS}
-          values={settings}
-          onToggle={toggle}
-        />
-
-        <SettingsToggleSection
-          title="AI ENGINE"
-          items={AI_ENGINE_ITEMS}
-          values={settings}
-          onToggle={toggle}
-        />
-
-        <SettingsIntervalSection
-          value={settings.refreshInterval}
-          onChange={(value) => {
-            setSettings((current) => ({ ...current, refreshInterval: value }));
+        <SettingsLogoutModal
+          open={logoutConfirmOpen}
+          onCancel={() => setLogoutConfirmOpen(false)}
+          onConfirm={() => {
+            void handleLogout();
           }}
         />
 
-        <button className="accent-btn w-full py-3 text-xs font-bold tracking-[0.1em]">SAVE CONFIGURATION</button>
-
-        {/* Logout Confirmation Modal */}
-        {logoutConfirmOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface/80 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-2xl border border-accent/20 bg-surface-secondary p-5 sm:p-6 shadow-[0_18px_60px_rgba(0,0,0,0.4)]">
-              <h3 className="mb-2 text-lg font-semibold text-content">Log Out?</h3>
-              <p className="mb-6 text-sm text-content-secondary">Are you sure you want to log out of your account?</p>
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setLogoutConfirmOpen(false)}
-                  className="flex-1 rounded-lg border border-accent/20 px-4 py-2 text-sm text-content-secondary transition hover:border-accent/40 hover:text-content"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="flex-1 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-content-inverse transition hover:bg-accent-secondary"
-                >
-                  Yes, Log Out
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Delete Account Triple Confirmation Modal */}
-        {deleteStep > 0 && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface/90 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-2xl border border-danger/30 bg-surface-secondary p-5 sm:p-6 shadow-[0_18px_60px_rgba(239,68,68,0.4)]">
-              {/* Step 1: Re-authenticate */}
-              {deleteStep === 1 && (
-                <>
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-danger/20">
-                      <span className="text-sm font-bold text-danger">1/3</span>
-                    </div>
-                    <h3 className="text-lg font-semibold text-content">Re-authenticate</h3>
-                  </div>
-                  <p className="mb-4 text-sm text-content-secondary">
-                    For security, please enter your password to continue with account deletion.
-                  </p>
-                  <input
-                    type="password"
-                    value={reauthPassword}
-                    onChange={(e) => setReauthPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    className="glass-input mb-4 w-full"
-                  />
-                  {deleteError && <p className="mb-4 text-sm text-danger">{deleteError}</p>}
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={resetDeleteFlow}
-                      className="flex-1 rounded-lg border border-accent/20 px-4 py-2 text-sm text-content-secondary transition hover:border-accent/40 hover:text-content"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleReauth}
-                      disabled={deleting}
-                      className="flex-1 rounded-lg bg-danger px-4 py-2 text-sm font-semibold text-white transition hover:bg-danger/80 disabled:opacity-60"
-                    >
-                      {deleting ? "Verifying..." : "Continue"}
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {/* Step 2: Type DELETE */}
-              {deleteStep === 2 && (
-                <>
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-danger/20">
-                      <span className="text-sm font-bold text-danger">2/3</span>
-                    </div>
-                    <h3 className="text-lg font-semibold text-content">Type to Confirm</h3>
-                  </div>
-                  <p className="mb-4 text-sm text-content-secondary">
-                    This action is permanent. Type <strong className="text-danger">DELETE</strong> below to confirm.
-                  </p>
-                  <input
-                    type="text"
-                    value={confirmText}
-                    onChange={(e) => setConfirmText(e.target.value)}
-                    placeholder="Type DELETE here"
-                    className="glass-input mb-4 w-full"
-                  />
-                  {deleteError && <p className="mb-4 text-sm text-danger">{deleteError}</p>}
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={resetDeleteFlow}
-                      className="flex-1 rounded-lg border border-accent/20 px-4 py-2 text-sm text-content-secondary transition hover:border-accent/40 hover:text-content"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleConfirmText}
-                      className="flex-1 rounded-lg bg-danger px-4 py-2 text-sm font-semibold text-white transition hover:bg-danger/80"
-                    >
-                      Continue
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {/* Step 3: Final confirmation */}
-              {deleteStep === 3 && (
-                <>
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-danger/20">
-                      <span className="text-sm font-bold text-danger">3/3</span>
-                    </div>
-                    <h3 className="text-lg font-semibold text-content">Final Confirmation</h3>
-                  </div>
-                  <p className="mb-4 text-sm text-content-secondary">
-                    <strong className="text-danger">Warning:</strong> All your data will be permanently deleted. This cannot be undone.
-                  </p>
-                  <div className="mb-4 rounded-lg border border-danger/20 bg-danger/5 p-3">
-                    <p className="text-xs text-content-secondary">Account to delete:</p>
-                    <p className="text-sm font-medium text-content">{user?.email}</p>
-                  </div>
-                  {deleteError && <p className="mb-4 text-sm text-danger">{deleteError}</p>}
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={resetDeleteFlow}
-                      className="flex-1 rounded-lg border border-accent/20 px-4 py-2 text-sm text-content-secondary transition hover:border-accent/40 hover:text-content"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleFinalDelete}
-                      disabled={deleting}
-                      className="flex-1 rounded-lg bg-danger px-4 py-2 text-sm font-semibold text-white transition hover:bg-danger/80 disabled:opacity-60"
-                    >
-                      {deleting ? "Deleting..." : "Permanently Delete Account"}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        )}
+        <SettingsDeleteAccountModal
+          open={deleteStep > 0}
+          step={(deleteStep || 1) as 1 | 2 | 3}
+          reauthPassword={reauthPassword}
+          confirmText={confirmText}
+          deleteError={deleteError}
+          deleting={deleting}
+          userEmail={user?.email ?? ""}
+          onPasswordChange={setReauthPassword}
+          onConfirmTextChange={setConfirmText}
+          onCancel={resetDeleteFlow}
+          onReauth={() => {
+            void handleReauth();
+          }}
+          onStepTwoConfirm={handleConfirmText}
+          onFinalDelete={() => {
+            void handleFinalDelete();
+          }}
+        />
       </ResponsivePageLayout>
     </>
   );

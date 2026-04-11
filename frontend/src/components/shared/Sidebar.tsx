@@ -4,11 +4,11 @@ import { navigationItems } from "../../constants/navigation";
 import {
   LayoutDashboard,
   Search,
-  Users,
+  Layers,
   Inbox,
   Settings,
   Trash2,
-  Brain,
+  BrainCircuit as Brain,
   Sparkles,
   Zap,
   Cpu
@@ -50,7 +50,7 @@ const iconMap: Record<string, (isActive: boolean) => React.ReactNode> = {
   "Leads Discovery": (isActive) => <LeadsDiscoveryIcon isActive={isActive} />,
   "Manage Leads": (isActive) => (
     <div className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}>
-      <Users className="w-4 h-4" />
+      <Layers className="w-4 h-4" />
     </div>
   ),
   "Messages": (isActive) => (

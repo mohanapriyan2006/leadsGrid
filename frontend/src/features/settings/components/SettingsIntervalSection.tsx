@@ -1,10 +1,10 @@
-import type { AppSettings } from "../constants/settingsDefaults";
+import type { RefreshInterval } from "../types/settings";
 
 import { REFRESH_INTERVALS } from "../constants/settingsOptions";
 
 type SettingsIntervalSectionProps = {
-  value: AppSettings["refreshInterval"];
-  onChange: (value: AppSettings["refreshInterval"]) => void;
+  value: RefreshInterval;
+  onChange: (value: RefreshInterval) => void;
 };
 
 export const SettingsIntervalSection = ({

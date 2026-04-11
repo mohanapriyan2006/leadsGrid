@@ -29,7 +29,11 @@ import {
   formatCurrency,
   parseCurrency,
 } from "../../features/crm/constants/crm";
-import type { CRMStage, Deal, NewDealDraft } from "../../features/crm/types/crm";
+import type {
+  CRMStage,
+  Deal,
+  NewDealDraft,
+} from "../../features/crm/types/crm";
 
 const INITIAL_NEW_DEAL: NewDealDraft = {
   name: "",
@@ -50,7 +54,10 @@ export const CRMPage = () => {
 
   // Modal states
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [modalPosition, setModalPosition] = useState<{ x: number; y: number } | null>(null);
+  const [modalPosition, setModalPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const [isModalHover, setIsModalHover] = useState(false);
   const isModalHoverRef = useRef(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -77,8 +84,15 @@ export const CRMPage = () => {
     const nextDeals = centralizedLeads
       .filter((lead) => CRM_STAGES.includes(lead.stage as CRMStage))
       .map((lead) => {
-        const updatedAt = new Date(lead.updated_at || lead.created_at || Date.now());
-        const daysInStage = Math.max(0, Math.floor((Date.now() - updatedAt.getTime()) / (1000 * 60 * 60 * 24)));
+        const updatedAt = new Date(
+          lead.updated_at || lead.created_at || Date.now(),
+        );
+        const daysInStage = Math.max(
+          0,
+          Math.floor(
+            (Date.now() - updatedAt.getTime()) / (1000 * 60 * 60 * 24),
+          ),
+        );
 
         return {
           id: lead.id,
@@ -86,7 +100,9 @@ export const CRMPage = () => {
           company: lead.company,
           status: STAGE_TO_STATUS[lead.stage as CRMStage],
           score: lead.score,
-          lastAction: lead.last_activity_at ? new Date(lead.last_activity_at).toLocaleDateString() : "No recent activity",
+          lastAction: lead.last_activity_at
+            ? new Date(lead.last_activity_at).toLocaleDateString()
+            : "No recent activity",
           daysInStage,
           value: formatCurrency(lead.budget_estimate),
           email: lead.email,
@@ -105,7 +121,9 @@ export const CRMPage = () => {
   }, [centralizedLeads]);
 
   useEffect(() => {
-    setSelectedDealIds((prev) => prev.filter((id) => deals.some((deal) => deal.id === id)));
+    setSelectedDealIds((prev) =>
+      prev.filter((id) => deals.some((deal) => deal.id === id)),
+    );
   }, [deals]);
 
   const activeDeal = useMemo(() => {
@@ -152,13 +170,16 @@ export const CRMPage = () => {
 
   const toggleSelectDeal = (dealId: string) => {
     setSelectedDealIds((prev) =>
-      prev.includes(dealId) ? prev.filter((id) => id !== dealId) : [...prev, dealId],
+      prev.includes(dealId)
+        ? prev.filter((id) => id !== dealId)
+        : [...prev, dealId],
     );
   };
 
   const toggleSelectAllDeals = () => {
     setSelectedDealIds((prev) => {
-      const allSelected = deals.length > 0 && deals.every((deal) => prev.includes(deal.id));
+      const allSelected =
+        deals.length > 0 && deals.every((deal) => prev.includes(deal.id));
       if (allSelected) return [];
       return deals.map((deal) => deal.id);
     });
@@ -167,19 +188,26 @@ export const CRMPage = () => {
   const handleBulkDeleteDeals = async () => {
     if (selectedDealIds.length === 0) return;
 
-    await Promise.all(selectedDealIds.map((dealId) => leadService.softDeleteManageLead(dealId)));
+    await Promise.all(
+      selectedDealIds.map((dealId) => leadService.softDeleteManageLead(dealId)),
+    );
     setSelectedDealIds([]);
-    setFeedback(`${selectedDealIds.length} deal(s) deleted and moved to recycle bin`);
+    setFeedback(
+      `${selectedDealIds.length} deal(s) deleted and moved to recycle bin`,
+    );
     setConfirmBulkDeleteOpen(false);
   };
 
   const handleExportSelectedDealsCsv = () => {
     if (selectedDealIds.length === 0) return;
 
-    const selectedDeals = deals.filter((deal) => selectedDealIds.includes(deal.id));
+    const selectedDeals = deals.filter((deal) =>
+      selectedDealIds.includes(deal.id),
+    );
     if (selectedDeals.length === 0) return;
 
-    const escapeCsv = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+    const escapeCsv = (value: unknown) =>
+      `"${String(value ?? "").replace(/"/g, '""')}"`;
     const headers = [
       "Name",
       "Company",
@@ -216,7 +244,9 @@ export const CRMPage = () => {
       deal.notes,
     ]);
 
-    const csv = [headers, ...rows].map((row) => row.map(escapeCsv).join(",")).join("\n");
+    const csv = [headers, ...rows]
+      .map((row) => row.map(escapeCsv).join(","))
+      .join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
@@ -270,7 +300,11 @@ export const CRMPage = () => {
       google_maps_url: editDraft.google_maps_url ?? null,
     });
 
-    setDeals((current) => current.map((deal) => (deal.id === selectedDealId ? { ...deal, ...editDraft } : deal)));
+    setDeals((current) =>
+      current.map((deal) =>
+        deal.id === selectedDealId ? { ...deal, ...editDraft } : deal,
+      ),
+    );
 
     setEditOpen(false);
     setEditDraft(null);
@@ -348,7 +382,11 @@ export const CRMPage = () => {
     if (!activeDeal) return;
 
     await leadService.updateManageLead(activeDeal.id, { notes });
-    setDeals((current) => current.map((deal) => (deal.id === activeDeal.id ? { ...deal, notes } : deal)));
+    setDeals((current) =>
+      current.map((deal) =>
+        deal.id === activeDeal.id ? { ...deal, notes } : deal,
+      ),
+    );
     setFeedback("Deal notes updated");
   };
 
@@ -406,9 +444,7 @@ export const CRMPage = () => {
   return (
     <>
       <PageBackground image={bgConnecting} tint="rgba(109, 111, 252, 0.70)" />
-      <ResponsivePageLayout
-        contentClassName="space-y-4"
-      >
+      <ResponsivePageLayout contentClassName="space-y-4">
         <header className="glass-card-lg flex flex-col justify-between gap-3 px-4 py-4 sm:px-5 sm:py-5 md:flex-row md:items-center md:px-6">
           <div>
             <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-2xl font-semibold text-transparent sm:text-3xl">
@@ -427,7 +463,11 @@ export const CRMPage = () => {
             <button
               onClick={() => setDisableDetailsPopup((v) => !v)}
               className={`glass-btn text-xs ${disableDetailsPopup ? "text-danger" : "text-success"}`}
-              title={disableDetailsPopup ? "Click to enable details popup" : "Click to disable details popup"}
+              title={
+                disableDetailsPopup
+                  ? "Click to enable details popup"
+                  : "Click to disable details popup"
+              }
             >
               {disableDetailsPopup ? "🚫 Popups Off" : "✓ Popups On"}
             </button>
@@ -454,19 +494,24 @@ export const CRMPage = () => {
           />
         )}
 
-        <CRMStatsGrid deals={deals} totalValue={totalValue} closedValue={closedValue} />
+        <CRMStatsGrid
+          deals={deals}
+          totalValue={totalValue}
+          closedValue={closedValue}
+        />
 
         {/* view toggle */}
         <div className="flex items-center justify-between gap-2">
-          <div className="glass-card-sm inline-flex p-1 text-[11px]">
+          <div className="glass-card-sm  gap-1 inline-flex p-1 text-[11px]">
             {(["table", "kanban", "analysis"] as const).map((option) => (
               <button
                 key={option}
                 onClick={() => setView(option)}
-                className={`relative rounded-full px-4 py-1.5 uppercase tracking-[0.18em] transition-all duration-200 ${view === option
-                  ? "bg-gradient-to-r from-accent to-accent-secondary text-content-inverse shadow-glow"
-                  : "text-content-tertiary hover:text-content-secondary"
-                  }`}
+                className={`relative rounded-full px-4 py-1.5 uppercase tracking-[0.18em] transition-all duration-200 ${
+                  view === option
+                    ? "bg-gradient-to-r from-accent to-accent-secondary text-content-inverse shadow-glow"
+                    : "text-content hover:text-content-secondary"
+                } ${option === "analysis" ? "relative p-4 animate-pulseGlow  " : ""} `}
               >
                 {option}
               </button>
@@ -480,18 +525,24 @@ export const CRMPage = () => {
         </div>
 
         {feedback ? (
-          <div className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-2 text-sm text-success">{feedback}</div>
+          <div className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-2 text-sm text-success">
+            {feedback}
+          </div>
         ) : null}
 
         {/* main content */}
         {loading ? (
-          <div className="glass-card p-8 text-center text-content-secondary">Loading CRM deals...</div>
+          <div className="glass-card p-8 text-center text-content-secondary">
+            Loading CRM deals...
+          </div>
         ) : view === "analysis" ? (
           <CRMAnalysisPage deals={deals} />
         ) : view === "table" ? (
           <>
             <div className="glass-card-sm flex flex-wrap items-center gap-2 px-3 py-2">
-              <span className="text-xs text-content-secondary">{selectedDealIds.length} selected</span>
+              <span className="text-xs text-content-secondary">
+                {selectedDealIds.length} selected
+              </span>
               <button
                 type="button"
                 onClick={() => {
@@ -535,7 +586,9 @@ export const CRMPage = () => {
           >
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {STATUS_COLUMNS.map((status) => {
-                const columnDeals = deals.filter((deal) => deal.status === status);
+                const columnDeals = deals.filter(
+                  (deal) => deal.status === status,
+                );
 
                 return (
                   <DroppableStatusColumn
@@ -551,9 +604,7 @@ export const CRMPage = () => {
                         {columnDeals.length === 0 && (
                           <div className="flex h-28 items-center justify-center rounded-glass-sm border border-dashed border-accent/15 bg-surface-secondary/50 text-[11px] text-content-secondary">
                             Drop deals here to move into{" "}
-                            <span className="ml-1 font-semibold">
-                              {status}
-                            </span>
+                            <span className="ml-1 font-semibold">{status}</span>
                             .
                           </div>
                         )}
@@ -579,7 +630,11 @@ export const CRMPage = () => {
         <DealModal
           key={hoveredId || selectedDealId || "closed"}
           deal={activeDeal}
-          open={view === "kanban" ? Boolean(hoveredId && activeDeal && !isDragging) : Boolean(detailsOpen && activeDeal)}
+          open={
+            view === "kanban"
+              ? Boolean(hoveredId && activeDeal && !isDragging)
+              : Boolean(detailsOpen && activeDeal)
+          }
           variant={view === "kanban" ? "hover" : "dialog"}
           position={modalPosition}
           onClose={() => {
@@ -635,13 +690,19 @@ export const CRMPage = () => {
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <h3 className="text-lg font-semibold text-content">Edit Deal</h3>
+                <h3 className="text-lg font-semibold text-content">
+                  Edit Deal
+                </h3>
                 <div className="grid gap-3 md:grid-cols-2">
                   <label className="text-xs text-content-secondary">
                     Name
                     <input
                       value={editDraft?.name ?? ""}
-                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, name: event.target.value } : prev))}
+                      onChange={(event) =>
+                        setEditDraft((prev) =>
+                          prev ? { ...prev, name: event.target.value } : prev,
+                        )
+                      }
                       className="glass-input mt-1"
                     />
                   </label>
@@ -649,7 +710,13 @@ export const CRMPage = () => {
                     Company
                     <input
                       value={editDraft?.company ?? ""}
-                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, company: event.target.value } : prev))}
+                      onChange={(event) =>
+                        setEditDraft((prev) =>
+                          prev
+                            ? { ...prev, company: event.target.value }
+                            : prev,
+                        )
+                      }
                       className="glass-input mt-1"
                     />
                   </label>
@@ -657,7 +724,13 @@ export const CRMPage = () => {
                     Email
                     <input
                       value={editDraft?.email ?? ""}
-                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, email: event.target.value || null } : prev))}
+                      onChange={(event) =>
+                        setEditDraft((prev) =>
+                          prev
+                            ? { ...prev, email: event.target.value || null }
+                            : prev,
+                        )
+                      }
                       className="glass-input mt-1"
                     />
                   </label>
@@ -665,7 +738,13 @@ export const CRMPage = () => {
                     Phone
                     <input
                       value={editDraft?.phone ?? ""}
-                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, phone: event.target.value || null } : prev))}
+                      onChange={(event) =>
+                        setEditDraft((prev) =>
+                          prev
+                            ? { ...prev, phone: event.target.value || null }
+                            : prev,
+                        )
+                      }
                       className="glass-input mt-1"
                     />
                   </label>
@@ -673,13 +752,39 @@ export const CRMPage = () => {
                     Status
                     <select
                       value={editDraft?.status ?? "negotiation"}
-                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, status: event.target.value as DealStatus } : prev))}
+                      onChange={(event) =>
+                        setEditDraft((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                status: event.target.value as DealStatus,
+                              }
+                            : prev,
+                        )
+                      }
                       className="glass-input mt-1"
                     >
-                      <option value="negotiation" className="bg-surface-tertiary">negotiation</option>
-                      <option value="contracted" className="bg-surface-tertiary">contracted</option>
-                      <option value="in-progress" className="bg-surface-tertiary">in-progress</option>
-                      <option value="closed" className="bg-surface-tertiary">closed</option>
+                      <option
+                        value="negotiation"
+                        className="bg-surface-tertiary"
+                      >
+                        negotiation
+                      </option>
+                      <option
+                        value="contracted"
+                        className="bg-surface-tertiary"
+                      >
+                        contracted
+                      </option>
+                      <option
+                        value="in-progress"
+                        className="bg-surface-tertiary"
+                      >
+                        in-progress
+                      </option>
+                      <option value="closed" className="bg-surface-tertiary">
+                        closed
+                      </option>
                     </select>
                   </label>
                   <label className="text-xs text-content-secondary">
@@ -687,7 +792,16 @@ export const CRMPage = () => {
                     <input
                       type="number"
                       value={editDraft?.score ?? 0}
-                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, score: Number(event.target.value) || 0 } : prev))}
+                      onChange={(event) =>
+                        setEditDraft((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                score: Number(event.target.value) || 0,
+                              }
+                            : prev,
+                        )
+                      }
                       className="glass-input mt-1"
                     />
                   </label>
@@ -695,7 +809,11 @@ export const CRMPage = () => {
                     Deal Value
                     <input
                       value={editDraft?.value ?? "$0"}
-                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, value: event.target.value } : prev))}
+                      onChange={(event) =>
+                        setEditDraft((prev) =>
+                          prev ? { ...prev, value: event.target.value } : prev,
+                        )
+                      }
                       className="glass-input mt-1"
                     />
                   </label>
@@ -703,7 +821,13 @@ export const CRMPage = () => {
                     Category
                     <input
                       value={editDraft?.category ?? ""}
-                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, category: event.target.value || null } : prev))}
+                      onChange={(event) =>
+                        setEditDraft((prev) =>
+                          prev
+                            ? { ...prev, category: event.target.value || null }
+                            : prev,
+                        )
+                      }
                       className="glass-input mt-1"
                     />
                   </label>
@@ -715,7 +839,18 @@ export const CRMPage = () => {
                       min="0"
                       max="5"
                       value={editDraft?.rating ?? ""}
-                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, rating: event.target.value ? Number(event.target.value) : null } : prev))}
+                      onChange={(event) =>
+                        setEditDraft((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                rating: event.target.value
+                                  ? Number(event.target.value)
+                                  : null,
+                              }
+                            : prev,
+                        )
+                      }
                       className="glass-input mt-1"
                     />
                   </label>
@@ -724,7 +859,18 @@ export const CRMPage = () => {
                     <input
                       type="number"
                       value={editDraft?.review_count ?? ""}
-                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, review_count: event.target.value ? Number(event.target.value) : null } : prev))}
+                      onChange={(event) =>
+                        setEditDraft((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                review_count: event.target.value
+                                  ? Number(event.target.value)
+                                  : null,
+                              }
+                            : prev,
+                        )
+                      }
                       className="glass-input mt-1"
                     />
                   </label>
@@ -732,7 +878,13 @@ export const CRMPage = () => {
                     Address
                     <input
                       value={editDraft?.address ?? ""}
-                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, address: event.target.value || null } : prev))}
+                      onChange={(event) =>
+                        setEditDraft((prev) =>
+                          prev
+                            ? { ...prev, address: event.target.value || null }
+                            : prev,
+                        )
+                      }
                       className="glass-input mt-1"
                     />
                   </label>
@@ -740,7 +892,16 @@ export const CRMPage = () => {
                     Website URL
                     <input
                       value={editDraft?.website_url ?? ""}
-                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, website_url: event.target.value || null } : prev))}
+                      onChange={(event) =>
+                        setEditDraft((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                website_url: event.target.value || null,
+                              }
+                            : prev,
+                        )
+                      }
                       className="glass-input mt-1"
                     />
                   </label>
@@ -748,7 +909,16 @@ export const CRMPage = () => {
                     Google Maps URL
                     <input
                       value={editDraft?.google_maps_url ?? ""}
-                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, google_maps_url: event.target.value || null } : prev))}
+                      onChange={(event) =>
+                        setEditDraft((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                google_maps_url: event.target.value || null,
+                              }
+                            : prev,
+                        )
+                      }
                       className="glass-input mt-1"
                     />
                   </label>
@@ -757,7 +927,13 @@ export const CRMPage = () => {
                     <textarea
                       rows={4}
                       value={editDraft?.notes ?? ""}
-                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, notes: event.target.value || null } : prev))}
+                      onChange={(event) =>
+                        setEditDraft((prev) =>
+                          prev
+                            ? { ...prev, notes: event.target.value || null }
+                            : prev,
+                        )
+                      }
                       className="glass-input mt-1"
                     />
                   </label>
@@ -773,7 +949,10 @@ export const CRMPage = () => {
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="accent-btn px-3 py-1.5 text-xs font-semibold">
+                  <button
+                    type="submit"
+                    className="accent-btn px-3 py-1.5 text-xs font-semibold"
+                  >
                     Update Deal
                   </button>
                 </div>
@@ -819,7 +998,7 @@ export const CRMPage = () => {
         />
 
         {/* simple keyframes for table rows */}
-        <style >{`
+        <style>{`
         @keyframes fadeInUp {
           from {
             opacity: 0;

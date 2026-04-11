@@ -47,35 +47,49 @@ export const ManageLeadsHeader = ({
         <div className="flex items-center gap-2">
           {utilityControl}
 
-          {VIEW_OPTIONS.map((view) => (
-            <button
-              key={view.value}
-              type="button"
-              onClick={() => onViewChange(view.value)}
-              className={`rounded-full px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] transition-all duration-200 ${
-                manageLeadView === view.value
-                  ? "bg-gradient-to-r from-accent to-accent-secondary text-content-inverse shadow-glow"
-                  : "border border-accent/10 bg-surface-secondary/80 text-content-tertiary hover:border-accent/30 hover:text-content-secondary"
-              }`}
-            >
-              {view.label}
-            </button>
-          ))}
+          <div className="glass-card-sm  gap-1 inline-flex p-1 text-[11px]">
+            {VIEW_OPTIONS.map((view) => (
+              <button
+                key={view.value}
+                type="button"
+                onClick={() => onViewChange(view.value)}
+                className={`rounded-full px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] transition-all duration-200 ${
+                  manageLeadView === view.value
+                    ? "bg-gradient-to-r from-accent to-accent-secondary text-content-inverse shadow-glow"
+                    : "border border-accent/10 bg-surface-secondary/80 text-content hover:border-accent/30 hover:text-content-secondary"
+                }  ${view.value === "analytics" ? "relative p-4 animate-pulseGlow  " : ""}  `}
+              >
+                {view.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       <div className="grid gap-3 md:grid-cols-3">
         <div className="glass-card-sm p-3">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-content-tertiary">Hot leads</p>
-          <p className="text-2xl font-semibold text-danger">{insights?.hot_leads_need_reply ?? 0}</p>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-content-tertiary">
+            Hot leads
+          </p>
+          <p className="text-2xl font-semibold text-danger">
+            {insights?.hot_leads_need_reply ?? 0}
+          </p>
         </div>
         <div className="glass-card-sm p-3">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-content-tertiary">Going cold</p>
-          <p className="text-2xl font-semibold text-warning">{insights?.leads_going_cold ?? 0}</p>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-content-tertiary">
+            Going cold
+          </p>
+          <p className="text-2xl font-semibold text-warning">
+            {insights?.leads_going_cold ?? 0}
+          </p>
         </div>
         <div className="glass-card-sm p-3">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-content-tertiary">Likely to close</p>
-          <p className="text-2xl font-semibold text-success">{insights?.leads_likely_to_close ?? 0}</p>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-content-tertiary">
+            Likely to close
+          </p>
+          <p className="text-2xl font-semibold text-success">
+            {insights?.leads_likely_to_close ?? 0}
+          </p>
         </div>
       </div>
 
@@ -86,19 +100,31 @@ export const ManageLeadsHeader = ({
           placeholder="Search by name/company/email/phone"
           className="glass-input min-w-[220px] flex-1"
         />
-        <button type="button" onClick={onToggleOnlyHot} className="glass-btn text-xs">
+        <button
+          type="button"
+          onClick={onToggleOnlyHot}
+          className="glass-btn text-xs"
+        >
           {onlyHot ? "Hot only: on" : "Hot only"}
         </button>
         <button
           type="button"
           onClick={onTogglePopup}
           className={`glass-btn text-xs ${disableDetailsPopup ? "text-danger" : "text-success"}`}
-          title={disableDetailsPopup ? "Click to enable details popup" : "Click to disable details popup"}
+          title={
+            disableDetailsPopup
+              ? "Click to enable details popup"
+              : "Click to disable details popup"
+          }
         >
           {disableDetailsPopup ? "🚫 Popups Off" : "✓ Popups On"}
         </button>
         {uploadControl}
-        <button type="button" onClick={onToggleAddLead} className="glass-btn text-xs">
+        <button
+          type="button"
+          onClick={onToggleAddLead}
+          className="glass-btn text-xs"
+        >
           Add Lead
         </button>
       </div>

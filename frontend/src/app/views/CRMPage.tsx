@@ -12,6 +12,7 @@ import { leadService } from "../../features/leads/services/leadService";
 import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButton";
 import { PageBackground } from "../../components/ui/PageBackground";
 import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
+import { CRMAnalysisPage } from "./CRMAnalysisPage";
 import bgConnecting from "../../assets/bg-images/connecting-teams.svg";
 import type { DealStatus } from "../../features/common/types/ui";
 import { AddDealForm } from "../../features/crm/components/AddDealForm";
@@ -41,7 +42,7 @@ const INITIAL_NEW_DEAL: NewDealDraft = {
 };
 
 export const CRMPage = () => {
-  const [view, setView] = useState<"table" | "kanban">("table");
+  const [view, setView] = useState<"table" | "kanban" | "analysis">("table");
   const { leads: centralizedLeads, loading } = useCentralizedLeads();
   const [deals, setDeals] = useState<Deal[]>([]);
   const [selectedDealIds, setSelectedDealIds] = useState<string[]>([]);
@@ -457,7 +458,7 @@ export const CRMPage = () => {
         {/* view toggle */}
         <div className="flex items-center justify-between gap-2">
           <div className="glass-card-sm inline-flex p-1 text-[11px]">
-            {(["table", "kanban"] as const).map((option) => (
+            {(["table", "kanban", "analysis"] as const).map((option) => (
               <button
                 key={option}
                 onClick={() => setView(option)}
@@ -471,7 +472,9 @@ export const CRMPage = () => {
             ))}
           </div>
           <p className="hidden text-[11px] text-content-tertiary md:block">
-            Drag deals between stages in Kanban view to instantly update status.
+            {view === "analysis"
+              ? "Analyze pipeline trends, AI recommendations, and close probability in one place."
+              : "Drag deals between stages in Kanban view to instantly update status."}
           </p>
         </div>
 
@@ -482,6 +485,8 @@ export const CRMPage = () => {
         {/* main content */}
         {loading ? (
           <div className="glass-card p-8 text-center text-content-secondary">Loading CRM deals...</div>
+        ) : view === "analysis" ? (
+          <CRMAnalysisPage deals={deals} />
         ) : view === "table" ? (
           <>
             <div className="glass-card-sm flex flex-wrap items-center gap-2 px-3 py-2">

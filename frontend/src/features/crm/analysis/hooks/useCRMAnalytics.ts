@@ -8,12 +8,18 @@ export const useCRMAnalytics = (deals: Deal[]) => {
   const [dateRange, setDateRange] = useState<AnalyticsDateRange>("30d");
   const [pipelineFilter, setPipelineFilter] = useState<PipelineFilter>("all");
 
+  const filteredDeals = useMemo(
+    () => analyticsService.filterDeals(deals, dateRange, pipelineFilter),
+    [deals, dateRange, pipelineFilter],
+  );
+
   const analytics = useMemo(
     () => analyticsService.buildAnalytics(deals, dateRange, pipelineFilter),
     [deals, dateRange, pipelineFilter],
   );
 
   return {
+    filteredDeals,
     analytics,
     dateRange,
     setDateRange,

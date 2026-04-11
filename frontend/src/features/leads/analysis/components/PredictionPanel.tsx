@@ -16,13 +16,13 @@ export const PredictionPanel = ({ prediction }: PredictionPanelProps) => {
       <article className="glass-card-sm p-4">
         <p className="text-xs uppercase tracking-[0.16em] text-content-tertiary">Leads to Discard</p>
         <p className="mt-2 text-2xl font-semibold text-content">{prediction.discardCandidates.length}</p>
-        <p className="mt-1 text-xs text-danger">Low quality recommendations</p>
+        <p className="mt-1 text-xs text-danger">{prediction.lowQualityLeads.length} low-quality identified</p>
       </article>
 
       <article className="glass-card-sm p-4">
-        <p className="text-xs uppercase tracking-[0.16em] text-content-tertiary">Expected CRM Conversions</p>
-        <p className="mt-2 text-2xl font-semibold text-content">{prediction.expectedConversions}</p>
-        <p className="mt-1 text-xs text-info">Weighted rule-based estimate</p>
+        <p className="text-xs uppercase tracking-[0.16em] text-content-tertiary">Conversion Probability</p>
+        <p className="mt-2 text-2xl font-semibold text-content">{prediction.conversionProbability}%</p>
+        <p className="mt-1 text-xs text-info">Expected conversions: {prediction.expectedConversions}</p>
       </article>
 
       <article className="glass-card-sm p-4">

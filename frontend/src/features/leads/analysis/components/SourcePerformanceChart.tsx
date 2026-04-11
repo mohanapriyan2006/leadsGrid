@@ -1,4 +1,4 @@
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { PolarAngleAxis, PolarGrid, Radar, RadarChart, ResponsiveContainer, Tooltip } from "recharts";
 
 import { PanelCard } from "../../../../components/ui/PanelCard";
 import type { SourcePerformance } from "../types/leadsAnalytics";
@@ -12,14 +12,13 @@ export const SourcePerformanceChart = ({ data }: SourcePerformanceChartProps) =>
     <PanelCard className="space-y-3">
       <header>
         <h3 className="text-lg font-semibold text-content">Source Performance</h3>
-        <p className="text-xs text-content-secondary">High-intent rate by lead source channel.</p>
+        <p className="text-xs text-content-secondary">Radar view of high-intent quality by source channel.</p>
       </header>
       <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
-            <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="4 4" />
-            <XAxis dataKey="source" stroke="var(--content-secondary)" tick={{ fill: "var(--content-secondary)", fontSize: 12 }} />
-            <YAxis stroke="var(--content-secondary)" tick={{ fill: "var(--content-secondary)", fontSize: 12 }} />
+          <RadarChart data={data} outerRadius="72%">
+            <PolarGrid stroke="rgba(255,255,255,0.12)" />
+            <PolarAngleAxis dataKey="source" tick={{ fill: "var(--content-secondary)", fontSize: 12 }} />
             <Tooltip
               formatter={(value, name) => {
                 if (name === "highIntentRate") return [`${value}%`, "High intent rate"];
@@ -32,10 +31,19 @@ export const SourcePerformanceChart = ({ data }: SourcePerformanceChartProps) =>
                 color: "#e8ecff",
               }}
             />
-            <Bar dataKey="highIntentRate" fill="var(--success)" radius={[8, 8, 0, 0]} />
-          </BarChart>
+            <Radar
+              name="High intent rate"
+              dataKey="highIntentRate"
+              stroke="var(--success)"
+              fill="var(--success)"
+              fillOpacity={0.35}
+            />
+          </RadarChart>
         </ResponsiveContainer>
       </div>
+      <p className="text-xs text-content-tertiary">
+        Tip: prioritize channels where high-intent grows while total volume stays stable.
+      </p>
     </PanelCard>
   );
 };

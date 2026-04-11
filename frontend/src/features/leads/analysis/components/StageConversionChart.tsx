@@ -1,4 +1,4 @@
-import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { PanelCard } from "../../../../components/ui/PanelCard";
 import type { StageConversionPoint } from "../types/leadsAnalytics";
@@ -11,15 +11,26 @@ export const StageConversionChart = ({ data }: StageConversionChartProps) => {
   return (
     <PanelCard className="space-y-3">
       <header>
-        <h3 className="text-lg font-semibold text-content">Stage Conversion Funnel</h3>
-        <p className="text-xs text-content-secondary">Track progression and drop-offs across board stages.</p>
+        <h3 className="text-lg font-semibold text-content">Stage Conversion Trend</h3>
+        <p className="text-xs text-content-secondary">Compare lead volume and drop-off rate across board stages.</p>
       </header>
       <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
+          <LineChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
             <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="4 4" />
             <XAxis dataKey="stage" stroke="var(--content-secondary)" tick={{ fill: "var(--content-secondary)", fontSize: 12 }} />
-            <YAxis stroke="var(--content-secondary)" tick={{ fill: "var(--content-secondary)", fontSize: 12 }} />
+            <YAxis
+              yAxisId="count"
+              stroke="var(--content-secondary)"
+              tick={{ fill: "var(--content-secondary)", fontSize: 12 }}
+            />
+            <YAxis
+              yAxisId="dropoff"
+              orientation="right"
+              domain={[0, 100]}
+              stroke="var(--content-secondary)"
+              tick={{ fill: "var(--content-secondary)", fontSize: 12 }}
+            />
             <Tooltip
               formatter={(value, name) => {
                 if (name === "dropOffRate") return [`${value}%`, "Drop-off"];
@@ -32,10 +43,25 @@ export const StageConversionChart = ({ data }: StageConversionChartProps) => {
                 color: "#e8ecff",
               }}
             />
-            <Bar dataKey="count" fill="var(--info)" radius={[8, 8, 0, 0]}>
-              <LabelList dataKey="dropOffRate" position="top" formatter={(value) => `${value ?? 0}%`} fill="var(--content-secondary)" />
-            </Bar>
-          </BarChart>
+            <Line
+              yAxisId="count"
+              type="monotone"
+              dataKey="count"
+              stroke="var(--info)"
+              strokeWidth={2.4}
+              dot={{ r: 3 }}
+              activeDot={{ r: 5 }}
+            />
+            <Line
+              yAxisId="dropoff"
+              type="monotone"
+              dataKey="dropOffRate"
+              stroke="var(--danger)"
+              strokeWidth={2}
+              dot={{ r: 3 }}
+              activeDot={{ r: 5 }}
+            />
+          </LineChart>
         </ResponsiveContainer>
       </div>
     </PanelCard>

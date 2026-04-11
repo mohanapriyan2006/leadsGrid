@@ -1,4 +1,4 @@
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { PanelCard } from "../../../../components/ui/PanelCard";
 import type { LeadVelocityPoint } from "../types/leadsAnalytics";
@@ -16,13 +16,7 @@ export const LeadQualityChart = ({ data }: LeadQualityChartProps) => {
       </header>
       <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data}>
-            <defs>
-              <linearGradient id="velocityGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--warning)" stopOpacity={0.65} />
-                <stop offset="100%" stopColor="var(--warning)" stopOpacity={0.05} />
-              </linearGradient>
-            </defs>
+          <LineChart data={data}>
             <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="4 4" />
             <XAxis dataKey="stage" stroke="var(--content-secondary)" tick={{ fill: "var(--content-secondary)", fontSize: 12 }} />
             <YAxis stroke="var(--content-secondary)" tick={{ fill: "var(--content-secondary)", fontSize: 12 }} />
@@ -35,8 +29,8 @@ export const LeadQualityChart = ({ data }: LeadQualityChartProps) => {
                 color: "#e8ecff",
               }}
             />
-            <Area dataKey="avgTime" type="monotone" stroke="var(--warning)" fill="url(#velocityGradient)" strokeWidth={2} />
-          </AreaChart>
+            <Line dataKey="avgTime" type="monotone" stroke="var(--warning)" strokeWidth={3} dot={{ r: 4, fill: "var(--warning)" }} activeDot={{ r: 6 }} />
+          </LineChart>
         </ResponsiveContainer>
       </div>
     </PanelCard>

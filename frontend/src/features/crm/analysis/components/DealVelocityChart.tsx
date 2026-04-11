@@ -1,8 +1,8 @@
 import {
-  Bar,
-  BarChart,
   CartesianGrid,
   ResponsiveContainer,
+  Scatter,
+  ScatterChart,
   Tooltip,
   XAxis,
   YAxis,
@@ -20,11 +20,11 @@ export const DealVelocityChart = ({ data }: DealVelocityChartProps) => {
     <PanelCard className="space-y-3">
       <header>
         <h3 className="text-lg font-semibold text-content">Deal Velocity</h3>
-        <p className="text-xs text-content-secondary">Average days spent in each pipeline stage.</p>
+        <p className="text-xs text-content-secondary">Scatter view of average days spent by stage.</p>
       </header>
       <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
+          <ScatterChart data={data}>
             <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="4 4" />
             <XAxis dataKey="stage" stroke="var(--content-secondary)" tick={{ fill: "var(--content-secondary)", fontSize: 12 }} />
             <YAxis stroke="var(--content-secondary)" tick={{ fill: "var(--content-secondary)", fontSize: 12 }} />
@@ -37,8 +37,8 @@ export const DealVelocityChart = ({ data }: DealVelocityChartProps) => {
                 color: "#e8ecff",
               }}
             />
-            <Bar dataKey="avgDays" fill="var(--warning)" radius={[8, 8, 0, 0]} />
-          </BarChart>
+            <Scatter dataKey="avgDays" fill="var(--warning)" line shape="circle" />
+          </ScatterChart>
         </ResponsiveContainer>
       </div>
     </PanelCard>

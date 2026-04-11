@@ -77,17 +77,17 @@ const buildConversionFunnel = (stageDistribution: StageCountPoint[]): FunnelPoin
 
 const buildRevenueTrend = (deals: Deal[]): TrendPoint[] => {
   const buckets = [
-    { label: "W1", max: 7 },
-    { label: "W2", max: 14 },
-    { label: "W3", max: 21 },
-    { label: "W4", max: 31 },
-    { label: "W5+", max: Number.POSITIVE_INFINITY },
+    { label: "0-7d", min: 0, max: 7 },
+    { label: "8-14d", min: 8, max: 14 },
+    { label: "15-21d", min: 15, max: 21 },
+    { label: "22-30d", min: 22, max: 30 },
+    { label: "31d+", min: 31, max: Number.POSITIVE_INFINITY },
   ];
 
   return buckets.map((bucket) => ({
     date: bucket.label,
     value: deals
-      .filter((deal) => deal.daysInStage <= bucket.max)
+      .filter((deal) => deal.daysInStage >= bucket.min && deal.daysInStage <= bucket.max)
       .reduce((sum, deal) => sum + safeNumber(deal.value), 0),
   }));
 };
@@ -108,6 +108,14 @@ const buildDealVelocity = (deals: Deal[]): VelocityPoint[] => {
 };
 
 export const analyticsService = {
+  filterDeals(
+    deals: Deal[],
+    dateRange: AnalyticsDateRange,
+    pipelineFilter: PipelineFilter,
+  ): Deal[] {
+    return getFilteredDeals(deals, dateRange, pipelineFilter);
+  },
+
   buildAnalytics(
     deals: Deal[],
     dateRange: AnalyticsDateRange,

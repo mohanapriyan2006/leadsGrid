@@ -1,4 +1,3 @@
-import { BOARD_STAGES } from "../../constants/manageLeads";
 import type { ManageLead } from "../../types/manageLead";
 import type {
   LeadSourceBucket,
@@ -28,6 +27,7 @@ const toDaysSince = (iso: string) => {
 const inferSourceBucket = (lead: ManageLead): LeadSourceBucket => {
   if (lead.source === "reddit") return "reddit";
   if (lead.source === "linkedin") return "linkedin";
+  if (lead.source === "search" || lead.source === "hackernews" || lead.source === "twitter") return "manual";
 
   if (
     lead.category
@@ -42,7 +42,7 @@ const inferSourceBucket = (lead: ManageLead): LeadSourceBucket => {
   return "manual";
 };
 
-const stageOrder = [...BOARD_STAGES.map((stage) => stage.id), "NEGOTIATION"];
+const stageOrder = ["NEW", "CONTACTED", "QUALIFIED", "RESPONDED", "NEGOTIATION"];
 
 const filterLeads = (leads: ManageLead[], filters: LeadsAnalysisFilters) => {
   const maxAge = MAX_AGE_BY_RANGE[filters.range];

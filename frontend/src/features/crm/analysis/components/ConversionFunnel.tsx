@@ -1,12 +1,9 @@
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  LabelList,
+  PolarAngleAxis,
+  RadialBar,
+  RadialBarChart,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
-  YAxis,
 } from "recharts";
 
 import { PanelCard } from "../../../../components/ui/PanelCard";
@@ -17,25 +14,24 @@ type ConversionFunnelProps = {
 };
 
 export const ConversionFunnel = ({ data }: ConversionFunnelProps) => {
+  const radialData = data.map((entry) => ({
+    stage: entry.label,
+    conversion: Number(entry.conversionFromPrevious.toFixed(1)),
+  }));
+
   return (
     <PanelCard className="space-y-3">
       <header>
         <h3 className="text-lg font-semibold text-content">Conversion Funnel</h3>
-        <p className="text-xs text-content-secondary">Lead flow progression across CRM stages.</p>
+        <p className="text-xs text-content-secondary">Radial view of conversion efficiency across CRM stages.</p>
       </header>
       <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
-            <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="4 4" />
-            <XAxis dataKey="label" stroke="var(--content-secondary)" tick={{ fill: "var(--content-secondary)", fontSize: 12 }} />
-            <YAxis stroke="var(--content-secondary)" tick={{ fill: "var(--content-secondary)", fontSize: 12 }} />
+          <RadialBarChart data={radialData} innerRadius="20%" outerRadius="90%" startAngle={180} endAngle={-180}>
+            <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
             <Tooltip
-              formatter={(value, name) => {
-                if (name === "conversionFromPrevious") {
-                  return [`${value}%`, "Conversion"];
-                }
-                return [value, "Deals"];
-              }}
+              formatter={(value) => [`${value}%`, "Conversion"]}
+              labelFormatter={(_value, payload) => payload?.[0]?.payload?.stage ?? "Stage"}
               contentStyle={{
                 borderRadius: 12,
                 border: "1px solid rgba(167,139,250,0.25)",
@@ -43,15 +39,14 @@ export const ConversionFunnel = ({ data }: ConversionFunnelProps) => {
                 color: "#e8ecff",
               }}
             />
-            <Bar dataKey="value" fill="var(--info)" radius={[8, 8, 0, 0]}>
-              <LabelList
-                dataKey="conversionFromPrevious"
-                position="top"
-                formatter={(value) => `${value ?? 0}%`}
-                fill="var(--content-secondary)"
-              />
-            </Bar>
-          </BarChart>
+            <RadialBar
+              dataKey="conversion"
+              background={{ fill: "rgba(255,255,255,0.08)" }}
+              cornerRadius={10}
+              fill="var(--info)"
+              label={{ position: "insideStart", fill: "#d7def8", fontSize: 11 }}
+            />
+          </RadialBarChart>
         </ResponsiveContainer>
       </div>
     </PanelCard>

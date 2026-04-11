@@ -1,7 +1,8 @@
 import {
-  Area,
-  AreaChart,
+  Bar,
   CartesianGrid,
+  ComposedChart,
+  Line,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -16,26 +17,32 @@ type RevenueForecastChartProps = {
 };
 
 export const RevenueForecastChart = ({ data }: RevenueForecastChartProps) => {
+  const withTrend = data.map((point, index, arr) => {
+    const start = Math.max(0, index - 2);
+    const window = arr.slice(start, index + 1);
+    const avg = window.reduce((sum, item) => sum + item.value, 0) / Math.max(1, window.length);
+    return { ...point, movingAvg: Math.round(avg) };
+  });
+
   return (
     <PanelCard className="space-y-3">
       <header>
         <h3 className="text-lg font-semibold text-content">Revenue Trend</h3>
-        <p className="text-xs text-content-secondary">Short-term value projection from active pipeline.</p>
+        <p className="text-xs text-content-secondary">Composed view of revenue and rolling forecast signal.</p>
       </header>
       <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data}>
-            <defs>
-              <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.8} />
-                <stop offset="100%" stopColor="var(--accent)" stopOpacity={0.05} />
-              </linearGradient>
-            </defs>
+          <ComposedChart data={withTrend}>
             <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="4 4" />
             <XAxis dataKey="date" stroke="var(--content-secondary)" tick={{ fill: "var(--content-secondary)", fontSize: 12 }} />
             <YAxis stroke="var(--content-secondary)" tick={{ fill: "var(--content-secondary)", fontSize: 12 }} />
             <Tooltip
-              formatter={(value) => [`$${Number(value).toLocaleString()}`, "Revenue"]}
+              formatter={(value, name) => {
+                if (name === "movingAvg") {
+                  return [`$${Number(value).toLocaleString()}`, "Moving avg"];
+                }
+                return [`$${Number(value).toLocaleString()}`, "Revenue"];
+              }}
               contentStyle={{
                 borderRadius: 12,
                 border: "1px solid rgba(167,139,250,0.25)",
@@ -43,8 +50,9 @@ export const RevenueForecastChart = ({ data }: RevenueForecastChartProps) => {
                 color: "#e8ecff",
               }}
             />
-            <Area type="monotone" dataKey="value" stroke="var(--accent)" fill="url(#revenueGradient)" strokeWidth={2} />
-          </AreaChart>
+            <Bar dataKey="value" fill="var(--accent)" radius={[6, 6, 0, 0]} opacity={0.75} />
+            <Line type="monotone" dataKey="movingAvg" stroke="var(--success)" strokeWidth={2.2} dot={false} />
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </PanelCard>

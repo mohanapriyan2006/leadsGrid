@@ -3,6 +3,11 @@ import type { LeadPrediction } from "../types/leadsAnalytics";
 
 const getProbability = (lead: ManageLead) => {
   const base = lead.score / 100;
+  const daysInStage = Math.max(
+    0,
+    Math.floor((Date.now() - new Date(lead.updated_at || lead.created_at).getTime()) / (1000 * 60 * 60 * 24)),
+  );
+
   const stageBoost =
     lead.stage === "NEGOTIATION"
       ? 0.2
@@ -12,7 +17,10 @@ const getProbability = (lead: ManageLead) => {
           ? 0.07
           : 0;
 
-  return Math.min(1, Number((base + stageBoost).toFixed(2)));
+  const freshnessBoost = daysInStage <= 2 ? 0.06 : daysInStage <= 7 ? 0.02 : 0;
+  const stalePenalty = daysInStage > 20 ? 0.12 : daysInStage > 12 ? 0.06 : 0;
+
+  return Math.min(1, Math.max(0, Number((base + stageBoost + freshnessBoost - stalePenalty).toFixed(2))));
 };
 
 export const leadsPredictionService = {

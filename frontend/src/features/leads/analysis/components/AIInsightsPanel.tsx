@@ -35,9 +35,11 @@ export const AIInsightsPanel = ({ insights }: AIInsightsPanelProps) => {
 
         <article className="rounded-glass-sm border border-danger/25 bg-danger-soft p-3">
           <p className="text-xs uppercase tracking-[0.16em] text-danger">Warning</p>
-          <p className="mt-2 text-sm text-content-secondary">{insights.warning}</p>
+          <p className="mt-2 rounded-glass-sm border border-danger/30 bg-surface/35 px-2 py-1.5 text-sm text-content-secondary">
+            {insights.warning}
+          </p>
           <p className="mt-3 text-xs uppercase tracking-[0.16em] text-content-tertiary">Best Leads Today</p>
-          <ul className="mt-1 space-y-1 text-xs text-content-secondary">
+          <ul className="mt-1 max-h-28 space-y-1 overflow-auto text-xs text-content-secondary">
             {insights.bestLeadsToday.map((lead) => (
               <li key={lead.id}>- {lead.name} ({lead.score})</li>
             ))}

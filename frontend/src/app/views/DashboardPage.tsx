@@ -1,52 +1,95 @@
 import { motion } from "framer-motion";
 
-import { MetricWidget } from "../../components/ui/MetricWidget";
-import { PanelCard } from "../../components/ui/PanelCard";
+import bgDataAtWork from "../../assets/bg-images/data-at-work.svg";
+import { PageBackground } from "../../components/ui/PageBackground";
+import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
+import { DashboardHero } from "../../features/dashboard/components/DashboardHero";
+import { DashboardHotLeadsWidget } from "../../features/dashboard/components/DashboardHotLeadsWidget";
+import { DashboardKpiGrid } from "../../features/dashboard/components/DashboardKpiGrid";
+import { DashboardPipelineWidget } from "../../features/dashboard/components/DashboardPipelineWidget";
+import { DashboardQuickActionsWidget } from "../../features/dashboard/components/DashboardQuickActionsWidget";
+import { DashboardRecentActivityWidget } from "../../features/dashboard/components/DashboardRecentActivityWidget";
+import { DashboardSkeleton } from "../../features/dashboard/components/DashboardSkeleton";
+import { useDashboardData } from "../../features/dashboard/hooks/useDashboardData";
 
-const metricItems = [
-  { title: "Leads Captured", value: "1,284", delta: "+12.4% this week" },
-  { title: "High Intent", value: "42", delta: "active queue" },
-  { title: "Engagement", value: "86", delta: "response quality" },
-  { title: "Efficiency", value: "6.4%", delta: "reply conversion" },
-];
+const reveal = {
+	hidden: { opacity: 0, y: 14 },
+	show: { opacity: 1, y: 0 },
+};
 
 export const DashboardPage = () => {
-  return (
-    <div className="space-y-6">
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {metricItems.map((item, index) => (
-          <motion.div
-            key={item.title}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.08 }}
-            whileHover={{ y: -2, scale: 1.01 }}
-          >
-            <MetricWidget {...item} />
-          </motion.div>
-        ))}
-      </section>
+	const {
+		leads,
+		hotLeads,
+		kpis,
+		stageMetrics,
+		recentActivity,
+		quickActions,
+		loading,
+		error,
+		refresh,
+		refreshing,
+		lastUpdatedIso,
+	} = useDashboardData();
 
-      <section className="grid gap-4 xl:grid-cols-3">
-        <PanelCard className="xl:col-span-2">
-          <h2 className="text-2xl font-semibold text-white">Signal Stream</h2>
-          <p className="mt-1 text-sm text-text-dim">Pipeline-first feed from scored intent inputs.</p>
-          <div className="mt-4 space-y-2 text-sm">
-            <div className="rounded border border-white/10 bg-black/20 p-3">Scaling outbound workflows with AI - score 92</div>
-            <div className="rounded border border-white/10 bg-black/20 p-3">Evaluating CRM replacements for Q3 - score 88</div>
-            <div className="rounded border border-white/10 bg-black/20 p-3">Seeking multi-channel prospecting support - score 74</div>
-          </div>
-        </PanelCard>
+	return (
+		<>
+			<PageBackground image={bgDataAtWork} tint="rgba(167, 139, 250, 0.66)" />
+			<ResponsivePageLayout>
+				{loading ? <DashboardSkeleton /> : null}
 
-        <PanelCard>
-          <h2 className="text-2xl font-semibold text-white">System Health</h2>
-          <div className="mt-4 space-y-3 text-sm text-text-dim">
-            <p>Relevance: <span className="text-highlight">93.2%</span></p>
-            <p>Sentiment Match: <span className="text-highlight">84.2%</span></p>
-            <p>Latency Risk: <span className="text-red-300">9.6%</span></p>
-          </div>
-        </PanelCard>
-      </section>
-    </div>
-  );
+				{!loading ? (
+					<div className="space-y-4">
+						{error ? (
+							<div className="rounded-glass-sm border border-warning/30 bg-warning-soft p-3 text-sm text-warning">
+								Showing live dashboard with fallback calculations. Detail: {error}
+							</div>
+						) : null}
+
+						<motion.div initial="hidden" animate="show" variants={reveal} transition={{ duration: 0.35 }}>
+							<DashboardHero
+								totalLeads={leads.length}
+								refreshing={refreshing}
+								lastUpdatedIso={lastUpdatedIso}
+								onRefresh={() => {
+									void refresh();
+								}}
+							/>
+						</motion.div>
+
+						<motion.div
+							initial="hidden"
+							animate="show"
+							variants={reveal}
+							transition={{ duration: 0.35, delay: 0.04 }}
+						>
+							<DashboardKpiGrid kpis={kpis} />
+						</motion.div>
+
+						<motion.div
+							className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]"
+							initial="hidden"
+							animate="show"
+							variants={reveal}
+							transition={{ duration: 0.35, delay: 0.08 }}
+						>
+							<DashboardHotLeadsWidget leads={hotLeads} />
+							<DashboardPipelineWidget stageMetrics={stageMetrics} />
+						</motion.div>
+
+						<motion.div
+							className="grid gap-4 lg:grid-cols-2"
+							initial="hidden"
+							animate="show"
+							variants={reveal}
+							transition={{ duration: 0.35, delay: 0.12 }}
+						>
+							<DashboardRecentActivityWidget activity={recentActivity} />
+							<DashboardQuickActionsWidget actions={quickActions} />
+						</motion.div>
+					</div>
+				) : null}
+			</ResponsivePageLayout>
+		</>
+	);
 };

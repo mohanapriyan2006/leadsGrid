@@ -1,34 +1,42 @@
-from datetime import datetime, timedelta, timezone
+from dataclasses import dataclass
 
-from jose import JWTError, jwt
-from passlib.context import CryptContext
-
-from app.core.config import settings
+from fastapi import Depends, HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-ALGORITHM = "HS256"
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+@dataclass
+class UserContext:
+    user_id: str
+    token: str | None = None
 
 
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+async def get_current_user(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+) -> UserContext:
+    settings = request.app.state.settings
+    firebase_client = request.app.state.firebase_client
 
+    if not settings.require_auth:
+        # Auth is optional in local development to keep iteration fast.
+        fallback_user_id = request.headers.get("x-user-id", "local-dev-user")
+        token = credentials.credentials if credentials else None
+        return UserContext(user_id=fallback_user_id, token=token)
 
-def create_access_token(subject: str, expires_delta: timedelta | None = None) -> str:
-    expire = datetime.now(timezone.utc) + (
-        expires_delta or timedelta(minutes=settings.access_token_expire_minutes)
-    )
-    to_encode = {"sub": subject, "exp": expire}
-    return jwt.encode(to_encode, settings.secret_key, algorithm=ALGORITHM)
+    if not credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing bearer token",
+        )
 
+    user_id = firebase_client.verify_token(credentials.credentials)
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+        )
 
-def decode_access_token(token: str) -> dict:
-    try:
-        payload = jwt.decode(token, settings.secret_key, algorithms=[ALGORITHM])
-        return payload
-    except JWTError as exc:
-        raise ValueError("Invalid token") from exc
+    return UserContext(user_id=user_id, token=credentials.credentials)

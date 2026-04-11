@@ -1,39 +1,323 @@
-@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --bg-0: #04060d;
-  --bg-1: #090f1f;
-  --panel: #10182e;
-  --line: rgba(181, 149, 255, 0.15);
+  /* === CORE SURFACE COLORS === */
+  --surface: #0a0c14;
+  --surface-secondary: #0f1420;
+  --surface-tertiary: #141b2d;
+  --surface-elevated: #1a2340;
+
+  /* === CONTENT COLORS === */
+  --content: #e8ecff;
+  --content-secondary: #94a3b8;
+  --content-tertiary: #64748b;
+  --content-inverse: #0a0c14;
+
+  /* === ACCENT COLORS === */
+  --accent: #a78bfa;
+  --accent-secondary: #8b5cf6;
+  --accent-tertiary: #6366f1;
+  --accent-soft: rgba(167, 139, 250, 0.15);
+  --accent-glow: rgba(167, 139, 250, 0.4);
+
+  /* === SEMANTIC COLORS === */
+  --success: #10b981;
+  --success-soft: rgba(16, 185, 129, 0.15);
+  --warning: #f59e0b;
+  --warning-soft: rgba(245, 158, 11, 0.15);
+  --danger: #ef4444;
+  --danger-soft: rgba(239, 68, 68, 0.15);
+  --info: #06b6d4;
+  --info-soft: rgba(6, 182, 212, 0.15);
+
+  /* === LEGACY ALIASES === */
+  --bg-0: #0a0c14;
+  --bg-1: #0f1420;
+  --panel: #141b2d;
+  --line: rgba(167, 139, 250, 0.15);
   --text-main: #e8ecff;
-  --text-dim: #8d96b8;
-  --accent: #b595ff;
-  --accent-2: #ffd586;
+  --text-dim: #94a3b8;
 }
 
-* {
-  box-sizing: border-box;
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--content);
+    background: var(--surface);
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Barlow Condensed", system-ui, sans-serif;
+    letter-spacing: 0.02em;
+    font-weight: 600;
+  }
+
+  /* Custom scrollbar for webkit browsers */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--surface-secondary);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--accent-soft);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+  }
 }
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  color: var(--text-main);
-  background:
-    radial-gradient(circle at 15% 10%, rgba(181, 149, 255, 0.17), transparent 36%),
-    radial-gradient(circle at 90% 20%, rgba(88, 130, 255, 0.16), transparent 30%),
-    linear-gradient(155deg, var(--bg-0), var(--bg-1));
-  font-family: "Space Grotesk", sans-serif;
+@layer components {
+  /* Glass Card Component */
+  .glass-card {
+    @apply rounded-glass backdrop-blur-glass;
+    background: rgba(20, 27, 45, 0.45);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      inset 0 0 0 0.5px rgba(167, 139, 250, 0.06);
+    border: 1px solid rgba(167, 139, 250, 0.12);
+  }
+
+  .glass-card-sm {
+    @apply rounded-glass-sm backdrop-blur-glass;
+    background: rgba(20, 27, 45, 0.50);
+    box-shadow:
+      0 4px 24px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(167, 139, 250, 0.1);
+  }
+
+  .glass-card-lg {
+    @apply rounded-glass-lg backdrop-blur-glass;
+    background: rgba(20, 27, 45, 0.55);
+    box-shadow:
+      0 16px 48px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 0 0 0.5px rgba(167, 139, 250, 0.08);
+    border: 1px solid rgba(167, 139, 250, 0.15);
+  }
+
+  /* Glass Button */
+  .glass-btn {
+    @apply rounded-glass-sm px-4 py-2 text-sm font-medium text-content;
+    @apply border border-accent/20 transition-all duration-200 backdrop-blur-sm;
+    background: rgba(20, 27, 45, 0.55);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  .glass-btn:hover {
+    @apply border-accent/40;
+    background: rgba(167, 139, 250, 0.12);
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  /* Accent Button */
+  .accent-btn {
+    @apply rounded-glass-sm px-4 py-2 text-sm font-semibold text-surface;
+    @apply bg-gradient-to-r from-accent to-accent-secondary transition-all duration-200;
+    box-shadow: 0 4px 16px rgba(167, 139, 250, 0.25);
+  }
+
+  .accent-btn:hover {
+    box-shadow: 0 0 24px var(--accent-glow);
+    transform: translateY(-1px);
+  }
+
+  /* Glass Input */
+  .glass-input {
+    @apply w-full rounded-glass-sm px-4 py-2.5 text-sm text-content;
+    @apply border border-accent/10 outline-none transition-all duration-200 backdrop-blur-sm;
+    background: rgba(15, 20, 32, 0.4);
+  }
+
+  .glass-input:focus {
+    @apply border-accent/30;
+    box-shadow: 0 0 0 3px var(--accent-soft), 0 0 20px rgba(167, 139, 250, 0.1);
+  }
+
+  .glass-input::placeholder {
+    @apply text-content-tertiary;
+  }
+
+  /* Status Badges */
+  .badge-success {
+    @apply rounded-full border border-success/30 bg-success-soft px-2.5 py-1 text-xs font-medium text-success;
+  }
+
+  .badge-warning {
+    @apply rounded-full border border-warning/30 bg-warning-soft px-2.5 py-1 text-xs font-medium text-warning;
+  }
+
+  .badge-danger {
+    @apply rounded-full border border-danger/30 bg-danger-soft px-2.5 py-1 text-xs font-medium text-danger;
+  }
+
+  .badge-info {
+    @apply rounded-full border border-info/30 bg-info-soft px-2.5 py-1 text-xs font-medium text-info;
+  }
+
+  .badge-accent {
+    @apply rounded-full border border-accent/30 bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent;
+  }
+
+  /* Page Layout */
+  .page-container {
+    @apply min-h-screen bg-surface p-6;
+  }
+
+  /* Page with background — wrapper for pages that use PageBackground */
+  .page-with-bg {
+    @apply relative isolate min-h-[calc(100dvh-56px)] sm:min-h-[calc(100dvh-60px)];
+  }
+
+  .page-scroll-container {
+    @apply min-h-[calc(100dvh-56px)] overflow-auto p-3 sm:min-h-[calc(100dvh-60px)] sm:p-4 md:p-6;
+  }
+
+  .shell-main {
+    @apply min-h-0 flex-1;
+  }
+
+  .focus-shell {
+    min-height: 100dvh;
+  }
+
+  .focus-shell .page-with-bg {
+    min-height: 100dvh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .focus-shell .page-scroll-container {
+    min-height: 100dvh;
+    height: 100dvh;
+  }
+
+  .focus-shell .focus-fill-height {
+    min-height: 100dvh;
+  }
+
+  .page-header {
+    @apply mb-6 flex items-center justify-between;
+  }
+
+  .page-title {
+    @apply text-2xl font-semibold text-content;
+  }
+
+  .page-subtitle {
+    @apply text-sm text-content-secondary;
+  }
+
+  /* Divider */
+  .glass-divider {
+    @apply h-px w-full bg-gradient-to-r from-transparent via-accent/20 to-transparent;
+  }
+
+  /* AI Chat Panel — opaque glass for chat area, prevents BG bleed */
+  .ai-chat-panel {
+    background: rgba(10, 12, 20, 0.60);
+    backdrop-filter: blur(24px) saturate(1.2);
+    -webkit-backdrop-filter: blur(24px) saturate(1.2);
+    box-shadow:
+      0 8px 40px rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      inset 0 0 0 0.5px rgba(167, 139, 250, 0.05);
+  }
+
+  /* Glow Effects */
+  .glow-accent {
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  .glow-success {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+  }
+
+  .glow-danger {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+  }
+
+  .logo-loader-shell {
+    @apply relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-surface px-4;
+  }
+
+  .logo-loader-orb {
+    position: absolute;
+    width: min(66vw, 560px);
+    height: min(66vw, 560px);
+    border-radius: 9999px;
+    background: radial-gradient(circle, rgba(167, 139, 250, 0.32) 0%, rgba(99, 102, 241, 0.16) 42%, transparent 75%);
+    filter: blur(8px);
+    animation: loaderPulse 2.2s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .logo-loader-card {
+    @apply relative z-10 flex flex-col items-center gap-4 rounded-glass-lg border border-accent/20 bg-surface-secondary/70 px-7 py-6 backdrop-blur-glass;
+    box-shadow:
+      0 16px 60px rgba(0, 0, 0, 0.45),
+      0 0 35px rgba(167, 139, 250, 0.2);
+  }
+
+  .logo-loader-image {
+    width: 68px;
+    height: 68px;
+    border-radius: 16px;
+    object-fit: cover;
+    animation: logoFloat 1.6s ease-in-out infinite;
+    box-shadow: 0 0 22px rgba(167, 139, 250, 0.4);
+  }
+
+  .logo-loader-text {
+    @apply text-center text-sm font-medium text-content-secondary;
+    letter-spacing: 0.03em;
+  }
 }
 
-h1,
-h2,
-h3,
-h4 {
-  font-family: "Barlow Condensed", sans-serif;
-  letter-spacing: 0.04em;
+@keyframes loaderPulse {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.65;
+  }
+
+  50% {
+    transform: scale(1.02);
+    opacity: 1;
+  }
+}
+
+@keyframes logoFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
 }

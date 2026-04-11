@@ -2,28 +2,32 @@ import { useQuery } from "@tanstack/react-query";
 
 import { useLeadStore } from "../../../store/useLeadStore";
 import { leadService } from "../services/leadService";
+import type { Lead } from "../types/lead";
 
-export const useLeads = (params: { query: string; source: "reddit" | "twitter" | "linkedin"; limit?: number }) => {
+export const useLeads = (params: { query: string; selectedSources: Lead["source"][]; limit?: number }) => {
   const { leads, setLeads } = useLeadStore();
+  const hasQuery = params.query.trim().length > 2;
 
   const leadsQuery = useQuery({
-    queryKey: ["leads", params.query, params.source, params.limit ?? 12],
-    enabled: params.query.trim().length > 2,
+    queryKey: ["leads", params.query, params.selectedSources.join(","), params.limit ?? 12],
+    enabled: hasQuery,
     queryFn: async () => {
       const leadList = await leadService.discoverLeads({
         query: params.query,
-        source: params.source,
         limit: params.limit ?? 12,
+        selectedSources: params.selectedSources,
       });
       setLeads(leadList);
       return leadList;
     },
     staleTime: 20_000,
-    refetchInterval: 25_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
   });
 
   return {
-    leads: leads.length ? leads : leadsQuery.data ?? [],
+    leads: hasQuery ? (leads.length ? leads : leadsQuery.data ?? []) : [],
     isLoading: leadsQuery.isLoading,
     isFetching: leadsQuery.isFetching,
     error: leadsQuery.error,

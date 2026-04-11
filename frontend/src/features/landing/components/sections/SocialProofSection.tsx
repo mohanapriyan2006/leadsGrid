@@ -1,0 +1,72 @@
+import { motion } from "framer-motion";
+import { SectionWrapper } from "../ui/SectionWrapper";
+import { GlassCard } from "../ui/GlassCard";
+import { GradientText } from "../ui/GradientText";
+import type { Testimonial } from "../../types/landing";
+
+const TESTIMONIALS: Testimonial[] = [
+  {
+    quote: "Saved me 10+ hours/week. I close 3x more deals now.",
+    author: "Alex M.",
+    role: "Freelance Developer",
+  },
+  {
+    quote: "Finally real leads, not junk. The AI scoring is insanely accurate.",
+    author: "Sarah K.",
+    role: "Agency Owner",
+  },
+  {
+    quote: "Like having a full-time lead gen team for the price of lunch.",
+    author: "David R.",
+    role: "SaaS Founder",
+  },
+];
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, delay: i * 0.15 },
+  }),
+};
+
+export const SocialProofSection = () => {
+  return (
+    <SectionWrapper>
+      <div className="mb-16 text-center">
+        <h2 className="mb-4 font-display text-4xl font-bold md:text-5xl">
+          Loved by <GradientText>Early Users</GradientText>
+        </h2>
+      </div>
+
+      <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-3">
+        {TESTIMONIALS.map((testimonial, idx) => (
+          <motion.div
+            key={testimonial.author}
+            custom={idx}
+            variants={cardVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-60px" }}
+          >
+            <GlassCard className="h-full">
+              <p className="mb-6 text-sm leading-relaxed text-white/70">
+                "{testimonial.quote}"
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent-secondary text-xs font-bold text-white">
+                  {testimonial.author.charAt(0)}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">{testimonial.author}</p>
+                  <p className="text-xs text-white/40">{testimonial.role}</p>
+                </div>
+              </div>
+            </GlassCard>
+          </motion.div>
+        ))}
+      </div>
+    </SectionWrapper>
+  );
+};

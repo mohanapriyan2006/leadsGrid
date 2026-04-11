@@ -1,9 +1,11 @@
 import { formatMoney } from "../constants/manageLeads";
 import type { ManageLead } from "../types/manageLead";
+import type { ManageLeadStage } from "../types/manageLead";
 
 type ManageLeadsTableViewProps = {
   leads: ManageLead[];
   selectedLeadIds: string[];
+  stageLabels?: Partial<Record<ManageLeadStage, string>>;
   onToggleSelectLead: (leadId: string) => void;
   onToggleSelectAllLeads: () => void;
   onOpenDetails: (leadId: string) => void;
@@ -14,6 +16,7 @@ type ManageLeadsTableViewProps = {
 export const ManageLeadsTableView = ({
   leads,
   selectedLeadIds,
+  stageLabels,
   onToggleSelectLead,
   onToggleSelectAllLeads,
   onOpenDetails,
@@ -67,7 +70,7 @@ export const ManageLeadsTableView = ({
 
             <div className="flex items-center justify-between gap-2 text-xs">
               <span className="rounded-glass-sm border border-accent/20 bg-accent-soft px-2 py-1 text-content-secondary">
-                {lead.stage}
+                {stageLabels?.[lead.stage] ?? lead.stage}
               </span>
               <span className="text-content-secondary">{formatMoney(lead.budget_estimate)}</span>
             </div>
@@ -116,7 +119,7 @@ export const ManageLeadsTableView = ({
           <span className="text-content">{lead.name}</span>
           <span className="text-content-secondary">{lead.company}</span>
           <span className="text-content-secondary">{lead.email || lead.phone || "N/A"}</span>
-          <span className="text-content-secondary">{lead.stage}</span>
+          <span className="text-content-secondary">{stageLabels?.[lead.stage] ?? lead.stage}</span>
           <span className="text-accent">{lead.score}</span>
           <span className="text-content-secondary">{formatMoney(lead.budget_estimate)}</span>
           <div className="flex gap-1">

@@ -9,6 +9,7 @@ import {
 import { ConfirmDialog } from "../../features/leads/components/ConfirmDialog";
 import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLeads";
 import { leadService } from "../../features/leads/services/leadService";
+import { usePipelineViewPreferences } from "../../features/settings/hooks/usePipelineViewPreferences";
 import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButton";
 import { PageBackground } from "../../components/ui/PageBackground";
 import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
@@ -48,6 +49,7 @@ const INITIAL_NEW_DEAL: NewDealDraft = {
 export const CRMPage = () => {
   const [view, setView] = useState<"table" | "kanban" | "analysis">("table");
   const { leads: centralizedLeads, loading } = useCentralizedLeads();
+  const { crmStatusLabelMap, preferredExportFields } = usePipelineViewPreferences();
   const [deals, setDeals] = useState<Deal[]>([]);
   const [selectedDealIds, setSelectedDealIds] = useState<string[]>([]);
   const [isAdding, setIsAdding] = useState(false);
@@ -208,41 +210,60 @@ export const CRMPage = () => {
 
     const escapeCsv = (value: unknown) =>
       `"${String(value ?? "").replace(/"/g, '""')}"`;
-    const headers = [
-      "Name",
-      "Company",
-      "Status",
-      "Score",
-      "Last Action",
-      "Deal Value",
-      "Email",
-      "Phone",
-      "Category",
-      "Rating",
-      "Review Count",
-      "Address",
-      "Website URL",
-      "Google Maps URL",
-      "Notes",
-    ];
 
-    const rows = selectedDeals.map((deal) => [
-      deal.name,
-      deal.company,
-      deal.status,
-      deal.score,
-      deal.lastAction,
-      deal.value,
-      deal.email,
-      deal.phone,
-      deal.category,
-      deal.rating,
-      deal.review_count,
-      deal.address,
-      deal.website_url,
-      deal.google_maps_url,
-      deal.notes,
-    ]);
+    const fieldDefinitions: Record<string, { header: string; getValue: (deal: Deal) => unknown }> = {
+      name: { header: "Name", getValue: (deal) => deal.name },
+      company: { header: "Company", getValue: (deal) => deal.company },
+      stage: {
+        header: "Stage",
+        getValue: (deal) => crmStatusLabelMap[deal.status] ?? deal.status,
+      },
+      status: {
+        header: "Status",
+        getValue: (deal) => crmStatusLabelMap[deal.status] ?? deal.status,
+      },
+      score: { header: "Score", getValue: (deal) => deal.score },
+      last_action: { header: "Last Action", getValue: (deal) => deal.lastAction },
+      value: { header: "Deal Value", getValue: (deal) => deal.value },
+      budget_estimate: { header: "Deal Value", getValue: (deal) => deal.value },
+      email: { header: "Email", getValue: (deal) => deal.email },
+      phone: { header: "Phone", getValue: (deal) => deal.phone },
+      category: { header: "Category", getValue: (deal) => deal.category },
+      rating: { header: "Rating", getValue: (deal) => deal.rating },
+      review_count: { header: "Review Count", getValue: (deal) => deal.review_count },
+      address: { header: "Address", getValue: (deal) => deal.address },
+      website_url: { header: "Website URL", getValue: (deal) => deal.website_url },
+      google_maps_url: {
+        header: "Google Maps URL",
+        getValue: (deal) => deal.google_maps_url,
+      },
+      notes: { header: "Notes", getValue: (deal) => deal.notes },
+    };
+
+    const fallbackFields = [
+      "name",
+      "company",
+      "stage",
+      "score",
+      "value",
+      "email",
+      "phone",
+      "notes",
+    ];
+    const selectedFields =
+      preferredExportFields.length > 0 ? preferredExportFields : fallbackFields;
+    const activeFields = selectedFields
+      .map((field) => fieldDefinitions[field])
+      .filter(Boolean);
+
+    if (activeFields.length === 0) {
+      return;
+    }
+
+    const headers = activeFields.map((field) => field.header);
+    const rows = selectedDeals.map((deal) =>
+      activeFields.map((field) => field.getValue(deal)),
+    );
 
     const csv = [headers, ...rows]
       .map((row) => row.map(escapeCsv).join(","))
@@ -566,6 +587,7 @@ export const CRMPage = () => {
             <CRMTableView
               deals={deals}
               selectedDealIds={selectedDealIds}
+              statusLabels={crmStatusLabelMap}
               onToggleSelectDeal={toggleSelectDeal}
               onToggleSelectAllDeals={toggleSelectAllDeals}
               onUpdateStatus={(dealId, status) => {
@@ -595,6 +617,7 @@ export const CRMPage = () => {
                     key={status}
                     status={status}
                     columnDeals={columnDeals}
+                    statusLabels={crmStatusLabelMap}
                   >
                     <SortableContext
                       items={columnDeals.map((d) => d.id)}

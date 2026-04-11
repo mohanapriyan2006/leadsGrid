@@ -9,22 +9,24 @@ import type { DealStatus } from "../../common/types/ui";
 type StatusColumnHeaderProps = {
   status: DealStatus;
   columnDeals: Deal[];
+  statusLabels?: Partial<Record<DealStatus, string>>;
 };
 
 type DroppableStatusColumnProps = {
   status: DealStatus;
   columnDeals: Deal[];
+  statusLabels?: Partial<Record<DealStatus, string>>;
   children: ReactNode;
 };
 
-const StatusColumnHeader = ({ status, columnDeals }: StatusColumnHeaderProps) => {
+const StatusColumnHeader = ({ status, columnDeals, statusLabels }: StatusColumnHeaderProps) => {
   return (
     <div
       className={`mb-3 flex items-center justify-between rounded-xl bg-gradient-to-r px-3 py-2 text-xs font-semibold tracking-[0.16em] ${getStatusLabelColor(
         status,
       )}`}
     >
-      <h3>{status.toUpperCase()}</h3>
+      <h3>{(statusLabels?.[status] ?? status).toUpperCase()}</h3>
       <span className="rounded-full bg-surface/60 px-2 py-0.5 text-[11px] text-content">
         {columnDeals.length}
       </span>
@@ -35,6 +37,7 @@ const StatusColumnHeader = ({ status, columnDeals }: StatusColumnHeaderProps) =>
 export const DroppableStatusColumn = ({
   status,
   columnDeals,
+  statusLabels,
   children,
 }: DroppableStatusColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({ id: status });
@@ -46,7 +49,7 @@ export const DroppableStatusColumn = ({
         isOver ? "border-accent/50 ring-1 ring-accent/30 shadow-glow" : ""
       }`}
     >
-      <StatusColumnHeader status={status} columnDeals={columnDeals} />
+      <StatusColumnHeader status={status} columnDeals={columnDeals} statusLabels={statusLabels} />
       {children}
     </section>
   );

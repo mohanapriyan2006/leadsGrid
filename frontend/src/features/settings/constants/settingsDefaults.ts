@@ -16,7 +16,17 @@ export const SETTINGS_DEFAULTS: AppSettings = {
   workspace: {
     name: "LeadsGrid Workspace",
     role: "owner",
-    pipelineStages: ["New", "Qualified", "Negotiation", "Closed"],
+    stageLabelMap: {
+      NEW: "New",
+      QUALIFIED: "Qualified",
+      CONTACTED: "Contacted",
+      RESPONDED: "Responded",
+      NEGOTIATION: "Negotiation",
+      CONTRACTED: "Contracted",
+      IN_PROGRESS: "In Progress",
+      CLOSED: "Closed",
+    },
+    preferredExportFields: ["name", "company", "email", "phone", "stage", "score", "notes"],
   },
   leadsScoring: {
     minimumLeadScore: 60,

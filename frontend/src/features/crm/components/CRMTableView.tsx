@@ -7,6 +7,7 @@ import type { Deal } from "../types/crm";
 type CRMTableViewProps = {
   deals: Deal[];
   selectedDealIds: string[];
+  statusLabels?: Partial<Record<DealStatus, string>>;
   onToggleSelectDeal: (dealId: string) => void;
   onToggleSelectAllDeals: () => void;
   onUpdateStatus: (dealId: string, status: DealStatus) => void;
@@ -18,6 +19,7 @@ type CRMTableViewProps = {
 export const CRMTableView = ({
   deals,
   selectedDealIds,
+  statusLabels,
   onToggleSelectDeal,
   onToggleSelectAllDeals,
   onUpdateStatus,
@@ -76,7 +78,7 @@ export const CRMTableView = ({
               >
                 {STATUS_COLUMNS.map((status) => (
                   <option key={status} value={status}>
-                    {status}
+                    {statusLabels?.[status] ?? status}
                   </option>
                 ))}
               </select>
@@ -139,7 +141,7 @@ export const CRMTableView = ({
               >
                 {STATUS_COLUMNS.map((status) => (
                   <option key={status} value={status}>
-                    {status}
+                    {statusLabels?.[status] ?? status}
                   </option>
                 ))}
               </select>

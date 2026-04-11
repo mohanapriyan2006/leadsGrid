@@ -7,9 +7,6 @@ const cloneDefaults = () => JSON.parse(JSON.stringify(SETTINGS_DEFAULTS)) as App
 
 const coerceArray = (value: unknown) => (Array.isArray(value) ? value : []);
 
-const coerceString = (value: unknown, fallback = "") =>
-  typeof value === "string" ? value : fallback;
-
 const coerceNumber = (value: unknown, fallback: number) =>
   typeof value === "number" && Number.isFinite(value) ? value : fallback;
 
@@ -24,6 +21,21 @@ const normalizeSettings = (raw: unknown): AppSettings => {
 
   const candidate = raw as Partial<AppSettings>;
 
+  const legacyPipelineStages = coerceArray((candidate.workspace as { pipelineStages?: unknown[] } | undefined)?.pipelineStages)
+    .map((entry) => String(entry).trim())
+    .filter(Boolean);
+
+  const workspaceStageLabelMap = {
+    ...defaults.workspace.stageLabelMap,
+    ...(candidate.workspace?.stageLabelMap ?? {}),
+  };
+
+  // Migrate old 4-stage array format to the first four manage pipeline stages.
+  if (legacyPipelineStages[0]) workspaceStageLabelMap.NEW = legacyPipelineStages[0];
+  if (legacyPipelineStages[1]) workspaceStageLabelMap.QUALIFIED = legacyPipelineStages[1];
+  if (legacyPipelineStages[2]) workspaceStageLabelMap.CONTACTED = legacyPipelineStages[2];
+  if (legacyPipelineStages[3]) workspaceStageLabelMap.RESPONDED = legacyPipelineStages[3];
+
   return {
     profile: {
       ...defaults.profile,
@@ -37,7 +49,8 @@ const normalizeSettings = (raw: unknown): AppSettings => {
     workspace: {
       ...defaults.workspace,
       ...candidate.workspace,
-      pipelineStages: coerceArray(candidate.workspace?.pipelineStages)
+      stageLabelMap: workspaceStageLabelMap,
+      preferredExportFields: coerceArray(candidate.workspace?.preferredExportFields)
         .map((entry) => String(entry).trim())
         .filter(Boolean),
     },

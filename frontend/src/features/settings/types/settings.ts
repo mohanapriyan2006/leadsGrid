@@ -1,3 +1,5 @@
+import type { ManageLeadStage } from "../../leads/types/manageLead";
+
 export type RefreshInterval = "5" | "15" | "30" | "60";
 
 export type ToneType = "professional" | "friendly" | "direct";
@@ -25,7 +27,8 @@ export type AppSettings = {
   workspace: {
     name: string;
     role: "owner" | "member";
-    pipelineStages: string[];
+    stageLabelMap: Record<ManageLeadStage, string>;
+    preferredExportFields: string[];
   };
   leadsScoring: {
     minimumLeadScore: number;

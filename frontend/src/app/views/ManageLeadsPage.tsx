@@ -34,6 +34,7 @@ import type {
   ManageLeadInsights,
   ManageLeadStage,
 } from "../../features/leads/types/manageLead";
+import { usePipelineViewPreferences } from "../../features/settings/hooks/usePipelineViewPreferences";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { useLeadStore } from "../../store/useLeadStore";
 import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButton";
@@ -69,6 +70,7 @@ export const ManageLeadsPage = () => {
     setSelectedManageLeadId,
     setManageLeadView,
   } = useLeadStore();
+  const { manageStageLabelMap, preferredExportFields } = usePipelineViewPreferences();
 
   // Use centralized leads hook for real-time data
   const { leads: manageLeads, loading, error: hookError } = useCentralizedLeads();
@@ -190,9 +192,12 @@ export const ManageLeadsPage = () => {
     () =>
       BOARD_STAGES.map((stage) => ({
         ...stage,
+        label:
+          (manageStageLabelMap as Partial<Record<ManageLeadStage, string>>)[stage.id] ??
+          stage.label,
         leads: filteredLeads.filter((lead) => lead.stage === stage.id),
       })),
-    [filteredLeads],
+    [filteredLeads, manageStageLabelMap],
   );
 
   const activeLead = useMemo(() => {
@@ -347,43 +352,63 @@ export const ManageLeadsPage = () => {
     if (selectedLeads.length === 0) return;
 
     const escapeCsv = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
-    const headers = [
-      "Name",
-      "Company",
-      "Email",
-      "Phone",
-      "Stage",
-      "Score",
-      "Budget Estimate",
-      "Category",
-      "Rating",
-      "Review Count",
-      "Address",
-      "Website URL",
-      "Google Maps URL",
-      "Notes",
-      "Created At",
-      "Updated At",
-    ];
 
-    const rows = selectedLeads.map((lead) => [
-      lead.name,
-      lead.company,
-      lead.email,
-      lead.phone,
-      lead.stage,
-      lead.score,
-      lead.budget_estimate,
-      lead.category,
-      lead.rating,
-      lead.review_count,
-      lead.address,
-      lead.website_url,
-      lead.google_maps_url,
-      lead.notes,
-      lead.created_at,
-      lead.updated_at,
-    ]);
+    const fieldDefinitions: Record<string, { header: string; getValue: (lead: ManageLead) => unknown }> = {
+      name: { header: "Name", getValue: (lead) => lead.name },
+      company: { header: "Company", getValue: (lead) => lead.company },
+      email: { header: "Email", getValue: (lead) => lead.email },
+      phone: { header: "Phone", getValue: (lead) => lead.phone },
+      stage: {
+        header: "Stage",
+        getValue: (lead) =>
+          (manageStageLabelMap as Partial<Record<ManageLeadStage, string>>)[lead.stage] ??
+          lead.stage,
+      },
+      score: { header: "Score", getValue: (lead) => lead.score },
+      budget_estimate: {
+        header: "Budget Estimate",
+        getValue: (lead) => lead.budget_estimate,
+      },
+      category: { header: "Category", getValue: (lead) => lead.category },
+      rating: { header: "Rating", getValue: (lead) => lead.rating },
+      review_count: {
+        header: "Review Count",
+        getValue: (lead) => lead.review_count,
+      },
+      address: { header: "Address", getValue: (lead) => lead.address },
+      website_url: { header: "Website URL", getValue: (lead) => lead.website_url },
+      google_maps_url: {
+        header: "Google Maps URL",
+        getValue: (lead) => lead.google_maps_url,
+      },
+      notes: { header: "Notes", getValue: (lead) => lead.notes },
+      created_at: { header: "Created At", getValue: (lead) => lead.created_at },
+      updated_at: { header: "Updated At", getValue: (lead) => lead.updated_at },
+    };
+
+    const fallbackFields = [
+      "name",
+      "company",
+      "email",
+      "phone",
+      "stage",
+      "score",
+      "notes",
+    ];
+    const selectedFields =
+      preferredExportFields.length > 0 ? preferredExportFields : fallbackFields;
+    const activeFields = selectedFields
+      .map((field) => fieldDefinitions[field])
+      .filter(Boolean);
+
+    if (activeFields.length === 0) {
+      return;
+    }
+
+    const headers = activeFields.map((field) => field.header);
+    const rows = selectedLeads.map((lead) =>
+      activeFields.map((field) => field.getValue(lead)),
+    );
 
     const csv = [headers, ...rows].map((row) => row.map(escapeCsv).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -549,6 +574,7 @@ export const ManageLeadsPage = () => {
             <ManageLeadsTableView
               leads={filteredLeads}
               selectedLeadIds={selectedLeadIds}
+              stageLabels={manageStageLabelMap}
               onToggleSelectLead={toggleSelectLead}
               onToggleSelectAllLeads={toggleSelectAllLeads}
               onOpenDetails={openDetails}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { AnimatePresence, motion } from "framer-motion";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
@@ -47,6 +48,7 @@ const INITIAL_NEW_DEAL: NewDealDraft = {
 };
 
 export const CRMPage = () => {
+  const navigate = useNavigate();
   const [view, setView] = useState<"table" | "kanban" | "analysis">("table");
   const { leads: centralizedLeads, loading } = useCentralizedLeads();
   const { crmStatusLabelMap, preferredExportFields } = usePipelineViewPreferences();
@@ -372,8 +374,16 @@ export const CRMPage = () => {
       return;
     }
 
-    window.open(`mailto:${activeDeal.email}`, "_blank", "noopener,noreferrer");
-    setFeedback(`Opened email draft for ${activeDeal.email}`);
+    navigate("/messages", {
+      state: {
+        fromPipeline: true,
+        leadId: activeDeal.id,
+        tone: "professional",
+        subject: `Regarding ${activeDeal.company} - Partnership Opportunity`,
+        customContext: `Status: ${activeDeal.status}. Score: ${activeDeal.score}. Last action: ${activeDeal.lastAction}. Deal value: ${activeDeal.value}.`,
+      },
+    });
+    setFeedback(`Redirected to Messages for ${activeDeal.name}`);
   };
 
   const handleDealScheduleCall = () => {

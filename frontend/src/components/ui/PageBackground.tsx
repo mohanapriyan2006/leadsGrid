@@ -4,7 +4,7 @@ type PageBackgroundProps = {
   opacity?: number;
 };
 
-export const PageBackground = ({ image, tint, opacity = 0.4 }: PageBackgroundProps) => (
+export const PageBackground = ({ image, tint, opacity = 0.2 }: PageBackgroundProps) => (
   <div className="pointer-events-none absolute inset-0 z-1 overflow-hidden" aria-hidden="true">
     {/* Colored radial glow — ambient light source */}
     <div

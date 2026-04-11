@@ -2,6 +2,7 @@ import { SETTINGS_DEFAULTS } from "../constants/settingsDefaults";
 import type { AppSettings } from "../types/settings";
 
 const STORAGE_KEY = "leadsgrid.settings.v1";
+export const SETTINGS_UPDATED_EVENT = "leadsgrid:settings-updated";
 
 const cloneDefaults = () => JSON.parse(JSON.stringify(SETTINGS_DEFAULTS)) as AppSettings;
 
@@ -129,7 +130,9 @@ export const settingsService = {
     if (typeof window === "undefined") {
       return;
     }
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizeSettings(settings)));
+    const normalized = normalizeSettings(settings);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+    window.dispatchEvent(new CustomEvent(SETTINGS_UPDATED_EVENT, { detail: normalized }));
   },
 
   normalize(settings: unknown): AppSettings {

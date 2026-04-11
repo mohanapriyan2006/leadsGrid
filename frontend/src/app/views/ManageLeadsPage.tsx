@@ -612,11 +612,31 @@ export const ManageLeadsPage = () => {
           }}
           onSendMessage={() => {
             if (!activeLead) return;
-            void runAction(activeLead.id, "SEND_FOLLOW_UP");
+            if (!activeLead.email) {
+              setFeedback("No email available for this lead.");
+              return;
+            }
+
+            navigate("/messages", {
+              state: {
+                fromPipeline: true,
+                leadId: activeLead.id,
+                tone: "professional",
+                subject: `Regarding ${activeLead.company} - Partnership Opportunity`,
+                customContext: `Stage: ${activeLead.stage}. Score: ${activeLead.score}. Company: ${activeLead.company}.`,
+              },
+            });
+            setFeedback(`Redirected to Messages for ${activeLead.name}`);
           }}
           onScheduleCall={() => {
             if (!activeLead) return;
-            void runAction(activeLead.id, "SCHEDULE_CALL");
+            if (!activeLead.phone?.trim()) {
+              setFeedback("No phone number available for this lead.");
+              return;
+            }
+
+            window.open(`tel:${activeLead.phone.trim()}`, "_blank", "noopener,noreferrer");
+            setFeedback(`Initiated call action for ${activeLead.phone.trim()}`);
           }}
           onMoveNext={() => {
             if (!activeLead) return;

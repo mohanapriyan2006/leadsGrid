@@ -172,6 +172,7 @@ export const SettingsPage = () => {
         return (
           <MessagingSettingsSection
             messaging={settings.messaging}
+            userEmail={user?.email ?? undefined}
             onChange={(messaging) => updateSettings((current) => ({ ...current, messaging }))}
           />
         );

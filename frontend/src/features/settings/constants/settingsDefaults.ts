@@ -46,7 +46,8 @@ export const SETTINGS_DEFAULTS: AppSettings = {
     signature: "Best regards,\nLeadsGrid Team",
     followUpReminderDays: 2,
     followUpFinalDays: 5,
-    fallbackEmail: "",
+    primaryEmail: "",
+    secondaryEmail: "",
   },
   integrations: {
     gmail: "needs_auth",

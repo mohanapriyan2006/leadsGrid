@@ -27,7 +27,22 @@ export type SendEmailPayload = {
   to: string;
   subject: string;
   message: string;
+  body_plain?: string;
+  body_html?: string;
   lead_id: string;
+  template_id?: string;
+  primary_color?: string;
+  secondary_color?: string;
+  sender_name?: string;
+  reply_to?: string;
+  backup_to?: string;
+  attachment?: {
+    filename: string;
+    content_type: string;
+    content_base64: string;
+    size_bytes: number;
+  };
+  custom_args?: Record<string, string | number | boolean>;
 };
 
 export type SendEmailResult = {
@@ -48,6 +63,9 @@ const buildAuthHeaders = async (): Promise<Record<string, string>> => {
     const token = await auth.currentUser.getIdToken();
     headers.Authorization = `Bearer ${token}`;
     headers["x-user-id"] = auth.currentUser.uid;
+    if (auth.currentUser.email) {
+      headers["x-user-email"] = auth.currentUser.email;
+    }
     return headers;
   }
 
@@ -84,22 +102,48 @@ export const messageService = {
       throw new Error("Unauthenticated or Firebase not configured");
     }
 
+    const headers = await buildAuthHeaders();
+    const response = await apiClient.post<SendEmailResult>(
+      "/email/send",
+      {
+        to: payload.to,
+        subject: payload.subject,
+        message: payload.message,
+        body_plain: payload.body_plain,
+        body_html: payload.body_html,
+        lead_id: payload.lead_id,
+        template_id: payload.template_id,
+        primary_color: payload.primary_color,
+        secondary_color: payload.secondary_color,
+        sender_name: payload.sender_name,
+        reply_to: payload.reply_to,
+        backup_to: payload.backup_to,
+        attachment: payload.attachment,
+        custom_args: payload.custom_args,
+      },
+      { headers },
+    );
+
+    const sendResult = response.data;
+
     const messageDoc = await addDoc(collection(db, "users", uid, "leads", payload.lead_id, "messages"), {
       email: payload.to,
       subject: payload.subject,
       content: payload.message,
-      status: "sent",
+      status: sendResult.status,
+      provider: sendResult.provider,
+      messageId: sendResult.message_id,
       createdAt: Timestamp.now(),
     });
 
     return {
-      status: "sent",
-      message_id: messageDoc.id,
+      status: sendResult.status,
+      message_id: sendResult.message_id || messageDoc.id,
       lead_id: payload.lead_id,
       to: payload.to,
       subject: payload.subject,
-      provider: "firestore",
-      sent_at: new Date().toISOString(),
+      provider: sendResult.provider,
+      sent_at: sendResult.sent_at,
     };
   },
 

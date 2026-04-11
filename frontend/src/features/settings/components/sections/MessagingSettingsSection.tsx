@@ -6,10 +6,13 @@ import type { AppSettings } from "../../types/settings";
 
 type MessagingSettingsSectionProps = {
   messaging: AppSettings["messaging"];
+  userEmail?: string;
   onChange: (messaging: AppSettings["messaging"]) => void;
 };
 
-export const MessagingSettingsSection = ({ messaging, onChange }: MessagingSettingsSectionProps) => {
+export const MessagingSettingsSection = ({ messaging, userEmail, onChange }: MessagingSettingsSectionProps) => {
+  const resolvedPrimaryEmail = (userEmail || messaging.primaryEmail || "").trim();
+
   return (
     <SettingsSectionCard
       title="Messaging"
@@ -77,17 +80,18 @@ export const MessagingSettingsSection = ({ messaging, onChange }: MessagingSetti
         </SettingsField>
       </div> */}
 
-      <SettingsField label="Primary Email" hint="Used for email-based outreach and notifications.">
+      <SettingsField label="Primary Email" hint="Automatically synced from your logged-in account.">
         <input
           type="email"
           className="glass-input"
-          value={messaging.primaryEmail}
-          onChange={(event) => onChange({ ...messaging, primaryEmail: event.target.value })}
-          placeholder="team@yourcompany.com"
+          value={resolvedPrimaryEmail}
+          readOnly
+          disabled
+          placeholder="login email"
         />
       </SettingsField>
 
-      <SettingsField label="Secondary Email" hint="Optional backup for outreach and notifications.">
+      <SettingsField label="Secondary Email" hint="Optional backup recipient that receives a copy of sent emails.">
         <input
           type="email"
           className="glass-input"

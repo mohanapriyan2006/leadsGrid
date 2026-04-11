@@ -10,11 +10,18 @@ import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLe
 import { MessageComposerPanel } from "../../features/messages/components/MessageComposerPanel";
 import { MessageLeadDetailsModal } from "../../features/messages/components/MessageLeadDetailsModal";
 import { MessageLeadPanel } from "../../features/messages/components/MessageLeadPanel";
+import { EmailTemplatePreviewPanel } from "../../features/messages/components/EmailTemplatePreviewPanel";
 import { CONTEXT_PREVIEW_LIMIT } from "../../features/messages/constants/messages";
 import type { ToneType } from "../../features/common/types/ui";
+import { useAuth } from "../../features/auth/AuthContext";
+import { useSettingsState } from "../../features/settings/hooks/useSettingsState";
+import { renderEmailTemplate } from "../../features/messages/utils/emailTemplateRenderer";
+import type { EmailTemplateId } from "../../features/messages/types/emailTemplates";
+import { EMAIL_TEMPLATES } from "../../features/messages/constants/emailTemplates";
 
 type DiscoveryMessagesPrefillState = {
   fromDiscovery?: boolean;
+  fromPipeline?: boolean;
   leadId?: string;
   tone?: ToneType;
   draft?: string;
@@ -22,8 +29,35 @@ type DiscoveryMessagesPrefillState = {
   customContext?: string;
 };
 
+const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024;
+
+type EncodedAttachment = {
+  filename: string;
+  content_type: string;
+  content_base64: string;
+  size_bytes: number;
+};
+
+const encodeAttachment = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      const base64Content = result.includes(",") ? result.split(",", 2)[1] : "";
+      if (!base64Content) {
+        reject(new Error("Failed to read file content."));
+        return;
+      }
+      resolve(base64Content);
+    };
+    reader.onerror = () => reject(new Error("Unable to read selected file."));
+    reader.readAsDataURL(file);
+  });
+
 export const MessagesPage = () => {
   const location = useLocation();
+  const { user } = useAuth();
+  const { settings } = useSettingsState(user?.email);
   // Use centralized leads for message generation
   const { leads: manageLeads, loading } = useCentralizedLeads();
 
@@ -32,9 +66,17 @@ export const MessagesPage = () => {
   const [customContext, setCustomContext] = useState(
     "Keep the email concise, personalized, and focused on a clear business outcome.",
   );
+  const [activeTab, setActiveTab] = useState<"compose" | "templates">("compose");
   const [localDraft, setLocalDraft] = useState("");
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
+  const [senderName, setSenderName] = useState("");
+  const [selectedTemplateId, setSelectedTemplateId] =
+    useState<EmailTemplateId>("minimal-professional");
+  const [primaryColor, setPrimaryColor] = useState("#8b5cf6");
+  const [secondaryColor, setSecondaryColor] = useState("#eef2ff");
+  const [templateHtml, setTemplateHtml] = useState<string | null>(null);
+  const [attachment, setAttachment] = useState<EncodedAttachment | null>(null);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
@@ -58,36 +100,125 @@ export const MessagesPage = () => {
 
     const navState =
       (location.state as DiscoveryMessagesPrefillState | null) ?? null;
-    if (!navState?.fromDiscovery || !navState.draft?.trim()) {
+    if (!navState) {
       return;
     }
+
+    const fromSupportedSource = Boolean(
+      navState.fromDiscovery || navState.fromPipeline,
+    );
+    if (!fromSupportedSource) {
+      return;
+    }
+
+    let hasPrefill = false;
 
     if (
       navState.leadId &&
       manageLeads.some((lead) => lead.id === navState.leadId)
     ) {
       setSelectedLeadId(navState.leadId);
+      hasPrefill = true;
     }
 
     if (navState.tone) {
       setTone(navState.tone);
+      hasPrefill = true;
     }
 
     if (navState.customContext?.trim()) {
       setCustomContext(navState.customContext);
+      hasPrefill = true;
     }
 
     if (navState.subject?.trim()) {
       setSubject(navState.subject);
+      hasPrefill = true;
     }
 
-    setLocalDraft(navState.draft);
-    setPrefillApplied(true);
+    if (navState.draft?.trim()) {
+      setLocalDraft(navState.draft);
+      hasPrefill = true;
+    }
+
+    if (hasPrefill) {
+      setPrefillApplied(true);
+    }
   }, [location.state, manageLeads, prefillApplied]);
 
   const selectedLead = useMemo(
     () => manageLeads.find((lead) => lead.id === selectedLeadId) ?? null,
     [manageLeads, selectedLeadId],
+  );
+
+  const selectedTemplate = useMemo(
+    () =>
+      EMAIL_TEMPLATES.find((template) => template.id === selectedTemplateId) ??
+      EMAIL_TEMPLATES[0],
+    [selectedTemplateId],
+  );
+
+  const renderedTemplatePreview = useMemo(
+    () =>
+      renderEmailTemplate({
+        templateId: selectedTemplateId,
+        primaryColor,
+        secondaryColor,
+        tokens: {
+          name: selectedLead?.name || "there",
+          company: selectedLead?.company || "your team",
+          pain_point:
+            selectedLead?.notes?.trim() ||
+            customContext.trim() ||
+            "slower lead conversion",
+          solution:
+            customContext.trim() ||
+            "improving reply quality with a focused outreach sequence",
+          sender_name: senderName.trim() || "LeadsGrid Team",
+        },
+      }),
+    [
+      customContext,
+      primaryColor,
+      secondaryColor,
+      selectedLead?.company,
+      selectedLead?.name,
+      selectedLead?.notes,
+      selectedTemplateId,
+      senderName,
+    ],
+  );
+
+  useEffect(() => {
+    setPrimaryColor(selectedTemplate.defaultPrimaryColor);
+    setSecondaryColor(selectedTemplate.defaultSecondaryColor);
+  }, [selectedTemplate]);
+
+  useEffect(() => {
+    if (senderName.trim()) {
+      return;
+    }
+
+    const defaultName =
+      settings.profile.name.trim() ||
+      user?.displayName?.trim() ||
+      user?.email?.split("@")[0]?.trim() ||
+      "User";
+    setSenderName(defaultName);
+  }, [senderName, settings.profile.name, user?.displayName, user?.email]);
+
+  const resolvedReplyToEmail = useMemo(
+    () =>
+      user?.email?.trim() ||
+      settings.messaging.primaryEmail.trim() ||
+      settings.profile.email.trim() ||
+      "",
+    [settings.messaging.primaryEmail, settings.profile.email, user?.email],
+  );
+
+  const resolvedBackupEmail = useMemo(
+    () => settings.messaging.secondaryEmail.trim(),
+    [settings.messaging.secondaryEmail],
   );
 
   const generateSubject = () => {
@@ -148,6 +279,15 @@ export const MessagesPage = () => {
     }
   };
 
+  const handleApplyTemplate = () => {
+    setLocalDraft(renderedTemplatePreview.plain);
+    if (!subject.trim()) {
+      setSubject(renderedTemplatePreview.subject);
+    }
+    setTemplateHtml(renderedTemplatePreview.html);
+    setActiveTab("compose");
+  };
+
   const handleSendEmail = async () => {
     if (!selectedLead || !email || !localDraft.trim()) {
       return;
@@ -162,16 +302,56 @@ export const MessagesPage = () => {
         to: email,
         subject: subject.trim() || generateSubject(),
         message: localDraft,
+        body_plain: localDraft,
+        body_html: templateHtml || undefined,
         lead_id: selectedLead.id,
+        template_id: selectedTemplateId,
+        primary_color: primaryColor,
+        secondary_color: secondaryColor,
+        sender_name: senderName.trim() || undefined,
+        reply_to: resolvedReplyToEmail || undefined,
+        backup_to: resolvedBackupEmail || undefined,
+        attachment: attachment || undefined,
+        custom_args: {
+          tone,
+          page: "messages",
+        },
       });
 
       setSent(true);
     } catch {
       setSendError(
-        "Failed to send email. Please verify SMTP settings and try again.",
+        "Failed to send email. Please verify email provider settings and try again.",
       );
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleAttachmentChange = async (file: File | null) => {
+    if (!file) {
+      setAttachment(null);
+      return;
+    }
+
+    if (file.size > MAX_ATTACHMENT_BYTES) {
+      setAttachment(null);
+      setSendError("Attachment must be 5 MB or smaller.");
+      return;
+    }
+
+    try {
+      const contentBase64 = await encodeAttachment(file);
+      setAttachment({
+        filename: file.name,
+        content_type: file.type || "application/octet-stream",
+        content_base64: contentBase64,
+        size_bytes: file.size,
+      });
+      setSendError(null);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "Unknown file error";
+      setSendError(reason);
     }
   };
 
@@ -195,36 +375,53 @@ export const MessagesPage = () => {
         </header>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
-          <MessageLeadPanel
-            contextPreviewLimit={CONTEXT_PREVIEW_LIMIT}
-            loading={loading}
-            leads={manageLeads}
-            selectedLeadId={selectedLeadId}
-            selectedLead={selectedLead}
-            leadContext={leadContext}
-            trimmedContent={trimmedContent}
-            contextExpanded={contextExpanded}
-            isGenerating={isGenerating}
-            onLeadChange={setSelectedLeadId}
-            onToggleContext={() => setContextExpanded((value) => !value)}
-            onOpenDetails={() => setDetailsOpen(true)}
-            onGenerate={() => {
-              void handleGenerate();
-            }}
-          />
+          {activeTab === "templates" ? (
+            <EmailTemplatePreviewPanel
+              templateName={selectedTemplate.name}
+              previewSubject={renderedTemplatePreview.subject}
+              htmlContent={renderedTemplatePreview.html}
+            />
+          ) : (
+            <MessageLeadPanel
+              contextPreviewLimit={CONTEXT_PREVIEW_LIMIT}
+              loading={loading}
+              leads={manageLeads}
+              selectedLeadId={selectedLeadId}
+              selectedLead={selectedLead}
+              leadContext={leadContext}
+              trimmedContent={trimmedContent}
+              contextExpanded={contextExpanded}
+              isGenerating={isGenerating}
+              onLeadChange={setSelectedLeadId}
+              onToggleContext={() => setContextExpanded((value) => !value)}
+              onOpenDetails={() => setDetailsOpen(true)}
+              onGenerate={() => {
+                void handleGenerate();
+              }}
+            />
+          )}
 
           <MessageComposerPanel
             tone={tone}
             confidence={generatedMessage?.confidence ?? null}
+            activeTab={activeTab}
             customContext={customContext}
+            senderName={senderName}
+            replyToEmail={resolvedReplyToEmail}
             email={email}
             subject={subject}
             localDraft={localDraft}
+            selectedTemplateId={selectedTemplateId}
+            primaryColor={primaryColor}
+            secondaryColor={secondaryColor}
+            selectedAttachmentName={attachment?.filename}
+            selectedAttachmentSize={attachment?.size_bytes}
             sending={sending}
             sent={sent}
             copied={copied}
             sendError={sendError}
             selectedLeadName={selectedLead?.name}
+            onTabChange={setActiveTab}
             onToneChange={setTone}
             onCustomContextChange={setCustomContext}
             onApplyContextPreset={(value) => {
@@ -234,6 +431,14 @@ export const MessagesPage = () => {
                 return `${current.trim()}\n- ${value}`;
               });
             }}
+            onTemplateChange={setSelectedTemplateId}
+            onPrimaryColorChange={setPrimaryColor}
+            onSecondaryColorChange={setSecondaryColor}
+            onApplyTemplate={handleApplyTemplate}
+            onAttachmentChange={(file) => {
+              void handleAttachmentChange(file);
+            }}
+            onSenderNameChange={setSenderName}
             onEmailChange={setEmail}
             onSubjectChange={setSubject}
             onDraftChange={setLocalDraft}

@@ -27,10 +27,15 @@ class Settings(BaseSettings):
     require_auth: bool = False
 
     smtp_host: str = "smtp.gmail.com"
-    smtp_port: int = 465
+    smtp_port: int = 587
+    smtp_use_starttls: bool = True
+    smtp_email: str | None = None
+    smtp_password: str | None = None
     smtp_sender: str | None = None
     smtp_app_password: str | None = None
     smtp_rate_limit_per_min: int = 20
+    smtp_timeout_seconds: int = 15
+    smtp_max_attachment_bytes: int = 5 * 1024 * 1024
 
     max_lead_age_days: int = 5
 
@@ -56,6 +61,14 @@ class Settings(BaseSettings):
                 pass
 
         return [item.strip() for item in value.split(",") if item.strip()]
+
+    @property
+    def smtp_effective_sender(self) -> str | None:
+        return self.smtp_email or self.smtp_sender
+
+    @property
+    def smtp_effective_password(self) -> str | None:
+        return self.smtp_password or self.smtp_app_password
 
 
 @lru_cache(maxsize=1)

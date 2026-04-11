@@ -10,6 +10,7 @@ bearer_scheme = HTTPBearer(auto_error=False)
 @dataclass
 class UserContext:
     user_id: str
+    email: str | None = None
     token: str | None = None
 
 
@@ -23,8 +24,9 @@ async def get_current_user(
     if not settings.require_auth:
         # Auth is optional in local development to keep iteration fast.
         fallback_user_id = request.headers.get("x-user-id", "local-dev-user")
+        fallback_email = request.headers.get("x-user-email")
         token = credentials.credentials if credentials else None
-        return UserContext(user_id=fallback_user_id, token=token)
+        return UserContext(user_id=fallback_user_id, email=fallback_email, token=token)
 
     if not credentials:
         raise HTTPException(
@@ -39,4 +41,8 @@ async def get_current_user(
             detail="Invalid or expired token",
         )
 
-    return UserContext(user_id=user_id, token=credentials.credentials)
+    return UserContext(
+        user_id=user_id,
+        email=request.headers.get("x-user-email"),
+        token=credentials.credentials,
+    )

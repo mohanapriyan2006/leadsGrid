@@ -40,6 +40,7 @@ import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButt
 import { PageBackground } from "../../components/ui/PageBackground";
 import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import bgTeamCollab from "../../assets/bg-images/team-collaboration.svg";
+import { LeadsAnalysisPage } from "./LeadsAnalysisPage";
 
 export const ManageLeadsPage = () => {
   const navigate = useNavigate();
@@ -535,6 +536,10 @@ export const ManageLeadsPage = () => {
               onDelete={setConfirmDeleteId}
             />
           </>
+        ) : null}
+
+        {manageLeadView === "analytics" ? (
+          <LeadsAnalysisPage leads={filteredLeads} />
         ) : null}
 
         <LeadModal

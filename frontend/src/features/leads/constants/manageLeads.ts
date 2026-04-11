@@ -10,6 +10,7 @@ export const BOARD_STAGES: { id: ManageLeadStage; label: string; icon: string }[
 export const VIEW_OPTIONS: { value: ManageLeadView; label: string }[] = [
   { value: "kanban", label: "Kanban" },
   { value: "table", label: "Table" },
+  { value: "analytics", label: "Analysis" },
 ];
 
 export const NEXT_STAGE: Record<ManageLeadStage, ManageLeadStage | null> = {

@@ -58,6 +58,7 @@ export const CRMPage = () => {
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [editDraft, setEditDraft] = useState<NewDealDraft | null>(null);
+  const [confirmEditOpen, setConfirmEditOpen] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -251,7 +252,6 @@ export const CRMPage = () => {
 
   const handleSaveEdit = async () => {
     if (!selectedDealId || !editDraft) return;
-    if (!window.confirm("Are you sure you want to update this deal?")) return;
 
     await leadService.updateManageLead(selectedDealId, {
       name: editDraft.name,
@@ -274,6 +274,7 @@ export const CRMPage = () => {
 
     setEditOpen(false);
     setEditDraft(null);
+    setConfirmEditOpen(false);
     setFeedback("Deal updated successfully");
   };
 
@@ -630,7 +631,7 @@ export const CRMPage = () => {
                 transition={{ duration: 0.16 }}
                 onSubmit={(e) => {
                   e.preventDefault();
-                  void handleSaveEdit();
+                  setConfirmEditOpen(true);
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
@@ -780,6 +781,17 @@ export const CRMPage = () => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        <ConfirmDialog
+          open={confirmEditOpen}
+          title="Confirm Deal Update"
+          description="Are you sure you want to update this deal?"
+          confirmLabel="Update Deal"
+          onCancel={() => setConfirmEditOpen(false)}
+          onConfirm={() => {
+            void handleSaveEdit();
+          }}
+        />
 
         <ConfirmDialog
           open={Boolean(confirmDeleteId)}

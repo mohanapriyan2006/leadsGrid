@@ -42,6 +42,25 @@ import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import bgTeamCollab from "../../assets/bg-images/team-collaboration.svg";
 import { LeadsAnalysisPage } from "./LeadsAnalysisPage";
 
+type PendingLeadUpdate = {
+  leadId: string;
+  payload: {
+    name: string;
+    company: string;
+    email: string;
+    phone: string;
+    stage: ManageLeadStage;
+    budget_estimate: number;
+    notes: string;
+    category: string | null;
+    rating: number | null;
+    review_count: number | null;
+    address: string | null;
+    website_url: string | null;
+    google_maps_url: string | null;
+  };
+};
+
 export const ManageLeadsPage = () => {
   const navigate = useNavigate();
   const {
@@ -75,6 +94,7 @@ export const ManageLeadsPage = () => {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [disableDetailsPopup, setDisableDetailsPopup] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [pendingLeadUpdate, setPendingLeadUpdate] = useState<PendingLeadUpdate | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -593,28 +613,44 @@ export const ManageLeadsPage = () => {
           onClose={() => setEditOpen(false)}
           onSave={(updated) => {
             if (!activeLead) return;
-            if (!window.confirm("Are you sure you want to update this lead?")) return;
+            setPendingLeadUpdate({
+              leadId: activeLead.id,
+              payload: updated,
+            });
+          }}
+        />
+
+        <ConfirmDialog
+          open={Boolean(pendingLeadUpdate)}
+          title="Confirm Lead Update"
+          description="Are you sure you want to update this lead?"
+          confirmLabel="Update Lead"
+          onCancel={() => setPendingLeadUpdate(null)}
+          onConfirm={() => {
+            if (!pendingLeadUpdate) return;
+            const { leadId, payload } = pendingLeadUpdate;
             void leadService
-              .updateManageLead(activeLead.id, {
-                name: updated.name,
-                company: updated.company,
-                email: updated.email || undefined,
-                phone: updated.phone || undefined,
-                stage: updated.stage,
-                budget_estimate: updated.budget_estimate,
-                notes: updated.notes || undefined,
+              .updateManageLead(leadId, {
+                name: payload.name,
+                company: payload.company,
+                email: payload.email || undefined,
+                phone: payload.phone || undefined,
+                stage: payload.stage,
+                budget_estimate: payload.budget_estimate,
+                notes: payload.notes || undefined,
                 // CSV fields
-                category: updated.category,
-                rating: updated.rating,
-                review_count: updated.review_count,
-                address: updated.address,
-                website_url: updated.website_url,
-                google_maps_url: updated.google_maps_url,
+                category: payload.category,
+                rating: payload.rating,
+                review_count: payload.review_count,
+                address: payload.address,
+                website_url: payload.website_url,
+                google_maps_url: payload.google_maps_url,
               })
               .then(async () => {
                 await loadInsights();
                 setEditOpen(false);
-                setFeedback(`Updated ${updated.name}`);
+                setPendingLeadUpdate(null);
+                setFeedback(`Updated ${payload.name}`);
               });
           }}
         />

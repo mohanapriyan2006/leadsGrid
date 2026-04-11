@@ -59,13 +59,6 @@ export const AIHeader = ({
         <div className="flex items-center gap-2">
           {utilityControl}
 
-          <div className="flex items-center gap-2 rounded-md border border-accent/[0.08] bg-surface-secondary/30 px-2.5 py-1 text-[11px] text-content-secondary">
-            <span>📎</span>
-            <span>{contextLabel}</span>
-            <span className="text-content-tertiary">•</span>
-            <span className="capitalize">{aiStatus}</span>
-          </div>
-
           <button
             type="button"
             onClick={onStartNewChat}

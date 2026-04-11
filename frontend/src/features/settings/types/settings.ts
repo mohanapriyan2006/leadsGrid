@@ -48,7 +48,8 @@ export type AppSettings = {
     signature: string;
     followUpReminderDays: number;
     followUpFinalDays: number;
-    fallbackEmail: string;
+    primaryEmail: string;
+    secondaryEmail: string;
   };
   integrations: {
     gmail: IntegrationStatus;

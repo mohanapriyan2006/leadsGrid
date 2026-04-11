@@ -136,7 +136,7 @@ export const SettingsPage = () => {
       Boolean(settings.profile.skills.length > 0),
       settings.integrations.gmail === "connected" || settings.integrations.outlook === "connected",
       settings.ai.personalization !== "low",
-      Boolean(settings.messaging.fallbackEmail.trim()),
+      Boolean(settings.messaging.primaryEmail),
       settings.privacy.complianceConsent,
     ];
     const met = checks.filter(Boolean).length;

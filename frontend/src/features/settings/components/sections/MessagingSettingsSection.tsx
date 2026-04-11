@@ -77,25 +77,25 @@ export const MessagingSettingsSection = ({ messaging, onChange }: MessagingSetti
         </SettingsField>
       </div> */}
 
-      {/* <SettingsField label="Primary Email" hint="Used when a lead has no email address.">
+      <SettingsField label="Primary Email" hint="Used for email-based outreach and notifications.">
         <input
           type="email"
           className="glass-input"
-          value={messaging.fallbackEmail}
-          onChange={(event) => onChange({ ...messaging, fallbackEmail: event.target.value })}
+          value={messaging.primaryEmail}
+          onChange={(event) => onChange({ ...messaging, primaryEmail: event.target.value })}
           placeholder="team@yourcompany.com"
         />
       </SettingsField>
 
-      <SettingsField label="Fallback Email" hint="Used when a lead has no email address.">
+      <SettingsField label="Secondary Email" hint="Optional backup for outreach and notifications.">
         <input
           type="email"
           className="glass-input"
-          value={messaging.fallbackEmail}
-          onChange={(event) => onChange({ ...messaging, fallbackEmail: event.target.value })}
+          value={messaging.secondaryEmail}
+          onChange={(event) => onChange({ ...messaging, secondaryEmail: event.target.value })}
           placeholder="team@yourcompany.com"
         />
-      </SettingsField> */}
+      </SettingsField>
 
       <SettingsField label="Email Signature">
         <textarea

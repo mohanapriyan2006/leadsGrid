@@ -35,7 +35,6 @@ export type SendEmailPayload = {
   secondary_color?: string;
   sender_name?: string;
   reply_to?: string;
-  backup_to?: string;
   attachment?: {
     filename: string;
     content_type: string;
@@ -117,7 +116,6 @@ export const messageService = {
         secondary_color: payload.secondary_color,
         sender_name: payload.sender_name,
         reply_to: payload.reply_to,
-        backup_to: payload.backup_to,
         attachment: payload.attachment,
         custom_args: payload.custom_args,
       },

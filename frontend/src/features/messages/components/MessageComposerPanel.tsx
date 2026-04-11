@@ -19,6 +19,7 @@ type MessageComposerPanelProps = {
   customContext: string;
   senderName: string;
   replyToEmail: string;
+  secondaryEmail?: string;
   email: string;
   subject: string;
   localDraft: string;
@@ -58,6 +59,7 @@ export const MessageComposerPanel = ({
   customContext,
   senderName,
   replyToEmail,
+  secondaryEmail,
   email,
   subject,
   localDraft,
@@ -211,6 +213,10 @@ export const MessageComposerPanel = ({
             <p className="text-[11px] text-content-tertiary">
               Reply-To:{" "}
               <span className="text-content">{replyToEmail || "Not set"}</span>
+            </p>
+            <p className="text-[11px] text-content-tertiary">
+              Contact footer email 2: {" "}
+              <span className="text-content">{secondaryEmail || "Not set"}</span>
             </p>
 
             <label

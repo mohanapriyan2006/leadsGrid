@@ -54,6 +54,105 @@ const encodeAttachment = (file: File): Promise<string> =>
     reader.readAsDataURL(file);
   });
 
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const buildContactFooterPlain = (
+  primaryEmail: string,
+  secondaryEmail: string,
+): string => {
+  const entries = [primaryEmail.trim(), secondaryEmail.trim()].filter(Boolean);
+  const uniqueEntries = Array.from(new Set(entries));
+  if (uniqueEntries.length === 0) {
+    return "";
+  }
+
+  return `Contact Emails:\n${uniqueEntries.join("\n")}`;
+};
+
+const buildContactFooterHtml = (
+  primaryEmail: string,
+  secondaryEmail: string,
+): string => {
+  const entries = [primaryEmail.trim(), secondaryEmail.trim()].filter(Boolean);
+  const uniqueEntries = Array.from(new Set(entries));
+  if (uniqueEntries.length === 0) {
+    return "";
+  }
+
+  const items = uniqueEntries
+    .map((entry) => `<div>${escapeHtml(entry)}</div>`)
+    .join("");
+
+  return `<div style="margin-top:12px;color:#374151;font-size:13px;line-height:1.5;"><strong>Contact Emails:</strong>${items}</div>`;
+};
+
+const appendSignatureToPlain = (
+  content: string,
+  signature: string,
+  primaryEmail: string,
+  secondaryEmail: string,
+): string => {
+  const trimmedContent = content.trim();
+  const trimmedSignature = signature.trim();
+  const contactFooterPlain = buildContactFooterPlain(primaryEmail, secondaryEmail);
+  if (!trimmedSignature) {
+    if (!contactFooterPlain || trimmedContent.includes(contactFooterPlain)) {
+      return trimmedContent;
+    }
+    return `${trimmedContent}\n\n${contactFooterPlain}`;
+  }
+
+  let next = trimmedContent;
+  if (!trimmedContent.includes(trimmedSignature)) {
+    next = `${next}\n\n${trimmedSignature}`;
+  }
+
+  if (contactFooterPlain && !next.includes(contactFooterPlain)) {
+    next = `${next}\n\n${contactFooterPlain}`;
+  }
+
+  return next;
+};
+
+const appendSignatureToHtml = (
+  content: string,
+  signature: string,
+  primaryEmail: string,
+  secondaryEmail: string,
+): string => {
+  const trimmedSignature = signature.trim();
+  const contactFooterHtml = buildContactFooterHtml(primaryEmail, secondaryEmail);
+
+  const signatureHtml = trimmedSignature
+    ? `<div style="margin-top:18px;padding-top:12px;border-top:1px solid #e5e7eb;color:#374151;font-size:14px;line-height:1.5;white-space:pre-wrap;">${escapeHtml(trimmedSignature)}</div>`
+    : "";
+
+  const hasSignature = trimmedSignature && content.includes(trimmedSignature);
+  const hasContactFooter = contactFooterHtml && content.includes("Contact Emails:");
+
+  if ((hasSignature || !signatureHtml) && (hasContactFooter || !contactFooterHtml)) {
+    return content;
+  }
+
+  const combinedBlock = `${hasSignature ? "" : signatureHtml}${hasContactFooter ? "" : contactFooterHtml}`;
+
+  if (!combinedBlock) {
+    return content;
+  }
+
+  if (content.includes("</body>")) {
+    return content.replace("</body>", `${combinedBlock}</body>`);
+  }
+
+  return `${content}${combinedBlock}`;
+};
+
 export const MessagesPage = () => {
   const location = useLocation();
   const { user } = useAuth();
@@ -216,10 +315,19 @@ export const MessagesPage = () => {
     [settings.messaging.primaryEmail, settings.profile.email, user?.email],
   );
 
-  const resolvedBackupEmail = useMemo(
+  const resolvedSecondaryEmail = useMemo(
     () => settings.messaging.secondaryEmail.trim(),
     [settings.messaging.secondaryEmail],
   );
+
+  const signature = useMemo(
+    () => settings.messaging.signature.trim(),
+    [settings.messaging.signature],
+  );
+
+  useEffect(() => {
+    setTone(settings.messaging.defaultTone);
+  }, [settings.messaging.defaultTone]);
 
   const generateSubject = () => {
     if (!selectedLead) {
@@ -270,7 +378,14 @@ export const MessagesPage = () => {
         tone,
         max_words: 130,
       });
-      setLocalDraft(result.message);
+      setLocalDraft(
+        appendSignatureToPlain(
+          result.message,
+          signature,
+          resolvedReplyToEmail,
+          resolvedSecondaryEmail,
+        ),
+      );
       setSubject(generateSubject());
     } catch (error) {
       const reason =
@@ -280,11 +395,25 @@ export const MessagesPage = () => {
   };
 
   const handleApplyTemplate = () => {
-    setLocalDraft(renderedTemplatePreview.plain);
+    setLocalDraft(
+      appendSignatureToPlain(
+        renderedTemplatePreview.plain,
+        signature,
+        resolvedReplyToEmail,
+        resolvedSecondaryEmail,
+      ),
+    );
     if (!subject.trim()) {
       setSubject(renderedTemplatePreview.subject);
     }
-    setTemplateHtml(renderedTemplatePreview.html);
+    setTemplateHtml(
+      appendSignatureToHtml(
+        renderedTemplatePreview.html,
+        signature,
+        resolvedReplyToEmail,
+        resolvedSecondaryEmail,
+      ),
+    );
     setActiveTab("compose");
   };
 
@@ -298,19 +427,33 @@ export const MessagesPage = () => {
       setSendError(null);
       setSent(false);
 
+      const messageWithSignature = appendSignatureToPlain(
+        localDraft,
+        signature,
+        resolvedReplyToEmail,
+        resolvedSecondaryEmail,
+      );
+      const htmlWithSignature = templateHtml
+        ? appendSignatureToHtml(
+            templateHtml,
+            signature,
+            resolvedReplyToEmail,
+            resolvedSecondaryEmail,
+          )
+        : undefined;
+
       await messageService.sendEmail({
         to: email,
         subject: subject.trim() || generateSubject(),
-        message: localDraft,
-        body_plain: localDraft,
-        body_html: templateHtml || undefined,
+        message: messageWithSignature,
+        body_plain: messageWithSignature,
+        body_html: htmlWithSignature,
         lead_id: selectedLead.id,
         template_id: selectedTemplateId,
         primary_color: primaryColor,
         secondary_color: secondaryColor,
         sender_name: senderName.trim() || undefined,
         reply_to: resolvedReplyToEmail || undefined,
-        backup_to: resolvedBackupEmail || undefined,
         attachment: attachment || undefined,
         custom_args: {
           tone,
@@ -318,6 +461,7 @@ export const MessagesPage = () => {
         },
       });
 
+      setLocalDraft(messageWithSignature);
       setSent(true);
     } catch {
       setSendError(
@@ -408,6 +552,7 @@ export const MessagesPage = () => {
             customContext={customContext}
             senderName={senderName}
             replyToEmail={resolvedReplyToEmail}
+            secondaryEmail={resolvedSecondaryEmail}
             email={email}
             subject={subject}
             localDraft={localDraft}

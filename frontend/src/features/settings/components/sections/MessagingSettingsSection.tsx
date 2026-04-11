@@ -91,7 +91,7 @@ export const MessagingSettingsSection = ({ messaging, userEmail, onChange }: Mes
         />
       </SettingsField>
 
-      <SettingsField label="Secondary Email" hint="Optional backup recipient that receives a copy of sent emails.">
+      <SettingsField label="Secondary Email" hint="Optional second contact email shown in the email footer for clients.">
         <input
           type="email"
           className="glass-input"

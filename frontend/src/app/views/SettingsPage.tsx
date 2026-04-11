@@ -7,6 +7,7 @@ import bgDataAtWork from "../../assets/bg-images/data-at-work.svg";
 import { useAuth } from "../../features/auth/AuthContext";
 import { getFirebaseAuth } from "../../lib/firebase";
 import { signInWithEmailAndPassword, deleteUser, type User } from "firebase/auth";
+import { LogOut } from "lucide-react";
 import { leadService } from "../../features/leads/services/leadService";
 import { SETTINGS_TABS } from "../../features/settings/constants/settingsOptions";
 import { useSettingsState } from "../../features/settings/hooks/useSettingsState";
@@ -224,12 +225,25 @@ export const SettingsPage = () => {
       <PageBackground image={bgDataAtWork} tint="rgba(159, 175, 12, 0.49)" />
       <ResponsivePageLayout contentClassName="space-y-4">
         <header className="glass-card p-5">
-          <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-2xl font-semibold text-transparent sm:text-3xl">
-            AI Sales Engine Control Center
-          </h2>
-          <p className="mt-1 text-sm text-content-secondary">
-            Configure profile, automation, scoring, and compliance from one command surface.
-          </p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-2xl font-semibold text-transparent sm:text-3xl">
+                AI Sales Engine Control Center
+              </h2>
+              <p className="mt-1 text-sm text-content-secondary">
+                Configure profile, automation, scoring, and compliance from one command surface.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setLogoutConfirmOpen(true)}
+              className="glass-btn inline-flex h-12 w-12 items-center justify-center text-content-secondary transition-colors hover:text-danger"
+              aria-label="Open logout confirmation"
+              title="Logout"
+            >
+              <LogOut className="h-10 w-10" />
+            </button>
+          </div>
         </header>
 
         <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">

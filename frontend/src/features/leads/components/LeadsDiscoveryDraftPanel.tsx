@@ -29,6 +29,7 @@ type LeadsDiscoveryInsightPanelProps = {
   onGenerateOutreach: () => void;
   onCopyInsights: (value: string) => Promise<void>;
   onCopyOutreach: () => Promise<void>;
+  onSendToMessages: () => void;
   onOpenSource: () => void;
 };
 
@@ -110,6 +111,7 @@ export const LeadsDiscoveryInsightPanel = ({
   onGenerateOutreach,
   onCopyInsights,
   onCopyOutreach,
+  onSendToMessages,
   onOpenSource,
 }: LeadsDiscoveryInsightPanelProps) => {
   const [searchParams] = useSearchParams();
@@ -488,6 +490,13 @@ export const LeadsDiscoveryInsightPanel = ({
                 All quality checks passed.
               </div>
             )}
+            <button
+              type="button"
+              onClick={onSendToMessages}
+              className="accent-btn w-full px-2 py-2 text-xs"
+            >
+              Send in Messages
+            </button>
           </div>
         ) : null}
       </div>

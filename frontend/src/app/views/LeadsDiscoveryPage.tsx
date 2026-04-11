@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import bgConnecting from "../../assets/bg-images/connecting-teams.svg";
 import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButton";
@@ -25,6 +26,7 @@ const getIntentLabel = (score: number): string => {
 type TriageQueue = "all" | "hot_qualified" | "high_urgency" | "needs_nurture";
 
 export const LeadsDiscoveryPage = () => {
+  const navigate = useNavigate();
   const {
     searchTerm,
     setSearchTerm,
@@ -376,6 +378,48 @@ export const LeadsDiscoveryPage = () => {
     }
   };
 
+  const handleSendToMessages = async () => {
+    if (!selectedLead || !outreachResult?.message.trim()) {
+      return;
+    }
+
+    let targetLeadId = selectedLead.id;
+    const intent = selectedIntent ?? advancedIntentByLeadId[selectedLead.id] ?? null;
+
+    try {
+      if (!savedLeadIds[selectedLead.id]) {
+        const saved = await leadService.saveDiscoveryLeadAsManageLead(selectedLead, {
+          aiIntent: intent,
+        });
+        targetLeadId = saved.id;
+        setSavedLeadIds((prev) => ({ ...prev, [selectedLead.id]: true }));
+      }
+
+      const contextLines = [
+        `Pain point: ${painPointInput.trim() || "N/A"}`,
+        `Your skills: ${skillsList.join(", ") || "N/A"}`,
+        `Portfolio summary: ${portfolioSummaryInput.trim() || "N/A"}`,
+        "Generated from Discovery Console outreach flow.",
+      ];
+
+      navigate("/messages", {
+        state: {
+          fromDiscovery: true,
+          leadId: targetLeadId,
+          tone,
+          draft: outreachResult.message,
+          subject: selectedLead.company
+            ? `Regarding ${selectedLead.company} - Partnership Opportunity`
+            : "Partnership Opportunity",
+          customContext: contextLines.join("\n"),
+        },
+      });
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "Unknown redirect error";
+      setSaveFeedback(`Unable to open Messages tab: ${reason}`);
+    }
+  };
+
   const handleOpenSource = () => {
     if (!selectedLead?.permalink) return;
     window.open(selectedLead.permalink, "_blank", "noopener,noreferrer");
@@ -717,6 +761,9 @@ export const LeadsDiscoveryPage = () => {
             }}
             onCopyInsights={(text : string) => handleCopyText(text)}
             onCopyOutreach={handleCopyOutreach}
+            onSendToMessages={() => {
+              void handleSendToMessages();
+            }}
             onOpenSource={handleOpenSource}
           />
           {draftError || outreachError ? (

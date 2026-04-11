@@ -22,6 +22,8 @@ type MessageComposerPanelProps = {
   onDraftChange: (value: string) => void;
   onSend: () => void;
   onCopy: () => void;
+  isGenerating: boolean;
+  onGenerate: () => void;
 };
 
 export const MessageComposerPanel = ({
@@ -44,6 +46,8 @@ export const MessageComposerPanel = ({
   onDraftChange,
   onSend,
   onCopy,
+  isGenerating,
+  onGenerate,
 }: MessageComposerPanelProps) => {
   const contextPresets = [
     "Focus on ROI and measurable outcomes.",
@@ -78,7 +82,10 @@ export const MessageComposerPanel = ({
       </div>
 
       <div className="mb-3 space-y-2">
-        <label className="text-xs tracking-[0.1em] text-content-tertiary" htmlFor="your-context">
+        <label
+          className="text-xs tracking-[0.1em] text-content-tertiary"
+          htmlFor="your-context"
+        >
           YOUR CONTEXT FOR AI
         </label>
         <textarea
@@ -103,7 +110,10 @@ export const MessageComposerPanel = ({
       </div>
 
       <div className="mb-3 space-y-2">
-        <label className="text-xs tracking-[0.1em] text-content-tertiary" htmlFor="email-to">
+        <label
+          className="text-xs tracking-[0.1em] text-content-tertiary"
+          htmlFor="email-to"
+        >
           SEND TO
         </label>
         <input
@@ -113,7 +123,10 @@ export const MessageComposerPanel = ({
           placeholder="Enter client email"
           className="glass-input"
         />
-        <label className="text-xs tracking-[0.1em] text-content-tertiary" htmlFor="email-subject">
+        <label
+          className="text-xs tracking-[0.1em] text-content-tertiary"
+          htmlFor="email-subject"
+        >
           SUBJECT
         </label>
         <input
@@ -123,7 +136,9 @@ export const MessageComposerPanel = ({
           placeholder="Subject"
           className="glass-input"
         />
-        {!email ? <p className="text-xs text-warning">No email found for this lead.</p> : null}
+        {!email ? (
+          <p className="text-xs text-warning">No email found for this lead.</p>
+        ) : null}
       </div>
 
       <textarea
@@ -133,28 +148,38 @@ export const MessageComposerPanel = ({
       />
 
       <div className="mt-3 flex items-center justify-between">
-        <p className="text-xs text-content-tertiary">
-          Optimized for {selectedLeadName?.toUpperCase() || "LEAD"}
-        </p>
-        <div className="flex items-center gap-2">
+        <p className="text-xs  text-content-tertiary">Specifically Optimized</p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
           <button
             type="button"
-            onClick={onSend}
-            disabled={sending || !email || !localDraft.trim()}
-            className="rounded-glass-sm bg-success px-4 py-1.5 text-xs font-semibold tracking-[0.08em] text-content-inverse shadow-[0_0_16px_rgba(16,185,129,0.3)] transition hover:shadow-[0_0_24px_rgba(16,185,129,0.5)] disabled:opacity-60"
+            onClick={onGenerate}
+            disabled={isGenerating}
+            className="accent-btn flex-1 text-xs font-bold disabled:opacity-60"
           >
-            {sending ? "SENDING..." : sent ? "SENT" : "SEND EMAIL"}
+            {isGenerating ? "GENERATING..." : "GENERATE DRAFT"}
           </button>
-          <button
-            type="button"
-            onClick={onCopy}
-            className="rounded-glass-sm border border-success/30 bg-success-soft px-4 py-1.5 text-xs font-semibold tracking-[0.08em] text-success transition hover:border-success/50 hover:shadow-[0_0_16px_rgba(16,185,129,0.2)]"
-          >
-            {copied ? "COPIED" : "COPY"}
-          </button>
+          <div className="flex gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={onSend}
+              disabled={sending || !email || !localDraft.trim()}
+              className="flex-1 rounded-glass-sm bg-success px-4 py-1.5 text-xs font-semibold tracking-[0.08em] text-content-inverse shadow-[0_0_16px_rgba(16,185,129,0.3)] transition hover:shadow-[0_0_24px_rgba(16,185,129,0.5)] disabled:opacity-60"
+            >
+              {sending ? "SENDING..." : sent ? "SENT" : "SEND EMAIL"}
+            </button>
+            <button
+              type="button"
+              onClick={onCopy}
+              className="rounded-glass-sm border border-success/30 bg-success-soft px-4 py-1.5 text-xs font-semibold tracking-[0.08em] text-success transition hover:border-success/50 hover:shadow-[0_0_16px_rgba(16,185,129,0.2)]"
+            >
+              {copied ? "COPIED" : "COPY"}
+            </button>
+          </div>
         </div>
       </div>
-      {sendError ? <p className="mt-2 text-xs text-danger">{sendError}</p> : null}
+      {sendError ? (
+        <p className="mt-2 text-xs text-danger">{sendError}</p>
+      ) : null}
     </section>
   );
 };

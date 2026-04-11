@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 import { PageBackground } from "../../components/ui/PageBackground";
 import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
@@ -9,12 +10,20 @@ import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLe
 import { MessageComposerPanel } from "../../features/messages/components/MessageComposerPanel";
 import { MessageLeadDetailsModal } from "../../features/messages/components/MessageLeadDetailsModal";
 import { MessageLeadPanel } from "../../features/messages/components/MessageLeadPanel";
-import {
-  CONTEXT_PREVIEW_LIMIT,
-} from "../../features/messages/constants/messages";
+import { CONTEXT_PREVIEW_LIMIT } from "../../features/messages/constants/messages";
 import type { ToneType } from "../../features/common/types/ui";
 
+type DiscoveryMessagesPrefillState = {
+  fromDiscovery?: boolean;
+  leadId?: string;
+  tone?: ToneType;
+  draft?: string;
+  subject?: string;
+  customContext?: string;
+};
+
 export const MessagesPage = () => {
+  const location = useLocation();
   // Use centralized leads for message generation
   const { leads: manageLeads, loading } = useCentralizedLeads();
 
@@ -32,8 +41,10 @@ export const MessagesPage = () => {
   const [copied, setCopied] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [contextExpanded, setContextExpanded] = useState(false);
+  const [prefillApplied, setPrefillApplied] = useState(false);
 
-  const { generateMessage, generatedMessage, isGenerating } = useMessageGenerator();
+  const { generateMessage, generatedMessage, isGenerating } =
+    useMessageGenerator();
 
   // Auto-select first lead if none selected
   useEffect(() => {
@@ -42,9 +53,41 @@ export const MessagesPage = () => {
     }
   }, [selectedLeadId, manageLeads]);
 
+  useEffect(() => {
+    if (prefillApplied) return;
+
+    const navState =
+      (location.state as DiscoveryMessagesPrefillState | null) ?? null;
+    if (!navState?.fromDiscovery || !navState.draft?.trim()) {
+      return;
+    }
+
+    if (
+      navState.leadId &&
+      manageLeads.some((lead) => lead.id === navState.leadId)
+    ) {
+      setSelectedLeadId(navState.leadId);
+    }
+
+    if (navState.tone) {
+      setTone(navState.tone);
+    }
+
+    if (navState.customContext?.trim()) {
+      setCustomContext(navState.customContext);
+    }
+
+    if (navState.subject?.trim()) {
+      setSubject(navState.subject);
+    }
+
+    setLocalDraft(navState.draft);
+    setPrefillApplied(true);
+  }, [location.state, manageLeads, prefillApplied]);
+
   const selectedLead = useMemo(
     () => manageLeads.find((lead) => lead.id === selectedLeadId) ?? null,
-    [manageLeads, selectedLeadId]
+    [manageLeads, selectedLeadId],
   );
 
   const generateSubject = () => {
@@ -66,7 +109,8 @@ export const MessagesPage = () => {
     setDetailsOpen(false);
   }, [selectedLead]);
 
-  const leadContext = selectedLead?.notes || `Lead from ${selectedLead?.company || 'Unknown'}`;
+  const leadContext =
+    selectedLead?.notes || `Lead from ${selectedLead?.company || "Unknown"}`;
   const trimmedContent =
     leadContext.length > CONTEXT_PREVIEW_LIMIT
       ? `${leadContext.slice(0, CONTEXT_PREVIEW_LIMIT).trim()}...`
@@ -98,7 +142,8 @@ export const MessagesPage = () => {
       setLocalDraft(result.message);
       setSubject(generateSubject());
     } catch (error) {
-      const reason = error instanceof Error ? error.message : "Unknown AI error";
+      const reason =
+        error instanceof Error ? error.message : "Unknown AI error";
       setSendError(`AI draft generation failed: ${reason}`);
     }
   };
@@ -122,7 +167,9 @@ export const MessagesPage = () => {
 
       setSent(true);
     } catch {
-      setSendError("Failed to send email. Please verify SMTP settings and try again.");
+      setSendError(
+        "Failed to send email. Please verify SMTP settings and try again.",
+      );
     } finally {
       setSending(false);
     }
@@ -136,13 +183,15 @@ export const MessagesPage = () => {
 
   return (
     <>
-      <PageBackground image={bgRemotely} tint="rgba(21, 171, 123, 0.50)"  />
-      <ResponsivePageLayout
-        contentClassName="space-y-4"
-      >
+      <PageBackground image={bgRemotely} tint="rgba(21, 171, 123, 0.50)" />
+      <ResponsivePageLayout contentClassName="space-y-4">
         <header className="glass-card p-5">
-          <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-2xl font-semibold text-transparent sm:text-3xl">Message Synthesis</h2>
-          <p className="mt-1 text-sm text-content-secondary">Generate personalized outbound drafts from live lead context.</p>
+          <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-2xl font-semibold text-transparent sm:text-3xl">
+            Message Synthesis
+          </h2>
+          <p className="mt-1 text-sm text-content-secondary">
+            Generate personalized outbound drafts from live lead context.
+          </p>
         </header>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
@@ -194,6 +243,10 @@ export const MessagesPage = () => {
             onCopy={() => {
               void handleCopy();
             }}
+            isGenerating={isGenerating}
+            onGenerate={() => {
+              void handleGenerate();
+            }}
           />
         </div>
 
@@ -205,5 +258,4 @@ export const MessagesPage = () => {
       </ResponsivePageLayout>
     </>
   );
-
 };

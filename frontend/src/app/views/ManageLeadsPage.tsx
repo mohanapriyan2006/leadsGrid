@@ -42,6 +42,8 @@ import { PageBackground } from "../../components/ui/PageBackground";
 import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import bgTeamCollab from "../../assets/bg-images/team-collaboration.svg";
 import { LeadsAnalysisPage } from "./LeadsAnalysisPage";
+import { useSettingsState } from "../../features/settings/hooks/useSettingsState";
+import { useAuth } from "../../features/auth/AuthContext";
 
 type PendingLeadUpdate = {
   leadId: string;
@@ -64,6 +66,8 @@ type PendingLeadUpdate = {
 
 export const ManageLeadsPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { settings } = useSettingsState(user?.email);
   const {
     selectedManageLeadId,
     manageLeadView,
@@ -162,6 +166,9 @@ export const ManageLeadsPage = () => {
 
   const filteredLeads = useMemo(() => {
     let filtered = manageLeads;
+    const scoreThreshold = settings.leadsScoring.minimumLeadScore;
+
+    filtered = filtered.filter((lead) => lead.score >= scoreThreshold);
 
     // Apply search filter
     const q = debouncedSearch.trim().toLowerCase();
@@ -178,11 +185,11 @@ export const ManageLeadsPage = () => {
 
     // Apply hot filter
     if (onlyHot) {
-      filtered = filtered.filter(lead => lead.score >= 80);
+      filtered = filtered.filter((lead) => lead.score >= 80);
     }
 
     return filtered;
-  }, [manageLeads, debouncedSearch, onlyHot]);
+  }, [manageLeads, debouncedSearch, onlyHot, settings.leadsScoring.minimumLeadScore]);
 
   useEffect(() => {
     setSelectedLeadIds((prev) => prev.filter((id) => filteredLeads.some((lead) => lead.id === id)));

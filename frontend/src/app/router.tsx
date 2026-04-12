@@ -1,11 +1,13 @@
 import { lazy, Suspense, type ReactNode } from "react";
-import { Link, createBrowserRouter } from "react-router-dom";
+import { Link, Navigate, createBrowserRouter } from "react-router-dom";
 
 import { AppShell } from "./shell/AppShell";
 import { ProtectedRoute } from "./shell/ProtectedRoute";
 import { LoginPage } from "./views/LoginPage";
 import { RouteErrorPage } from "./views/RouteErrorPage";
 import { RouteSkeleton } from "./views/RouteSkeleton";
+import { GlobalLogoLoader } from "../components/ui/GlobalLogoLoader";
+import { useAuth } from "../features/auth/AuthContext";
 
 const DashboardPage = lazy(() =>
   import("./views/DashboardPage").then((module) => ({ default: module.DashboardPage }))
@@ -39,15 +41,43 @@ const withSuspense = (element: ReactNode) => (
   <Suspense fallback={<RouteSkeleton />}>{element}</Suspense>
 );
 
+const HomeRoute = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <GlobalLogoLoader message="Checking your session..." />;
+  }
+
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return withSuspense(<LandingPage />);
+};
+
+const LoginRoute = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <GlobalLogoLoader message="Checking your session..." />;
+  }
+
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <LoginPage />;
+};
+
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: withSuspense(<LandingPage />),
+    element: <HomeRoute />,
     errorElement: <RouteErrorPage title="Unable to open landing page" />,
   },
   {
     path: "/login",
-    element: <LoginPage />,
+    element: <LoginRoute />,
     errorElement: <RouteErrorPage title="Unable to open login" />,
   },
   {

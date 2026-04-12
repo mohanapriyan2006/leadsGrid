@@ -114,7 +114,7 @@ export const MessageComposerPanel = ({
         <button
           type="button"
           onClick={() => onTabChange("templates")}
-          className={`rounded-glass-sm border px-3 py-2 text-xs uppercase tracking-[0.1em] transition-all ${
+          className={`rounded-glass-sm animate-pulseGlow border px-3 py-2 text-xs uppercase tracking-[0.1em] transition-all ${
             activeTab === "templates"
               ? "border-accent/50 bg-accent-soft text-accent shadow-glow"
               : "border-accent/10 bg-surface-secondary/70 text-content-tertiary hover:border-accent/30"

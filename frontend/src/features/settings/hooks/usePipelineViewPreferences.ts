@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { ManageLeadStage } from "../../leads/types/manageLead";
-import { settingsService } from "../services/settingsService";
+import { SETTINGS_UPDATED_EVENT, settingsService } from "../services/settingsService";
 
 const CRM_STATUS_ORDER = ["negotiation", "contracted", "in-progress", "closed"] as const;
 const CRM_DEFAULT_LABELS: Record<(typeof CRM_STATUS_ORDER)[number], string> = {
@@ -36,7 +36,25 @@ export const usePipelineViewPreferences = () => {
       setPreferredExportFields(settings.workspace.preferredExportFields);
     };
 
+    const onStorage = (event: StorageEvent) => {
+      if (event.key && event.key !== "leadsgrid.settings.v1") {
+        return;
+      }
+      void load();
+    };
+
+    const onSettingsUpdated = () => {
+      void load();
+    };
+
     void load();
+    window.addEventListener("storage", onStorage);
+    window.addEventListener(SETTINGS_UPDATED_EVENT, onSettingsUpdated);
+
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener(SETTINGS_UPDATED_EVENT, onSettingsUpdated);
+    };
   }, []);
 
   const crmStatusLabelMap = useMemo(() => {

@@ -28,6 +28,8 @@ import type { AgentStep } from "../../features/ai/types/agent";
 import type { AgentActionResult } from "../../features/ai/services/agentApiService";
 import { buildContextSummary, buildStructuredAIContext } from "../../features/ai/services/contextBuilder";
 import { conversationMemoryService } from "../../features/ai/services/conversationMemoryService";
+import { useAuth } from "../../features/auth/AuthContext";
+import { useSettingsState } from "../../features/settings/hooks/useSettingsState";
 
 export const AIPage = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -40,6 +42,8 @@ export const AIPage = () => {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [lastAgentPrompt, setLastAgentPrompt] = useState("");
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { settings } = useSettingsState(user?.email);
 
   const { leads } = useLeadStore();
   const { leads: manageLeads } = useCentralizedLeads();
@@ -58,6 +62,22 @@ export const AIPage = () => {
 
   const endRef = useRef<HTMLDivElement | null>(null);
   const leadPool = leads.length ? leads : MOCK_LEADS;
+
+  const aiWordLimit = useMemo(() => {
+    if (settings.ai.messageStyle === "short") return 90;
+    if (settings.ai.messageStyle === "detailed") return 220;
+    return 140;
+  }, [settings.ai.messageStyle]);
+
+  const personalizationInstruction = useMemo(() => {
+    if (settings.ai.personalization === "low") {
+      return "Keep personalization minimal and avoid speculative details.";
+    }
+    if (settings.ai.personalization === "high") {
+      return "Use rich personalization from available lead context and tailor recommendations specifically.";
+    }
+    return "Use balanced personalization grounded in available lead context.";
+  }, [settings.ai.personalization]);
 
   const getLeadChipTitle = useCallback((lead: Lead) => {
     const base = (lead.title || lead.author || lead.summary || "Untitled lead").trim();
@@ -176,6 +196,10 @@ export const AIPage = () => {
     setInputValue(input);
   }, [input, setInputValue]);
 
+  useEffect(() => {
+    setTone(settings.messaging.defaultTone);
+  }, [settings.messaging.defaultTone]);
+
   const buildAskPayload = (prompt: string) => {
     const structuredContext = buildStructuredAIContext({
       prompt,
@@ -206,10 +230,19 @@ export const AIPage = () => {
 
     try {
       const askPayload = buildAskPayload(prompt);
+      const enrichedContext = [
+        askPayload.lead_context,
+        personalizationInstruction,
+        settings.ai.enableEvaluator
+          ? "Self-evaluate the final answer briefly for clarity and actionability before returning it."
+          : "Skip evaluator/self-critique steps and return the direct answer.",
+      ].join("\n");
+
       const result = await generateMessage({
         ...askPayload,
+        lead_context: enrichedContext,
         tone,
-        max_words: 140,
+        max_words: aiWordLimit,
       });
 
       addMessage({

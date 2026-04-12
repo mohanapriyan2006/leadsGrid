@@ -306,7 +306,7 @@ export const SettingsPage = () => {
 
             <div>
               <p className="text-xs text-content-tertiary">
-                Signed in as {user?.email || "unknown user"}. Your data is saved locally in this implementation slice.
+                Signed in as {user?.email || "unknown user"}. Configuration is persisted to Firebase when signed in, with local fallback.
               </p>
             </div>
           </div>

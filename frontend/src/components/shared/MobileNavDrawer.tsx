@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { X, User, LayoutDashboard, Search, Inbox, Settings, Trash2, Brain, Users, Sparkles, Zap } from "lucide-react";
 import { useAuth } from "../../features/auth/AuthContext";
 import logo from "../../assets/logo1.png";
@@ -97,6 +97,7 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
   const [isClosing, setIsClosing] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [isBackendOnline, setIsBackendOnline] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const testDocRef = doc(db, "_system", "status");
@@ -182,7 +183,7 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
             </button>
 
             {/* Logo & Brand */}
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-4 cursor-pointer" onClick={() => navigate("/")}>
               <div className="relative flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-700 to-purple-900 shadow-glow animate-float">
                 <img src={logo} alt="leadsGrid" className="h-6 w-6" />
               </div>

@@ -1,8 +1,11 @@
 import { SETTINGS_DEFAULTS } from "../constants/settingsDefaults";
 import type { AppSettings } from "../types/settings";
+import { db, getFirebaseAuth, isFirebaseConfigured } from "../../../lib/firebase";
+import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 
 const STORAGE_KEY = "leadsgrid.settings.v1";
 export const SETTINGS_UPDATED_EVENT = "leadsgrid:settings-updated";
+const FIREBASE_SETTINGS_DOC_ID = "app";
 
 const cloneDefaults = () => JSON.parse(JSON.stringify(SETTINGS_DEFAULTS)) as AppSettings;
 
@@ -110,28 +113,99 @@ const normalizeSettings = (raw: unknown): AppSettings => {
   };
 };
 
+const readFromLocalStorage = (): AppSettings => {
+  if (typeof window === "undefined") {
+    return cloneDefaults();
+  }
+
+  const raw = window.localStorage.getItem(STORAGE_KEY);
+  if (!raw) {
+    return cloneDefaults();
+  }
+
+  try {
+    return normalizeSettings(JSON.parse(raw));
+  } catch {
+    return cloneDefaults();
+  }
+};
+
+const writeToLocalStorage = (settings: AppSettings) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+};
+
+const loadFromFirebase = async (): Promise<AppSettings | null> => {
+  if (!isFirebaseConfigured) {
+    return null;
+  }
+
+  const auth = getFirebaseAuth();
+  const userId = auth?.currentUser?.uid;
+  if (!userId) {
+    return null;
+  }
+
+  try {
+    const settingsRef = doc(db, "users", userId, "settings", FIREBASE_SETTINGS_DOC_ID);
+    const snapshot = await getDoc(settingsRef);
+    if (!snapshot.exists()) {
+      return null;
+    }
+
+    const payload = snapshot.data() as { settings?: unknown };
+    const normalized = normalizeSettings(payload.settings ?? payload);
+    writeToLocalStorage(normalized);
+    return normalized;
+  } catch {
+    return null;
+  }
+};
+
+const saveToFirebase = async (settings: AppSettings): Promise<void> => {
+  if (!isFirebaseConfigured) {
+    return;
+  }
+
+  const auth = getFirebaseAuth();
+  const userId = auth?.currentUser?.uid;
+  if (!userId) {
+    return;
+  }
+
+  const settingsRef = doc(db, "users", userId, "settings", FIREBASE_SETTINGS_DOC_ID);
+  await setDoc(
+    settingsRef,
+    {
+      settings,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
+};
+
 export const settingsService = {
   async load(): Promise<AppSettings> {
-    if (typeof window === "undefined") {
-      return cloneDefaults();
+    const firebaseSettings = await loadFromFirebase();
+    if (firebaseSettings) {
+      return firebaseSettings;
     }
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return cloneDefaults();
-    }
-    try {
-      return normalizeSettings(JSON.parse(raw));
-    } catch {
-      return cloneDefaults();
-    }
+
+    return readFromLocalStorage();
   },
 
   async save(settings: AppSettings): Promise<void> {
+    const normalized = normalizeSettings(settings);
+    writeToLocalStorage(normalized);
+    await saveToFirebase(normalized);
+
     if (typeof window === "undefined") {
       return;
     }
-    const normalized = normalizeSettings(settings);
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+
     window.dispatchEvent(new CustomEvent(SETTINGS_UPDATED_EVENT, { detail: normalized }));
   },
 

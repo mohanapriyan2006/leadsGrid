@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import { navigationItems } from "../../constants/navigation";
 import {
@@ -82,12 +82,13 @@ type SidebarProps = {
 
 export const Sidebar = ({ className = "" }: SidebarProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   return (
     <aside className={`hidden w-72 border-r border-accent/10 bg-gradient-to-b from-surface-secondary/90 via-surface-secondary/80 to-surface/90 p-5 backdrop-blur-glass md:block ${className}`.trim()}>
       {/* Logo Section - Pro Level */}
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-3 mb-4" onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
         <div className="relative flex items-center justify-center w-fit h-fit rounded-2xl bg-gradient-to-br from-purple-700 to-purple-900 shadow-glow animate-float">
           <img src={logo} alt="leadsGrid" className="h-10 w-10" />
         </div>

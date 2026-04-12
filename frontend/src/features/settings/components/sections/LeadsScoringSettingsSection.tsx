@@ -71,7 +71,7 @@ export const LeadsScoringSettingsSection = ({ leadsScoring, onChange }: LeadsSco
               onChange={() =>
                 onChange({
                   ...leadsScoring,
-                  [key]: !value,
+                  [key as string]: !value,
                 })
               }
             />

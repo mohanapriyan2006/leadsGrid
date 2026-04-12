@@ -16,6 +16,8 @@ import { leadAnalysisService, type AdvancedLeadIntent } from "../../features/lea
 import { leadService } from "../../features/leads/services/leadService";
 import type { HyperPersonalizedOutreachResult, Lead } from "../../features/leads/types/lead";
 import type { ToneType } from "../../features/common/types/ui";
+import { useAuth } from "../../features/auth/AuthContext";
+import { useSettingsState } from "../../features/settings/hooks/useSettingsState";
 
 const getIntentLabel = (score: number): string => {
   if (score >= 80) return "high";
@@ -27,6 +29,8 @@ type TriageQueue = "all" | "hot_qualified" | "high_urgency" | "needs_nurture";
 
 export const LeadsDiscoveryPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { settings } = useSettingsState(user?.email);
   const {
     searchTerm,
     setSearchTerm,
@@ -111,11 +115,25 @@ export const LeadsDiscoveryPage = () => {
     && portfolioSummaryInput.trim().length >= 10,
   );
 
+  const draftWordLimit = useMemo(() => {
+    if (settings.ai.messageStyle === "short") return 90;
+    if (settings.ai.messageStyle === "detailed") return 200;
+    return 120;
+  }, [settings.ai.messageStyle]);
+
   useEffect(() => {
     if (!selectedLeadId && enrichedLeads.length > 0) {
       setSelectedLeadId(enrichedLeads[0].id);
     }
   }, [enrichedLeads, selectedLeadId]);
+
+  useEffect(() => {
+    setTone(settings.messaging.defaultTone);
+  }, [settings.messaging.defaultTone]);
+
+  useEffect(() => {
+    setScoreMin(settings.leadsScoring.minimumLeadScore);
+  }, [setScoreMin, settings.leadsScoring.minimumLeadScore]);
 
   useEffect(() => {
     if (!selectedLead) {
@@ -312,12 +330,13 @@ export const LeadsDiscoveryPage = () => {
         `Category: ${advancedIntent.category}`,
         `Qualification status: ${advancedIntent.status}`,
         `Buying signals: ${advancedIntent.buying_signals.join(", ") || "none"}`,
+        `Personalization level: ${settings.ai.personalization}`,
       ].join("\n");
 
       await generateMessage({
         lead_context: analysisContext,
         tone,
-        max_words: 120,
+        max_words: draftWordLimit,
       });
     } catch (error) {
       setAnalyzingLeadId(null);
@@ -554,7 +573,7 @@ export const LeadsDiscoveryPage = () => {
                 onClick={() => {
                   void handleBulkAnalyzeVisible();
                 }}
-                className="glass-btn px-3 py-2 text-xs uppercase tracking-[0.08em]"
+                className="glass-btn animate-pulseGlow hover:animate-none px-3 py-2 text-xs uppercase tracking-[0.08em]"
                 disabled={triagedLeads.length === 0 || isBulkAnalyzing}
               >
                 {isBulkAnalyzing ? `Analyzing ${bulkAnalyzeProgress}%` : "Analyze Visible"}

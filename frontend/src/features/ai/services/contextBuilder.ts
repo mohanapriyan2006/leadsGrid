@@ -84,6 +84,7 @@ const normalizeManageLead = (lead: ManageLead): Lead => ({
   id: lead.id,
   source: lead.source === "website" ? "search" : lead.source,
   author: lead.name,
+  company: lead.company,
   title: lead.company,
   content: lead.notes || `Lead from ${lead.company}`,
   summary: lead.notes || `Lead from ${lead.company}`,

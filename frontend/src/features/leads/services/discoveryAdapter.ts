@@ -70,6 +70,7 @@ export const adaptDiscoveryLead = (dto: DiscoveryLeadDto): Lead => {
     id: dto.id || `${toSource(dto.platform)}-${Math.random().toString(36).slice(2, 10)}`,
     source: toSource(dto.platform),
     author,
+    company: dto.title?.trim() || author,
     title: dto.title,
     email: dto.email,
     avatar: initials(author),

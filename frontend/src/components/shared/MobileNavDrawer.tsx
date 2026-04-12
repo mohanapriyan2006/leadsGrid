@@ -98,6 +98,7 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [isBackendOnline, setIsBackendOnline] = useState(true);
   const navigate = useNavigate();
+  const homePath = user ? "/dashboard" : "/";
 
   useEffect(() => {
     const testDocRef = doc(db, "_system", "status");
@@ -105,10 +106,10 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
     const unsubscribe = onSnapshot(
       testDocRef,
       () => {
-        setIsBackendOnline(false);
+        setIsBackendOnline(true);
       },
       () => {
-        setIsBackendOnline(true);
+        setIsBackendOnline(false);
       },
     );
 
@@ -183,7 +184,7 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
             </button>
 
             {/* Logo & Brand */}
-            <div className="flex items-center gap-3 mb-4 cursor-pointer" onClick={() => navigate("/")}>
+            <div className="flex items-center gap-3 mb-4 cursor-pointer" onClick={() => navigate(homePath)}>
               <div className="relative flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-700 to-purple-900 shadow-glow animate-float">
                 <img src={logo} alt="leadsGrid" className="h-6 w-6" />
               </div>

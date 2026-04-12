@@ -8,33 +8,48 @@ import { RouteErrorPage } from "./views/RouteErrorPage";
 import { RouteSkeleton } from "./views/RouteSkeleton";
 import { GlobalLogoLoader } from "../components/ui/GlobalLogoLoader";
 import { useAuth } from "../features/auth/AuthContext";
+import notFound from "../assets/not-found.png";
 
 const DashboardPage = lazy(() =>
-  import("./views/DashboardPage").then((module) => ({ default: module.DashboardPage }))
+  import("./views/DashboardPage").then((module) => ({
+    default: module.DashboardPage,
+  })),
 );
 const LandingPage = lazy(() =>
-  import("./views/LandingPage").then((module) => ({ default: module.LandingPage }))
+  import("./views/LandingPage").then((module) => ({
+    default: module.LandingPage,
+  })),
 );
 const LeadsDiscoveryPage = lazy(() =>
-  import("./views/LeadsDiscoveryPage").then((module) => ({ default: module.LeadsDiscoveryPage }))
+  import("./views/LeadsDiscoveryPage").then((module) => ({
+    default: module.LeadsDiscoveryPage,
+  })),
 );
 const ManageLeadsPage = lazy(() =>
-  import("./views/ManageLeadsPage").then((module) => ({ default: module.ManageLeadsPage }))
+  import("./views/ManageLeadsPage").then((module) => ({
+    default: module.ManageLeadsPage,
+  })),
 );
 const RecyclicBinPage = lazy(() =>
-  import("./views/RecyclicBinPage").then((module) => ({ default: module.RecyclicBinPage }))
+  import("./views/RecyclicBinPage").then((module) => ({
+    default: module.RecyclicBinPage,
+  })),
 );
 const MessagesPage = lazy(() =>
-  import("./views/MessagesPage").then((module) => ({ default: module.MessagesPage }))
+  import("./views/MessagesPage").then((module) => ({
+    default: module.MessagesPage,
+  })),
 );
 const CRMPage = lazy(() =>
-  import("./views/CRMPage").then((module) => ({ default: module.CRMPage }))
+  import("./views/CRMPage").then((module) => ({ default: module.CRMPage })),
 );
 const AIPage = lazy(() =>
-  import("./views/AIPage").then((module) => ({ default: module.AIPage }))
+  import("./views/AIPage").then((module) => ({ default: module.AIPage })),
 );
 const SettingsPage = lazy(() =>
-  import("./views/SettingsPage").then((module) => ({ default: module.SettingsPage }))
+  import("./views/SettingsPage").then((module) => ({
+    default: module.SettingsPage,
+  })),
 );
 
 const withSuspense = (element: ReactNode) => (
@@ -127,9 +142,17 @@ export const router = createBrowserRouter([
     element: (
       <div className="min-h-screen flex items-center justify-center bg-surface text-content">
         <div className="text-center">
+          <img
+            src={notFound}
+            alt="Not found"
+            className="mx-auto mb-6 w-48 h-48 object-contain opacity-90"
+          />
           <h1 className="text-4xl font-bold text-accent mb-4">404</h1>
           <p className="text-content-secondary mb-6">Page not found</p>
-          <Link to="/" className="text-accent hover:text-accent-secondary transition-colors">
+          <Link
+            to="/"
+            className="text-accent hover:text-accent-secondary transition-colors"
+          >
             Go home
           </Link>
         </div>

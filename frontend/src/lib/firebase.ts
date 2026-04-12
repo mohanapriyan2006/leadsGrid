@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { type Auth, getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 import { getStorage } from "firebase/storage";
 
@@ -29,7 +29,10 @@ export const isFirebaseConfigured =
 const app = initializeApp(firebaseConfig);
 
 export const googleProvider = new GoogleAuthProvider();
-export const db = getFirestore(app);
+// Work around intermittent Firestore watch-stream internal assertions in browser dev sessions.
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+});
 export const functions = getFunctions(app);
 export const storage = getStorage(app);
 

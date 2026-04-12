@@ -16,6 +16,7 @@ export const Topbar = ({ onOpenMobileNav }: TopbarProps) => {
   const [isBackendOnline, setIsBackendOnline] = useState(true);
   const [isMenuHovered, setIsMenuHovered] = useState(false);
   const navigate = useNavigate();
+  const homePath = user ? "/dashboard" : "/";
 
   useEffect(() => {
     const testDocRef = doc(db, "_system", "status");
@@ -23,10 +24,10 @@ export const Topbar = ({ onOpenMobileNav }: TopbarProps) => {
     const unsubscribe = onSnapshot(
       testDocRef,
       () => {
-        setIsBackendOnline(false);
+        setIsBackendOnline(true);
       },
       () => {
-        setIsBackendOnline(true);
+        setIsBackendOnline(false);
       },
     );
 
@@ -39,7 +40,7 @@ export const Topbar = ({ onOpenMobileNav }: TopbarProps) => {
    
     <header className="sticky top-0 z-5 flex items-center gap-3 border-b border-accent/10 bg-surface/70 px-3 py-2 backdrop-blur-glass sm:gap-4 sm:px-4 sm:py-3">
       {/* Logo - LeadsGrid only */}
-      <div className="flex items-center gap-2 shrink-0 md:hidden cursor-pointer" onClick={() => navigate("/")}>
+      <div className="flex items-center gap-2 shrink-0 md:hidden cursor-pointer" onClick={() => navigate(homePath)}>
         <div className="relative flex items-center justify-center w-fit h-fit rounded-xl bg-gradient-to-br from-accent to-accent-secondary shadow-glow">
           <img src={logo} alt="leadsGrid" className="h-6 w-6" />
         </div>

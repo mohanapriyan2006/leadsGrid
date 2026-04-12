@@ -1,4 +1,5 @@
 import type { ManageLeadStage } from "../../leads/types/manageLead";
+import type { EmailTemplateId } from "../../messages/types/emailTemplates";
 
 export type RefreshInterval = "5" | "15" | "30" | "60";
 
@@ -44,6 +45,7 @@ export type AppSettings = {
   };
   messaging: {
     defaultTone: ToneType;
+    defaultTemplateId: EmailTemplateId;
     autoFillSubject: boolean;
     signature: string;
     followUpReminderDays: number;

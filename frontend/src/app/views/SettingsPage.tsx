@@ -235,15 +235,27 @@ export const SettingsPage = () => {
                 Configure profile, automation, scoring, and compliance from one command surface.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setLogoutConfirmOpen(true)}
-              className="glass-btn inline-flex h-12 w-12 items-center justify-center text-content-secondary transition-colors hover:text-danger"
-              aria-label="Open logout confirmation"
-              title="Logout"
-            >
-              <LogOut className="h-10 w-10" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  void saveSettings();
+                }}
+                disabled={!isDirty || saving}
+                className="accent-btn px-3 py-2 text-[10px] font-bold tracking-[0.1em] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {saving ? "SAVING" : "SAVE"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setLogoutConfirmOpen(true)}
+                className="glass-btn inline-flex h-12 w-12 items-center justify-center text-content-secondary transition-colors hover:text-danger"
+                aria-label="Open logout confirmation"
+                title="Logout"
+              >
+                <LogOut className="h-10 w-10" />
+              </button>
+            </div>
           </div>
         </header>
 

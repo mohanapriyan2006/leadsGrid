@@ -1,4 +1,5 @@
 export type Lead = {
+  company: any;
   id: string;
   source: "reddit" | "twitter" | "linkedin" | "hackernews" | "search";
   author: string;

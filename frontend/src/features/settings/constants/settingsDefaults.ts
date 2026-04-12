@@ -42,6 +42,7 @@ export const SETTINGS_DEFAULTS: AppSettings = {
   },
   messaging: {
     defaultTone: "professional",
+    defaultTemplateId: "minimal-professional",
     autoFillSubject: true,
     signature: "Best regards,\nLeadsGrid Team",
     followUpReminderDays: 2,

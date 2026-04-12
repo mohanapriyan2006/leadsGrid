@@ -3,6 +3,7 @@ import { SettingsField } from "../SettingsField";
 import { SettingsSectionCard } from "../SettingsSectionCard";
 import { SettingsToggle } from "../SettingsToggle";
 import type { AppSettings } from "../../types/settings";
+import { EMAIL_TEMPLATES } from "../../../messages/constants/emailTemplates";
 
 type MessagingSettingsSectionProps = {
   messaging: AppSettings["messaging"];
@@ -45,6 +46,28 @@ export const MessagingSettingsSection = ({ messaging, userEmail, onChange }: Mes
           onChange={() => onChange({ ...messaging, autoFillSubject: !messaging.autoFillSubject })}
         />
       </div>
+
+      <SettingsField
+        label="Default Email Template"
+        hint="Used as the starting template in Message Synthesis."
+      >
+        <select
+          className="glass-input"
+          value={messaging.defaultTemplateId}
+          onChange={(event) =>
+            onChange({
+              ...messaging,
+              defaultTemplateId: event.target.value as AppSettings["messaging"]["defaultTemplateId"],
+            })
+          }
+        >
+          {EMAIL_TEMPLATES.map((template) => (
+            <option key={template.id} value={template.id}>
+              {template.name}
+            </option>
+          ))}
+        </select>
+      </SettingsField>
 
       {/* <div className="grid gap-3 md:grid-cols-2">
         <SettingsField label="Reminder Follow-up (Days)">

@@ -97,6 +97,7 @@ export const AIPage = () => {
       .map((lead) => ({
         id: lead.id,
         author: lead.name,
+        company: lead.company,
         title: lead.company,
         summary: lead.notes || `Lead from ${lead.company}`,
         content: lead.notes || `Lead from ${lead.company}`,
@@ -563,6 +564,7 @@ export const AIPage = () => {
           leads={manageLeads.map((lead) => ({
             id: lead.id,
             author: lead.name,
+            company: lead.company,
             title: lead.company,
             summary: lead.notes || `Lead from ${lead.company}`,
             content: lead.notes || `Lead from ${lead.company}`,

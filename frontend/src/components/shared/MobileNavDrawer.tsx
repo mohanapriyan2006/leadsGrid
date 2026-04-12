@@ -211,7 +211,7 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
                 {isBackendOnline ? (
                   <p className="font-medium text-sm text-content truncate">{user?.displayName || "Welcome"}</p>
                 ) : (
-                  <p className="font-medium text-sm text-content truncate text-red-500">Backend Offline</p>
+                  <p className="font-medium text-sm truncate text-red-500">Backend Offline</p>
                 )}
                 <p className="text-xs text-content-tertiary truncate">{user?.email || "Sign in to continue"}</p>
               </div>

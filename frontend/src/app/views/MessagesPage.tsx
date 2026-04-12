@@ -171,7 +171,7 @@ export const MessagesPage = () => {
   const [subject, setSubject] = useState("");
   const [senderName, setSenderName] = useState("");
   const [selectedTemplateId, setSelectedTemplateId] =
-    useState<EmailTemplateId>("minimal-professional");
+    useState<EmailTemplateId>(settings.messaging.defaultTemplateId);
   const [primaryColor, setPrimaryColor] = useState("#8b5cf6");
   const [secondaryColor, setSecondaryColor] = useState("#eef2ff");
   const [templateHtml, setTemplateHtml] = useState<string | null>(null);
@@ -292,6 +292,10 @@ export const MessagesPage = () => {
     setPrimaryColor(selectedTemplate.defaultPrimaryColor);
     setSecondaryColor(selectedTemplate.defaultSecondaryColor);
   }, [selectedTemplate]);
+
+  useEffect(() => {
+    setSelectedTemplateId(settings.messaging.defaultTemplateId);
+  }, [settings.messaging.defaultTemplateId]);
 
   useEffect(() => {
     if (senderName.trim()) {

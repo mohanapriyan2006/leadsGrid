@@ -68,6 +68,79 @@
     font-weight: 600;
   }
 
+  input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 0.35rem;
+    border: 1px solid rgba(167, 139, 250, 0.38);
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.16), transparent 55%),
+      linear-gradient(145deg, rgba(26, 35, 64, 0.98), rgba(12, 17, 30, 0.98));
+    display: inline-grid;
+    place-content: center;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, transform 0.15s ease;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 0 0 1px rgba(10, 12, 20, 0.35);
+  }
+
+  input[type="checkbox"]::before {
+    content: "";
+    width: 0.30rem;
+    height: 0.56rem;
+    border-right: 2px solid var(--content-inverse);
+    border-bottom: 2px solid var(--content-inverse);
+    transform: rotate(42deg) scale(0);
+    transform-origin: center;
+    transition: transform 0.15s ease;
+    margin-top: -1px;
+  }
+
+  input[type="checkbox"]:hover {
+    border-color: rgba(167, 139, 250, 0.62);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 0 0 1px rgba(167, 139, 250, 0.25),
+      0 0 14px rgba(167, 139, 250, 0.18);
+  }
+
+  input[type="checkbox"]:checked {
+    border-color: rgba(167, 139, 250, 0.96);
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.2), transparent 58%),
+      linear-gradient(130deg, var(--accent), var(--accent-secondary) 45%, var(--accent-tertiary));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      0 0 0 1px rgba(167, 139, 250, 0.32),
+      0 0 16px rgba(167, 139, 250, 0.28);
+  }
+
+  input[type="checkbox"]:checked::before {
+    transform: rotate(42deg) scale(1);
+  }
+
+  input[type="checkbox"]:focus-visible {
+    outline: none;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 0 0 2px rgba(167, 139, 250, 0.25),
+      0 0 0 4px rgba(167, 139, 250, 0.14),
+      0 0 18px rgba(167, 139, 250, 0.2);
+  }
+
+  input[type="checkbox"]:active {
+    transform: translateY(1px) scale(0.98);
+  }
+
+  input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    filter: grayscale(0.15);
+  }
+
   /* Custom scrollbar for webkit browsers */
   ::-webkit-scrollbar {
     width: 8px;
@@ -160,6 +233,39 @@
 
   .glass-input::placeholder {
     @apply text-content-tertiary;
+  }
+
+  /* Custom Select + Option styling */
+  select.glass-input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 2.4rem;
+    cursor: pointer;
+    background-image:
+      linear-gradient(45deg, transparent 50%, var(--accent) 50%),
+      linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+    background-position:
+      calc(100% - 1rem) calc(50% - 2px),
+      calc(100% - 0.7rem) calc(50% - 2px);
+    background-size: 0.42rem 0.42rem, 0.42rem 0.42rem;
+    background-repeat: no-repeat;
+  }
+
+  select.glass-input:hover {
+    border-color: rgba(167, 139, 250, 0.35);
+    box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.08);
+  }
+
+  select.glass-input option {
+    color: var(--content);
+    background-color: var(--surface-secondary);
+    padding: 0.65rem 0.75rem;
+  }
+
+  select.glass-input option:checked {
+    color: var(--content-inverse);
+    background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
   }
 
   /* Status Badges */

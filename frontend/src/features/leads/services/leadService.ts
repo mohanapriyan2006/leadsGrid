@@ -1,4 +1,21 @@
-import { collection, query, where, getDocs, doc, addDoc, updateDoc, deleteDoc, orderBy, Timestamp } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  type DocumentData,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  orderBy,
+  type QueryDocumentSnapshot,
+  query,
+  startAfter,
+  Timestamp,
+  updateDoc,
+  where,
+  writeBatch,
+} from "firebase/firestore";
 import { db, getFirebaseAuth } from "../../../lib/firebase";
 import { apiClient } from "../../../lib/api";
 import type { Lead } from "../types/lead";
@@ -15,10 +32,49 @@ import type {
   ManageLeadStage,
   ManageLeadUrgency,
 } from "../types/manageLead";
-import { createFirestoreLead, mapDiscoveryLeadToManageInput, toFirestoreLeadPatch, toManageLead } from "./leadModel";
+import {
+  buildLeadDedupeKey,
+  createFirestoreLead,
+  mapDiscoveryLeadToManageInput,
+  toFirestoreLeadPatch,
+  toManageLead,
+} from "./leadModel";
 import { mapDiscoveryLeadToManageInputWithAI, type DiscoveryLeadAIIntent } from "./leadModel";
 import type { DiscoveryLeadDto, DiscoveryParams } from "../types/discovery";
 import { adaptDiscoveryLead } from "./discoveryAdapter";
+import { buildManageLeadAnalytics, buildManageLeadInsights } from "./leadMetrics";
+
+const BATCH_WRITE_SIZE = 250;
+const DEFAULT_PAGE_SIZE = 100;
+const MAX_PAGE_SIZE = 250;
+
+export type ManageLeadsCursor = QueryDocumentSnapshot<DocumentData> | null;
+
+export type ManageLeadsPageResult = {
+  items: ManageLead[];
+  nextCursor: ManageLeadsCursor;
+  hasMore: boolean;
+};
+
+const splitIntoChunks = <T,>(items: T[], chunkSize: number): T[][] => {
+  if (items.length === 0) {
+    return [];
+  }
+
+  const chunks: T[][] = [];
+  for (let index = 0; index < items.length; index += chunkSize) {
+    chunks.push(items.slice(index, index + chunkSize));
+  }
+  return chunks;
+};
+
+const getBoundedPageSize = (value?: number) => {
+  if (!value || value <= 0) {
+    return DEFAULT_PAGE_SIZE;
+  }
+
+  return Math.min(Math.max(1, value), MAX_PAGE_SIZE);
+};
 
 const getCurrentUser = () => {
   const auth = getFirebaseAuth();
@@ -70,17 +126,40 @@ export const leadService = {
     only_hot?: boolean;
     only_cold?: boolean;
     urgency?: ManageLeadUrgency;
+    page_size?: number;
   }): Promise<ManageLead[]> => {
+    const page = await leadService.listManageLeadsPage(params);
+    return page.items;
+  },
+
+  listManageLeadsPage: async (params: {
+    query?: string;
+    stage?: ManageLeadStage;
+    source?: ManageLeadSource;
+    min_score?: number;
+    only_hot?: boolean;
+    only_cold?: boolean;
+    urgency?: ManageLeadUrgency;
+    page_size?: number;
+    cursor?: ManageLeadsCursor;
+  }): Promise<ManageLeadsPageResult> => {
     try {
       const user = getCurrentUser();
+      const pageSize = getBoundedPageSize(params.page_size);
 
       let q = query(
         getUserLeadsCollection(user.uid),
         where("isDeleted", "==", false),
+        orderBy("updatedAt", "desc"),
+        limit(pageSize),
       );
 
       if (params.stage) {
         q = query(q, where("pipelineStage", "==", params.stage));
+      }
+
+      if (params.cursor) {
+        q = query(q, startAfter(params.cursor));
       }
       
       const snapshot = await getDocs(q);
@@ -99,31 +178,56 @@ export const leadService = {
 
       leads.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
 
-      return leads;
+      const lastDoc = snapshot.docs.at(-1) ?? null;
+
+      return {
+        items: leads,
+        nextCursor: lastDoc,
+        hasMore: snapshot.docs.length >= pageSize,
+      };
     } catch (error) {
       console.error("listManageLeads error:", error);
       throw error;
     }
   },
 
-  getManageLeadInsights: async (): Promise<ManageLeadInsights> => {
-    const leads = await leadService.listManageLeads({});
-    return {
-      hot_leads_need_reply: leads.filter(l => l.score >= 80 && l.stage === "RESPONDED").length,
-      leads_going_cold: leads.filter(l => l.is_going_cold).length,
-      leads_likely_to_close: leads.filter(l => l.score >= 70 && l.stage === "NEGOTIATION").length,
-    };
+  listAllManageLeads: async (params?: {
+    query?: string;
+    stage?: ManageLeadStage;
+    source?: ManageLeadSource;
+    min_score?: number;
+    only_hot?: boolean;
+    only_cold?: boolean;
+    urgency?: ManageLeadUrgency;
+    page_size?: number;
+  }): Promise<ManageLead[]> => {
+    const combined: ManageLead[] = [];
+    let cursor: ManageLeadsCursor = null;
+    let hasMore = true;
+
+    while (hasMore) {
+      const page = await leadService.listManageLeadsPage({
+        ...(params ?? {}),
+        page_size: params?.page_size,
+        cursor,
+      });
+
+      combined.push(...page.items);
+      cursor = page.nextCursor;
+      hasMore = page.hasMore && Boolean(cursor);
+    }
+
+    return combined;
   },
 
-  getManageLeadAnalytics: async (): Promise<ManageLeadAnalytics> => {
-    const leads = await leadService.listManageLeads({});
-    return {
-      total_leads: leads.length,
-      NEGOTIATION_count: leads.filter(l => l.stage === "NEGOTIATION").length,
-      conversion_rate: 15.5,
-      pipeline_value: leads.reduce((acc, l) => acc + (l.budget_estimate || 0), 0),
-      stage_drop_offs: { "NEW": 10, "CONTACTED": 5 },
-    };
+  getManageLeadInsights: async (leadsInput?: ManageLead[]): Promise<ManageLeadInsights> => {
+    const leads = leadsInput ?? await leadService.listManageLeads({});
+    return buildManageLeadInsights(leads);
+  },
+
+  getManageLeadAnalytics: async (leadsInput?: ManageLead[]): Promise<ManageLeadAnalytics> => {
+    const leads = leadsInput ?? await leadService.listManageLeads({});
+    return buildManageLeadAnalytics(leads);
   },
 
   getManageLeadTimeline: async (leadId: string): Promise<ManageLeadActivity[]> => {
@@ -143,8 +247,11 @@ export const leadService = {
     const user = getCurrentUser();
     const ref = getUserLeadDocument(user.uid, leadId);
     await updateDoc(ref, toFirestoreLeadPatch(payload));
-    const snap = await getDocs(query(getUserLeadsCollection(user.uid), where("__name__", "==", leadId)));
-    return toManageLead(snap.docs[0].id, snap.docs[0].data());
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      throw new Error("Lead not found after update");
+    }
+    return toManageLead(snap.id, snap.data());
   },
 
   manageLeadAction: async (
@@ -164,8 +271,13 @@ export const leadService = {
       return await leadService.updateManageLead(leadId, { stage: payload.target_stage });
     }
     
-    const snap = await getDocs(query(getUserLeadsCollection(user.uid), where("__name__", "==", leadId)));
-    return toManageLead(snap.docs[0].id, snap.docs[0].data());
+    const ref = getUserLeadDocument(user.uid, leadId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      throw new Error("Lead not found after action");
+    }
+
+    return toManageLead(snap.id, snap.data());
   },
 
   runManageLeadAutomation: async (): Promise<{
@@ -211,24 +323,25 @@ export const leadService = {
       ? mapDiscoveryLeadToManageInputWithAI(lead, options.aiIntent)
       : mapDiscoveryLeadToManageInput(lead);
 
-    // Lightweight duplicate guard by matching canonical name+company+source.
+    const dedupeKey = buildLeadDedupeKey(
+      candidate.name,
+      candidate.company,
+      candidate.source ?? "website",
+    );
+
+    // Duplicate guard using indexed key to avoid scanning the entire collection.
     const existingSnap = await getDocs(
       query(
         getUserLeadsCollection(user.uid),
         where("isDeleted", "==", false),
+        where("dedupeKey", "==", dedupeKey),
+        limit(1),
       ),
     );
-    const existing = existingSnap.docs
-      .map((row) => toManageLead(row.id, row.data()))
-      .find(
-        (row) =>
-          row.name.toLowerCase() === candidate.name.toLowerCase()
-          && row.company.toLowerCase() === candidate.company.toLowerCase()
-          && row.source === candidate.source,
-      );
 
-    if (existing) {
-      return existing;
+    if (!existingSnap.empty) {
+      const existing = existingSnap.docs[0];
+      return toManageLead(existing.id, existing.data());
     }
 
     const newLead = createFirestoreLead(candidate);
@@ -243,17 +356,61 @@ export const leadService = {
   }): Promise<{ updated: number }> => {
     const user = getCurrentUser();
     let updated = 0;
-    for (const id of payload.lead_ids) {
-      const ref = getUserLeadDocument(user.uid, id);
-      if (payload.action === "SOFT_DELETE") {
-        await updateDoc(ref, { isDeleted: true, deletedAt: Timestamp.now(), updatedAt: Timestamp.now() });
-        updated++;
-      } else if (payload.action === "MOVE_STAGE" && payload.target_stage) {
-        await updateDoc(ref, toFirestoreLeadPatch({ stage: payload.target_stage }));
+    const chunks = splitIntoChunks(payload.lead_ids, BATCH_WRITE_SIZE);
+
+    for (const chunk of chunks) {
+      const batch = writeBatch(db);
+      for (const id of chunk) {
+        const ref = getUserLeadDocument(user.uid, id);
+        if (payload.action === "SOFT_DELETE") {
+          batch.update(ref, { isDeleted: true, deletedAt: Timestamp.now(), updatedAt: Timestamp.now() });
+          updated++;
+        } else if (payload.action === "MOVE_STAGE" && payload.target_stage) {
+          batch.update(ref, toFirestoreLeadPatch({ stage: payload.target_stage }));
+          updated++;
+        }
+      }
+
+      await batch.commit();
+    }
+
+    return { updated };
+  },
+
+  bulkRestoreManageLeads: async (leadIds: string[]): Promise<{ updated: number }> => {
+    const user = getCurrentUser();
+    let updated = 0;
+    const chunks = splitIntoChunks(leadIds, BATCH_WRITE_SIZE);
+
+    for (const chunk of chunks) {
+      const batch = writeBatch(db);
+      for (const leadId of chunk) {
+        const ref = getUserLeadDocument(user.uid, leadId);
+        batch.update(ref, { isDeleted: false, deletedAt: null, updatedAt: Timestamp.now() });
         updated++;
       }
+      await batch.commit();
     }
+
     return { updated };
+  },
+
+  bulkDeleteManageLeadsForever: async (leadIds: string[]): Promise<{ deleted: number }> => {
+    const user = getCurrentUser();
+    let deleted = 0;
+    const chunks = splitIntoChunks(leadIds, BATCH_WRITE_SIZE);
+
+    for (const chunk of chunks) {
+      const batch = writeBatch(db);
+      for (const leadId of chunk) {
+        const ref = getUserLeadDocument(user.uid, leadId);
+        batch.delete(ref);
+        deleted++;
+      }
+      await batch.commit();
+    }
+
+    return { deleted };
   },
 
   softDeleteManageLead: async (leadId: string): Promise<void> => {
@@ -262,24 +419,43 @@ export const leadService = {
     await updateDoc(ref, { isDeleted: true, deletedAt: Timestamp.now(), updatedAt: Timestamp.now() });
   },
 
-  listManageLeadBin: async (): Promise<BinLead[]> => {
+  listManageLeadBinPage: async (params?: {
+    page_size?: number;
+    cursor?: ManageLeadsCursor;
+  }): Promise<ManageLeadsPageResult> => {
     const user = getCurrentUser();
+    const pageSize = getBoundedPageSize(params?.page_size);
 
-    const q = query(
+    let q = query(
       getUserLeadsCollection(user.uid),
       where("isDeleted", "==", true),
+      orderBy("updatedAt", "desc"),
+      limit(pageSize),
     );
+
+    if (params?.cursor) {
+      q = query(q, startAfter(params.cursor));
+    }
+
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((row) => {
-      const lead = toManageLead(row.id, row.data());
-      return {
-        id: lead.id,
-        name: lead.name,
-        company: lead.company,
-        email: lead.email,
-        deleted_at: lead.deleted_at ?? lead.updated_at,
-      };
-    });
+    const leads = snapshot.docs.map((row) => toManageLead(row.id, row.data()));
+
+    return {
+      items: leads,
+      nextCursor: snapshot.docs.at(-1) ?? null,
+      hasMore: snapshot.docs.length >= pageSize,
+    };
+  },
+
+  listManageLeadBin: async (): Promise<BinLead[]> => {
+    const page = await leadService.listManageLeadBinPage();
+    return page.items.map((lead) => ({
+      id: lead.id,
+      name: lead.name,
+      company: lead.company,
+      email: lead.email,
+      deleted_at: lead.deleted_at ?? lead.updated_at,
+    }));
   },
 
   restoreManageLead: async (leadId: string): Promise<void> => {
@@ -316,6 +492,15 @@ export const leadService = {
         skipEmptyLines: true,
         complete: async (parseResult: any) => {
           const rows = parseResult.data as Record<string, string>[];
+          let batch = writeBatch(db);
+          let pendingWrites = 0;
+
+          const commitBatch = async () => {
+            if (pendingWrites === 0) return;
+            await batch.commit();
+            batch = writeBatch(db);
+            pendingWrites = 0;
+          };
 
           for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
@@ -377,15 +562,29 @@ export const leadService = {
                 address: (mappedData["address"] as string) || null,
                 websiteUrl: (mappedData["website_url"] as string) || null,
                 googleMapsUrl: (mappedData["google_maps_url"] as string) || null,
+                dedupeKey: buildLeadDedupeKey(
+                  businessName,
+                  ((mappedData["company"] as string) || businessName),
+                  "website",
+                ),
               };
 
-              await addDoc(getUserLeadsCollection(user.uid), leadData);
+              const targetRef = doc(getUserLeadsCollection(user.uid));
+              batch.set(targetRef, leadData);
+              pendingWrites++;
+
+              if (pendingWrites >= BATCH_WRITE_SIZE) {
+                await commitBatch();
+              }
+
               results.accepted++;
             } catch (error) {
               results.invalid++;
               results.errors.push(`Row ${i + 1}: ${error instanceof Error ? error.message : String(error)}`);
             }
           }
+
+          await commitBatch();
 
           resolve(results);
         },

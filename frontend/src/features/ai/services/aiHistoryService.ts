@@ -1,4 +1,4 @@
-import { addDoc, collection, orderBy, query, getDocs, Timestamp } from "firebase/firestore";
+import { addDoc, collection, getDocs, limit, orderBy, query, Timestamp } from "firebase/firestore";
 
 import { db, getFirebaseAuth } from "../../../lib/firebase";
 
@@ -32,15 +32,21 @@ export const aiHistoryService = {
     });
   },
 
-  list: async () => {
+  list: async (take = 30) => {
     const auth = getFirebaseAuth();
     const uid = auth?.currentUser?.uid;
     if (!uid) {
       return [];
     }
 
+    const boundedTake = Math.max(1, Math.min(take, 100));
+
     const snapshot = await getDocs(
-      query(collection(db, "users", uid, "ai_history"), orderBy("createdAt", "desc")),
+      query(
+        collection(db, "users", uid, "ai_history"),
+        orderBy("createdAt", "desc"),
+        limit(boundedTake),
+      ),
     );
 
     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));

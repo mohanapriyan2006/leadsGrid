@@ -52,6 +52,7 @@ export type FirestoreLead = {
   address?: string | null;
   websiteUrl?: string | null;
   googleMapsUrl?: string | null;
+  dedupeKey?: string;
 };
 
 export type CreateManageLeadInput = {
@@ -260,8 +261,21 @@ export const createFirestoreLead = (
     address: payload.address ?? null,
     websiteUrl: payload.website_url ?? null,
     googleMapsUrl: payload.google_maps_url ?? null,
+    dedupeKey: buildLeadDedupeKey(payload.name, payload.company, payload.source ?? "website"),
   };
 };
+
+const toCanonicalPart = (value: string | undefined | null) =>
+  (value ?? "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ");
+
+export const buildLeadDedupeKey = (
+  name: string,
+  company: string,
+  source: ManageLeadSource,
+) => [toCanonicalPart(name), toCanonicalPart(company), toCanonicalPart(source)].join("|");
 
 const toUrgencyFromScore = (score: number): "low" | "medium" | "high" => {
   if (score >= 85) return "high";

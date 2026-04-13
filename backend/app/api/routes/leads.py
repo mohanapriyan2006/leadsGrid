@@ -39,7 +39,10 @@ async def analyze_lead(
 
         user_projects = []
         try:
-            user_projects = firebase_client.get_user_projects(request.headers.get("x-user-id", ""))
+            user_projects = firebase_client.get_user_projects(
+                request.headers.get("x-user-id", ""),
+                take=100,
+            )
         except Exception:
             pass
 

@@ -10,7 +10,15 @@ import bgBusinessPlan from "../../assets/bg-images/business-plan.svg";
 
 export const RecyclicBinPage = () => {
   // Use centralized leads hook for real-time bin data
-  const { binLeads, getLeadById, loading } = useCentralizedLeads();
+  const {
+    binLeads,
+    getLeadById,
+    loading,
+    refresh,
+    hasMoreBinLeads,
+    loadingMoreBinLeads,
+    loadMoreBinLeads,
+  } = useCentralizedLeads({ mode: "bin", binPageSize: 80 });
 
   const [selectedLead, setSelectedLead] = useState<BinLead | null>(null);
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
@@ -58,10 +66,12 @@ export const RecyclicBinPage = () => {
     }
 
     if (pendingAction === "restore") {
-      await Promise.all(pendingLeadIds.map((leadId) => leadService.restoreManageLead(leadId)));
+      await leadService.bulkRestoreManageLeads(pendingLeadIds);
     } else {
-      await Promise.all(pendingLeadIds.map((leadId) => leadService.deleteManageLeadForever(leadId)));
+      await leadService.bulkDeleteManageLeadsForever(pendingLeadIds);
     }
+
+    await refresh();
 
     setSelectedLeadIds((current) => current.filter((id) => !pendingLeadIds.includes(id)));
 
@@ -173,6 +183,21 @@ export const RecyclicBinPage = () => {
             promptAction("delete", [leadId]);
           }}
         />
+
+        {hasMoreBinLeads ? (
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => {
+                void loadMoreBinLeads();
+              }}
+              disabled={loadingMoreBinLeads}
+              className="glass-btn px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loadingMoreBinLeads ? "Loading more bin leads..." : "Load More Bin Leads"}
+            </button>
+          </div>
+        ) : null}
 
         <RecycleBinDetailsModal
           open={detailsOpen}

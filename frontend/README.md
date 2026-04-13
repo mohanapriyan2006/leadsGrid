@@ -86,6 +86,23 @@ Example `.env` in `frontend/`:
 VITE_API_BASE_URL=http://localhost:8000/api
 ```
 
+## Firestore Free-Plan Optimization
+- Lead lists use hard cursor pagination in service and hook APIs (`loadMore` pattern) instead of full active-set reads.
+- Lead bulk actions and CSV imports use batched writes to reduce write overhead.
+- Duplicate checks use an indexed `dedupeKey` query to avoid full scans.
+- Dashboard metrics are computed from centralized lead state to reduce repeated reads.
+- Conversation autosave in AI chat is debounced to reduce high-frequency writes.
+- AI history queries are bounded by default to prevent unbounded historical reads.
+
+### Firestore Index Deployment
+Required composite indexes are defined in `frontend/firestore.indexes.json`.
+
+Deploy with Firebase CLI:
+
+```bash
+firebase deploy --only firestore:indexes
+```
+
 ## Auth Integration Note
 Current leads hook uses a development placeholder token. Next step is to wire full login flow and inject real JWT into service calls.
 

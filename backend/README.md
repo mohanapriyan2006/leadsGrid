@@ -88,3 +88,9 @@ Notes:
 - Ask Mode remains frontend-direct AI by design.
 - Agent Mode is now backend-executable through `/api/agent/*` endpoints.
 - Firebase and SMTP operate in graceful simulated mode when not configured.
+
+## Firestore Free-Plan Notes
+- `get_user_projects()` now applies a bounded limit to avoid unbounded reads on `/api/leads/analyze`.
+- Agent run state persistence removes redundant intermediate writes and skips duplicate terminal log writes in Firebase-enabled mode.
+- Agent run snapshots now store canonical `run` state without duplicating top-level step arrays.
+- Lead persistence remains batched in `save_leads()` for efficient CRM update writes.

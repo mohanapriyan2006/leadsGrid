@@ -1,19 +1,55 @@
-import { useEffect, useState, useMemo } from "react";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
-import { db } from "../../../lib/firebase";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../auth/AuthContext";
 import type { ManageLead, BinLead } from "../types/manageLead";
-import { toManageLead } from "../services/leadModel";
+import { type ManageLeadsCursor, leadService } from "../services/leadService";
 
-export const useCentralizedLeads = () => {
+type CentralizedLeadsMode = "active" | "bin" | "both";
+
+type UseCentralizedLeadsOptions = {
+  mode?: CentralizedLeadsMode;
+  pageSize?: number;
+  binPageSize?: number;
+};
+
+const DEFAULT_ACTIVE_PAGE_SIZE = 100;
+const DEFAULT_BIN_PAGE_SIZE = 60;
+
+const mergeById = (current: ManageLead[], incoming: ManageLead[]) => {
+  const map = new Map<string, ManageLead>();
+  current.forEach((lead) => map.set(lead.id, lead));
+  incoming.forEach((lead) => map.set(lead.id, lead));
+  return [...map.values()].sort(
+    (a, b) => new Date(b.updated_at || b.created_at || 0).getTime() - new Date(a.updated_at || a.created_at || 0).getTime(),
+  );
+};
+
+export const useCentralizedLeads = (options?: UseCentralizedLeadsOptions) => {
   const { user } = useAuth();
-  const [allLeads, setAllLeads] = useState<ManageLead[]>([]);
+  const mode = options?.mode ?? "active";
+  const activePageSize = options?.pageSize ?? DEFAULT_ACTIVE_PAGE_SIZE;
+  const binPageSize = options?.binPageSize ?? DEFAULT_BIN_PAGE_SIZE;
+  const [activeLeads, setActiveLeads] = useState<ManageLead[]>([]);
+  const [deletedLeads, setDeletedLeads] = useState<ManageLead[]>([]);
+  const [activeCursor, setActiveCursor] = useState<ManageLeadsCursor>(null);
+  const [deletedCursor, setDeletedCursor] = useState<ManageLeadsCursor>(null);
+  const [hasMoreLeads, setHasMoreLeads] = useState(false);
+  const [hasMoreBinLeads, setHasMoreBinLeads] = useState(false);
+  const [loadingMoreLeads, setLoadingMoreLeads] = useState(false);
+  const [loadingMoreBinLeads, setLoadingMoreBinLeads] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
+  const includesActive = mode === "active" || mode === "both";
+  const includesBin = mode === "bin" || mode === "both";
+
+  const fetchInitial = useCallback(async () => {
     if (!user) {
-      setAllLeads([]);
+      setActiveLeads([]);
+      setDeletedLeads([]);
+      setActiveCursor(null);
+      setDeletedCursor(null);
+      setHasMoreLeads(false);
+      setHasMoreBinLeads(false);
       setLoading(false);
       return;
     }
@@ -21,42 +57,90 @@ export const useCentralizedLeads = () => {
     setLoading(true);
     setError(null);
 
-    // Subscribe to all leads for the current user (both active and deleted)
-    const leadsRef = collection(db, "users", user.uid, "leads");
-    
-    const unsubscribe = onSnapshot(
-      leadsRef,
-      (snapshot) => {
-        try {
-          const leadsData = snapshot.docs.map((doc) => toManageLead(doc.id, doc.data()));
-          
-          // Sort by creation date (newest first)
-          leadsData.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
-          
-          setAllLeads(leadsData);
-          setLoading(false);
-        } catch (err) {
-          console.error("Error processing leads snapshot:", err);
-          setError(err instanceof Error ? err : new Error("Failed to process leads"));
-          setLoading(false);
-        }
-      },
-      (err) => {
-        console.error("Firestore subscription error:", err);
-        setError(err instanceof Error ? err : new Error("Failed to subscribe to leads"));
-        setLoading(false);
+    try {
+      if (includesActive) {
+        const activePage = await leadService.listManageLeadsPage({
+          page_size: activePageSize,
+        });
+        setActiveLeads(activePage.items);
+        setActiveCursor(activePage.nextCursor);
+        setHasMoreLeads(activePage.hasMore);
+      } else {
+        setActiveLeads([]);
+        setActiveCursor(null);
+        setHasMoreLeads(false);
       }
-    );
 
-    return () => unsubscribe();
-  }, [user]);
+      if (includesBin) {
+        const binPage = await leadService.listManageLeadBinPage({
+          page_size: binPageSize,
+        });
+        setDeletedLeads(binPage.items);
+        setDeletedCursor(binPage.nextCursor);
+        setHasMoreBinLeads(binPage.hasMore);
+      } else {
+        setDeletedLeads([]);
+        setDeletedCursor(null);
+        setHasMoreBinLeads(false);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error("Failed to load leads"));
+    } finally {
+      setLoading(false);
+    }
+  }, [activePageSize, binPageSize, includesActive, includesBin, user]);
+
+  const loadMoreLeads = useCallback(async () => {
+    if (!includesActive || !hasMoreLeads || !activeCursor || loadingMoreLeads) {
+      return;
+    }
+
+    setLoadingMoreLeads(true);
+    try {
+      const page = await leadService.listManageLeadsPage({
+        page_size: activePageSize,
+        cursor: activeCursor,
+      });
+      setActiveLeads((current) => mergeById(current, page.items));
+      setActiveCursor(page.nextCursor);
+      setHasMoreLeads(page.hasMore);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error("Failed to load more leads"));
+    } finally {
+      setLoadingMoreLeads(false);
+    }
+  }, [activeCursor, activePageSize, hasMoreLeads, includesActive, loadingMoreLeads]);
+
+  const loadMoreBinLeads = useCallback(async () => {
+    if (!includesBin || !hasMoreBinLeads || !deletedCursor || loadingMoreBinLeads) {
+      return;
+    }
+
+    setLoadingMoreBinLeads(true);
+    try {
+      const page = await leadService.listManageLeadBinPage({
+        page_size: binPageSize,
+        cursor: deletedCursor,
+      });
+      setDeletedLeads((current) => mergeById(current, page.items));
+      setDeletedCursor(page.nextCursor);
+      setHasMoreBinLeads(page.hasMore);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error("Failed to load more bin leads"));
+    } finally {
+      setLoadingMoreBinLeads(false);
+    }
+  }, [binPageSize, deletedCursor, hasMoreBinLeads, includesBin, loadingMoreBinLeads]);
+
+  useEffect(() => {
+    void fetchInitial();
+  }, [fetchInitial]);
 
   // Computed values
-  const leads = useMemo(() => allLeads.filter(lead => !lead.is_deleted), [allLeads]);
+  const leads = useMemo(() => activeLeads, [activeLeads]);
   
   const binLeads = useMemo((): BinLead[] => 
-    allLeads
-      .filter(lead => lead.is_deleted)
+    deletedLeads
       .map(lead => ({
         id: lead.id,
         name: lead.name,
@@ -64,7 +148,7 @@ export const useCentralizedLeads = () => {
         email: lead.email,
         deleted_at: lead.deleted_at ?? lead.updated_at,
       })),
-    [allLeads]
+    [deletedLeads]
   );
 
   const negotiationLeads = useMemo(() => 
@@ -73,7 +157,7 @@ export const useCentralizedLeads = () => {
   );
 
   const getLeadById = (id: string): ManageLead | undefined => {
-    return allLeads.find(lead => lead.id === id);
+    return [...activeLeads, ...deletedLeads].find((lead) => lead.id === id);
   };
 
   const getLeadsByStage = (stage: string): ManageLead[] => {
@@ -81,9 +165,7 @@ export const useCentralizedLeads = () => {
   };
 
   const refresh = async () => {
-    // Real-time sync handles refresh automatically
-    // This is a no-op but provided for API compatibility
-    return Promise.resolve();
+    await fetchInitial();
   };
 
   return {
@@ -91,8 +173,14 @@ export const useCentralizedLeads = () => {
     binLeads,           // Deleted leads
     negotiationLeads,   // Leads in NEGOTIATION stage
     loading,
+    loadingMoreLeads,
+    loadingMoreBinLeads,
+    hasMoreLeads,
+    hasMoreBinLeads,
     error,
     refresh,
+    loadMoreLeads,
+    loadMoreBinLeads,
     getLeadById,
     getLeadsByStage,
   };

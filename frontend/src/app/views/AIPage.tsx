@@ -450,7 +450,7 @@ export const AIPage = () => {
     }
 
     setChatHistory((prev) => [session, ...prev.filter((entry) => entry.id !== session.id)].slice(0, CHAT_HISTORY_LIMIT));
-    void conversationMemoryService.saveSession(session);
+    void conversationMemoryService.saveSession(session, { immediate: true });
   };
 
   const startNewChat = () => {
@@ -458,7 +458,7 @@ export const AIPage = () => {
       const session = createSessionFromMessages(messages, activeSessionId ?? undefined);
       if (session) {
         setChatHistory((prev) => [session, ...prev.filter((entry) => entry.id !== session.id)].slice(0, CHAT_HISTORY_LIMIT));
-        void conversationMemoryService.saveSession(session);
+        void conversationMemoryService.saveSession(session, { immediate: true });
       }
     }
 

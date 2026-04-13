@@ -26,6 +26,7 @@ import {
   guessMapping,
 } from "../../features/leads/constants/manageLeads";
 import { leadService } from "../../features/leads/services/leadService";
+import { buildManageLeadInsights } from "../../features/leads/services/leadMetrics";
 import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLeads";
 import type {
   CSVImportResult,
@@ -77,12 +78,19 @@ export const ManageLeadsPage = () => {
   const { manageStageLabelMap, preferredExportFields } = usePipelineViewPreferences();
 
   // Use centralized leads hook for real-time data
-  const { leads: manageLeads, loading, error: hookError } = useCentralizedLeads();
+  const {
+    leads: manageLeads,
+    loading,
+    error: hookError,
+    refresh,
+    hasMoreLeads,
+    loadingMoreLeads,
+    loadMoreLeads,
+  } = useCentralizedLeads({ pageSize: 120 });
 
   const [search, setSearch] = useState("");
   const [onlyHot, setOnlyHot] = useState(false);
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
-  const [insights, setInsights] = useState<ManageLeadInsights | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -126,21 +134,10 @@ export const ManageLeadsPage = () => {
 
   const debouncedSearch = useDebouncedValue(search, 300);
 
-  const loadInsights = async () => {
-    try {
-      const insightsPayload = await leadService.getManageLeadInsights();
-      setInsights(insightsPayload);
-    } catch (err) {
-      console.error("Failed to load insights:", err);
-    }
-  };
-
-  // Load insights on mount and when leads change
-  useEffect(() => {
-    if (!loading && manageLeads.length > 0) {
-      void loadInsights();
-    }
-  }, [loading, manageLeads.length]);
+  const insights = useMemo<ManageLeadInsights>(
+    () => buildManageLeadInsights(manageLeads),
+    [manageLeads],
+  );
 
   // Set error from hook
   useEffect(() => {
@@ -221,9 +218,9 @@ export const ManageLeadsPage = () => {
   const createLeadRow = async () => {
     if (!newLead.name.trim() || !newLead.company.trim()) return;
     await leadService.createManageLead(newLead);
+    await refresh();
     setNewLead({ name: "", company: "", email: "", phone: "", stage: "NEW", budget_estimate: 0 });
     setShowAddRow(false);
-    await loadInsights();
   };
 
   const handleFilePick = async (file: File) => {
@@ -243,7 +240,7 @@ export const ManageLeadsPage = () => {
     if (!csvFile) return;
     const result = await leadService.importManageLeadCSV(csvFile, csvMapping);
     setCsvResult(result);
-    await loadInsights();
+    await refresh();
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -272,7 +269,7 @@ export const ManageLeadsPage = () => {
     if (!targetStage || source.stage === targetStage) return;
 
     await leadService.updateManageLead(source.id, { stage: targetStage });
-    await loadInsights();
+    await refresh();
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -284,14 +281,14 @@ export const ManageLeadsPage = () => {
 
   const runAction = async (leadId: string, actionType: ManageLeadActionType, targetStage?: ManageLeadStage) => {
     await leadService.manageLeadAction(leadId, { action_type: actionType, target_stage: targetStage });
-    await loadInsights();
+    await refresh();
   };
 
   const moveNext = async (lead: ManageLead) => {
     const nextStage = NEXT_STAGE[lead.stage];
     if (!nextStage) return;
     await leadService.updateManageLead(lead.id, { stage: nextStage });
-    await loadInsights();
+    await refresh();
     setFeedback(`Moved ${lead.name} to ${nextStage}`);
   };
 
@@ -322,7 +319,7 @@ export const ManageLeadsPage = () => {
 
   const moveToNEGOTIATION = async (lead: ManageLead) => {
     await leadService.updateManageLead(lead.id, { stage: "NEGOTIATION" });
-    await loadInsights();
+    await refresh();
     setFeedback(`Moved ${lead.name} to NEGOTIATION and sent to CRM`);
     navigate("/crm", { state: { lead } });
   };
@@ -345,9 +342,12 @@ export const ManageLeadsPage = () => {
   const handleBulkDeleteSelectedLeads = async () => {
     if (selectedLeadIds.length === 0) return;
 
-    await Promise.all(selectedLeadIds.map((leadId) => leadService.softDeleteManageLead(leadId)));
+    await leadService.bulkManageLeadAction({
+      lead_ids: selectedLeadIds,
+      action: "SOFT_DELETE",
+    });
     setSelectedLeadIds([]);
-    await loadInsights();
+    await refresh();
     setFeedback(`${selectedLeadIds.length} lead(s) deleted`);
     setConfirmBulkDeleteOpen(false);
   };
@@ -700,7 +700,7 @@ export const ManageLeadsPage = () => {
                 google_maps_url: payload.google_maps_url,
               })
               .then(async () => {
-                await loadInsights();
+                await refresh();
                 setEditOpen(false);
                 setPendingLeadUpdate(null);
                 setFeedback(`Updated ${payload.name}`);
@@ -721,7 +721,7 @@ export const ManageLeadsPage = () => {
               setConfirmDeleteId(null);
               setHoveredId(null);
               setDetailsOpen(false);
-              await loadInsights();
+              await refresh();
               setFeedback("Lead deleted");
             });
           }}
@@ -738,6 +738,21 @@ export const ManageLeadsPage = () => {
             void handleBulkDeleteSelectedLeads();
           }}
         />
+
+        {hasMoreLeads ? (
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => {
+                void loadMoreLeads();
+              }}
+              disabled={loadingMoreLeads}
+              className="glass-btn px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loadingMoreLeads ? "Loading more leads..." : "Load More Leads"}
+            </button>
+          </div>
+        ) : null}
       </ResponsivePageLayout>
     </>
   );

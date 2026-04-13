@@ -150,7 +150,6 @@ class AgentRunService:
 
         record.status = "running"
         record.updated_at = datetime.now(timezone.utc)
-        await self._persist_snapshot(record, event="running")
         force_this_step = force_current_step
 
         while True:
@@ -178,7 +177,6 @@ class AgentRunService:
             step.result = None
             step.error = None
             record.updated_at = datetime.now(timezone.utc)
-            await self._persist_snapshot(record, event="step_started")
 
             try:
                 current_leads = [LeadItem(**lead) for lead in record.leads if lead.get("title")]
@@ -246,6 +244,12 @@ class AgentRunService:
         if record.logged:
             return
 
+        # The run document already keeps the complete state history for the live UI.
+        # Avoid duplicate terminal writes to a secondary log document on free-tier plans.
+        if self._executor.firebase_client.enabled:
+            record.logged = True
+            return
+
         await self._executor.firebase_client.log_agent_run_async(
             user_id=record.user_id,
             task=record.prompt,
@@ -287,7 +291,6 @@ class AgentRunService:
 
     async def _persist_snapshot(self, record: _RunRecord, event: str) -> None:
         run_state = self._to_run_state(record).model_dump(mode="json")
-        step_statuses = [step.model_dump(mode="json") for step in record.plan.steps]
 
         await self._executor.firebase_client.upsert_agent_run_state_async(
             user_id=record.user_id,
@@ -300,7 +303,6 @@ class AgentRunService:
                 "autoApproveLowRisk": record.auto_approve_low_risk,
                 "approvalMode": record.approval_mode,
                 "run": run_state,
-                "steps": step_statuses,
             },
         )
 

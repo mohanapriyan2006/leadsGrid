@@ -50,7 +50,14 @@ const INITIAL_NEW_DEAL: NewDealDraft = {
 export const CRMPage = () => {
   const navigate = useNavigate();
   const [view, setView] = useState<"table" | "kanban" | "analysis">("table");
-  const { leads: centralizedLeads, loading } = useCentralizedLeads();
+  const {
+    leads: centralizedLeads,
+    loading,
+    refresh,
+    hasMoreLeads,
+    loadingMoreLeads,
+    loadMoreLeads,
+  } = useCentralizedLeads({ pageSize: 120 });
   const { crmStatusLabelMap, preferredExportFields } = usePipelineViewPreferences();
   const [deals, setDeals] = useState<Deal[]>([]);
   const [selectedDealIds, setSelectedDealIds] = useState<string[]>([]);
@@ -167,6 +174,7 @@ export const CRMPage = () => {
 
   const handleDelete = async (dealId: string) => {
     await leadService.softDeleteManageLead(dealId);
+    await refresh();
     setSelectedDealIds((prev) => prev.filter((id) => id !== dealId));
     setConfirmDeleteId(null);
     setFeedback("Deal deleted and moved to recycle bin");
@@ -192,9 +200,11 @@ export const CRMPage = () => {
   const handleBulkDeleteDeals = async () => {
     if (selectedDealIds.length === 0) return;
 
-    await Promise.all(
-      selectedDealIds.map((dealId) => leadService.softDeleteManageLead(dealId)),
-    );
+    await leadService.bulkManageLeadAction({
+      lead_ids: selectedDealIds,
+      action: "SOFT_DELETE",
+    });
+    await refresh();
     setSelectedDealIds([]);
     setFeedback(
       `${selectedDealIds.length} deal(s) deleted and moved to recycle bin`,
@@ -1029,6 +1039,21 @@ export const CRMPage = () => {
             void handleBulkDeleteDeals();
           }}
         />
+
+        {hasMoreLeads ? (
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => {
+                void loadMoreLeads();
+              }}
+              disabled={loadingMoreLeads}
+              className="glass-btn px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loadingMoreLeads ? "Loading more deals..." : "Load More Deals"}
+            </button>
+          </div>
+        ) : null}
 
         {/* simple keyframes for table rows */}
         <style>{`

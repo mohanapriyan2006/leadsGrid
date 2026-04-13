@@ -170,13 +170,14 @@ class FirebaseClient:
     async def upsert_agent_run_state_async(self, user_id: str, run_id: str, payload: dict[str, Any]) -> dict:
         return await asyncio.to_thread(self.upsert_agent_run_state, user_id, run_id, payload)
 
-    def get_user_projects(self, user_id: str) -> list[dict]:
+    def get_user_projects(self, user_id: str, take: int = 100) -> list[dict]:
         if not self._enabled or not self._db or not user_id:
             return []
 
         try:
+            bounded_take = max(1, min(take, 250))
             projects_ref = self._db.collection("users").document(user_id).collection("projects")
-            docs = projects_ref.stream()
+            docs = projects_ref.limit(bounded_take).stream()
             projects = []
             for doc in docs:
                 data = doc.to_dict()

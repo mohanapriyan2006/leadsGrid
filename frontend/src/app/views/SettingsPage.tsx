@@ -113,7 +113,7 @@ export const SettingsPage = () => {
 
   const handleExportLeads = async () => {
     try {
-      const leads = await leadService.listManageLeads({});
+      const leads = await leadService.listAllManageLeads({ page_size: 200 });
       const headers = ["Name", "Company", "Email", "Phone", "Stage", "Score"];
       const escapeCsv = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
       const rows = leads.map((lead) => [lead.name, lead.company, lead.email, lead.phone, lead.stage, lead.score]);

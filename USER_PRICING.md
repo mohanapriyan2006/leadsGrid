@@ -53,7 +53,7 @@ Best for power users & advanced automation
 - Agent Mode AI: 3,000 credits / month
 - Other AI Features: 500 credits / day
 - Advanced AI automation (Agent Mode full workflows)
-- Multi-platform discovery (Reddit, X, LinkedIn)
+- Multi-platform discovery 
 - Advanced analytics dashboard
 - Email deliverability tools + warmup
 - Custom AI templates + optimization
@@ -69,9 +69,9 @@ Best for power users & advanced automation
 ## 🏢 Organisation Plans
 
 ### 🧩 Normal — ₹4,999 / month | ₹49,999 / year
-For small teams (2–5 members)
+For small teams (2–10 members)
 
-- Users: Up to 5
+- Users: Up to 10
 - Shared CRM workspace (AI enabled)
 - Storage: 50,000 leads (shared)
 - Leads Discovery: 800 / day
@@ -88,9 +88,9 @@ For small teams (2–5 members)
 ---
 
 ### ⚡ Pro — ₹9,999 / month | ₹99,999 / year
-For growing teams (5–15 members)
+For growing teams (10–20 members)
 
-- Users: Up to 15
+- Users: Up to 20
 - Storage: 2,00,000 leads
 - Leads Discovery: 3,000 / day
 - Email Sending: 12,000 / day
@@ -107,7 +107,7 @@ For growing teams (5–15 members)
 
 ---
 
-### 🚀 Max — ₹24,999 / month | ₹2,49,999 / year
+### 🚀 Max — (Contact Us for pricing)
 For agencies & scale businesses
 
 - Users: Unlimited

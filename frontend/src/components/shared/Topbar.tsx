@@ -69,8 +69,8 @@ export const Topbar = ({ onOpenMobileNav }: TopbarProps) => {
         </span>
 
         {/* Desktop Avatar */}
-        <div className="hidden md:flex items-center gap-2 group relative">
-          <button className="h-9 w-9 rounded-xl overflow-hidden border border-accent/20 bg-surface-tertiary/60 text-xs text-content-secondary transition-all duration-200 hover:border-accent/40 hover:shadow-glow hover:scale-105" aria-label="Profile">
+        <div className="hidden md:flex items-center gap-2 relative">
+          <div className="h-9 w-9 rounded-xl overflow-hidden border border-accent/20 bg-surface-tertiary/60 text-xs text-content-secondary transition-all duration-200 cursor-default hover:border-accent/40 hover:shadow-glow hover:scale-105" aria-label="Profile">
             {user?.photoURL ? (
               <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
             ) : (
@@ -78,9 +78,6 @@ export const Topbar = ({ onOpenMobileNav }: TopbarProps) => {
                 <span className="text-sm font-medium">{(user?.displayName || "U")[0].toUpperCase()}</span>
               </div>
             )}
-          </button>
-          <div className="absolute top-12 right-0 hidden group-hover:block whitespace-nowrap glass-card-sm px-3 py-1.5 text-content text-xs z-50 animate-fadeIn">
-            {user?.displayName || "User"}
           </div>
         </div>
       </div>

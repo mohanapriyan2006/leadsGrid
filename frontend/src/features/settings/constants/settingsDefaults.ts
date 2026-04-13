@@ -82,7 +82,7 @@ export const SETTINGS_DEFAULTS: AppSettings = {
     },
   },
   billing: {
-    currentPlan: "free",
+    currentPlan: "single_free",
     creditsRemaining: 240,
     usage: {
       leadsScanned: 1220,

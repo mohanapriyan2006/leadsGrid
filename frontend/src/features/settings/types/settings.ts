@@ -10,7 +10,13 @@ export type PersonalizationLevel = "low" | "medium" | "high";
 export type CurrencyCode = "USD" | "INR";
 
 export type IntegrationStatus = "connected" | "needs_auth" | "disconnected";
-export type BillingPlan = "free" | "pro" | "agency";
+export type BillingPlanKey =
+  | "single_free"
+  | "single_pro"
+  | "single_max"
+  | "org_normal"
+  | "org_pro"
+  | "org_max";
 
 export type AppSettings = {
   profile: {
@@ -85,7 +91,7 @@ export type AppSettings = {
     };
   };
   billing: {
-    currentPlan: BillingPlan;
+    currentPlan: BillingPlanKey;
     creditsRemaining: number;
     usage: {
       leadsScanned: number;

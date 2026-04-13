@@ -5,8 +5,7 @@ import { useAuth } from "../../features/auth/AuthContext";
 import logo from "../../assets/logo1.png";
 
 import { navigationItems } from "../../constants/navigation";
-import { doc, onSnapshot } from "firebase/firestore";
-import { db } from "../../lib/firebase";
+import { useFirebaseOnline } from "../../hooks/useFirebaseOnline";
 
 // Custom icon renderers with special effects for AI and Leads Discovery
 const renderIcon = (label: string, isActive: boolean) => {
@@ -96,27 +95,9 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
   const { user } = useAuth();
   const [isClosing, setIsClosing] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const [isBackendOnline, setIsBackendOnline] = useState(true);
+  const isFirebaseOnline = useFirebaseOnline();
   const navigate = useNavigate();
   const homePath = user ? "/dashboard" : "/";
-
-  useEffect(() => {
-    const testDocRef = doc(db, "_system", "status");
-
-    const unsubscribe = onSnapshot(
-      testDocRef,
-      () => {
-        setIsBackendOnline(true);
-      },
-      () => {
-        setIsBackendOnline(false);
-      },
-    );
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
 
   useEffect(() => {
     if (!open) {
@@ -206,13 +187,13 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
                     </div>
                   )}
                 </div>
-                <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ${isBackendOnline ? 'bg-green-500' : 'bg-red-500'} border-2 border-surface`} />
+                <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ${isFirebaseOnline ? 'bg-green-500' : 'bg-red-500'} border-2 border-surface`} />
               </div>
               <div className="flex-1 min-w-0">
-                {isBackendOnline ? (
+                {isFirebaseOnline ? (
                   <p className="font-medium text-sm text-content truncate">{user?.displayName || "Welcome"}</p>
                 ) : (
-                  <p className="font-medium text-sm truncate text-red-500">Backend Offline</p>
+                  <p className="font-medium text-sm truncate text-red-500">Offline</p>
                 )}
                 <p className="text-xs text-content-tertiary truncate">{user?.email || "Sign in to continue"}</p>
               </div>

@@ -6,13 +6,23 @@ import httpx
 logger = logging.getLogger(__name__)
 
 
-async def fetch_hackernews(query: str, limit: int = 20, timeout: int = 15) -> list[dict]:
+async def fetch_hackernews(
+    query: str,
+    limit: int = 20,
+    timeout: int = 15,
+    client: httpx.AsyncClient | None = None,
+) -> list[dict]:
     url = "https://hn.algolia.com/api/v1/search"
     params = {"query": query, "tags": "story", "hitsPerPage": max(1, min(limit, 50))}
 
     try:
-        async with httpx.AsyncClient(timeout=timeout) as client:
-            response = await client.get(url, params=params)
+        if client is None:
+            async with httpx.AsyncClient(timeout=timeout) as owned_client:
+                response = await owned_client.get(url, params=params)
+                response.raise_for_status()
+                payload = response.json()
+        else:
+            response = await client.get(url, params=params, timeout=timeout)
             response.raise_for_status()
             payload = response.json()
     except Exception as exc:

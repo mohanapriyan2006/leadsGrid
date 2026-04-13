@@ -1,11 +1,12 @@
 type LeadsDiscoverySearchBarProps = {
   value: string;
   isFetching: boolean;
+  isBackendOnline: boolean;
   onChange: (value: string) => void;
   onFind: () => void;
 };
 
-export const LeadsDiscoverySearchBar = ({ value, isFetching, onChange, onFind }: LeadsDiscoverySearchBarProps) => {
+export const LeadsDiscoverySearchBar = ({ value, isFetching, isBackendOnline, onChange, onFind }: LeadsDiscoverySearchBarProps) => {
   const canFind = value.trim().length > 2 && !isFetching;
 
   return (
@@ -14,7 +15,9 @@ export const LeadsDiscoverySearchBar = ({ value, isFetching, onChange, onFind }:
         <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-content-tertiary">
           Search Intent Signals
         </label>
-        <span className="text-[11px] text-content-tertiary">Live API</span>
+        <span className={`${isBackendOnline ? "badge-success" : "badge-danger"} !px-2 !py-0.5 text-[10px] uppercase tracking-[0.08em]`}>
+          {isBackendOnline ? "API online" : "API offline"}
+        </span>
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">

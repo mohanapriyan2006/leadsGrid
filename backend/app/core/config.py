@@ -15,6 +15,17 @@ class Settings(BaseSettings):
 
     request_timeout_seconds: int = 15
     source_limit_default: int = 20
+    source_fetch_concurrency: int = 2
+    discovery_cache_ttl_seconds: int = 120
+    discovery_cache_max_entries: int = 256
+    discovery_global_timeout_seconds: int = 20
+
+    http_max_connections: int = 50
+    http_max_keepalive_connections: int = 20
+
+    ai_timeout_seconds: int = 10
+    ai_retry_attempts: int = 2
+    ai_retry_backoff_base_seconds: float = 0.25
 
     gemini_api_key: str | None = None
     groq_api_key: str | None = None

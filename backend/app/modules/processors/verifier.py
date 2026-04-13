@@ -8,8 +8,7 @@ BUYING_TERMS = ["need", "looking for", "hire", "hiring", "help", "budget", "asap
 
 
 def _contains_any(text: str, tokens: list[str]) -> bool:
-    lowered = text.lower()
-    return any(token in lowered for token in tokens)
+    return any(token in text for token in tokens)
 
 
 def _is_recent(iso_value: str | None, max_age_days: int) -> bool:
@@ -33,7 +32,7 @@ def verify_records(records: list[dict], max_age_days: int = 5) -> list[dict]:
                 str(item.get("summary") or ""),
                 str(item.get("content") or ""),
             ]
-        ).strip()
+        ).strip().lower()
 
         if not text:
             continue

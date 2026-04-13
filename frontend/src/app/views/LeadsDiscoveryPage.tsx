@@ -12,6 +12,7 @@ import { LeadsDiscoverySearchBar } from "../../features/leads/components/LeadsDi
 import { useLeadsDiscoveryFilters } from "../../features/leads/hooks/useLeadsDiscoveryFilters";
 import { useMessageGenerator } from "../../features/leads/hooks/useMessageGenerator";
 import { useLeads } from "../../features/leads/hooks/useLeads";
+import { useBackendOnline } from "../../hooks/useBackendOnline";
 import { leadAnalysisService, type AdvancedLeadIntent } from "../../features/leads/services/leadAnalysisService";
 import { leadService } from "../../features/leads/services/leadService";
 import type { HyperPersonalizedOutreachResult, Lead } from "../../features/leads/types/lead";
@@ -29,6 +30,7 @@ type TriageQueue = "all" | "hot_qualified" | "high_urgency" | "needs_nurture";
 
 export const LeadsDiscoveryPage = () => {
   const navigate = useNavigate();
+  const isBackendOnline = useBackendOnline();
   const { user } = useAuth();
   const { settings } = useSettingsState(user?.email);
   const {
@@ -620,6 +622,7 @@ export const LeadsDiscoveryPage = () => {
             <LeadsDiscoverySearchBar
               value={searchTerm}
               isFetching={isFetching}
+              isBackendOnline={isBackendOnline}
               onChange={setSearchTerm}
               onFind={handleFindLeads}
             />

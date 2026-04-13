@@ -6,14 +6,24 @@ import httpx
 logger = logging.getLogger(__name__)
 
 
-async def fetch_reddit(query: str, limit: int = 20, timeout: int = 15) -> list[dict]:
+async def fetch_reddit(
+    query: str,
+    limit: int = 20,
+    timeout: int = 15,
+    client: httpx.AsyncClient | None = None,
+) -> list[dict]:
     url = "https://www.reddit.com/search.json"
     params = {"q": query, "sort": "top", "limit": max(1, min(limit, 50))}
     headers = {"User-Agent": "PitchPilotAgent/1.0"}
 
     try:
-        async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
-            response = await client.get(url, params=params)
+        if client is None:
+            async with httpx.AsyncClient(timeout=timeout, headers=headers) as owned_client:
+                response = await owned_client.get(url, params=params)
+                response.raise_for_status()
+                payload = response.json()
+        else:
+            response = await client.get(url, params=params, headers=headers, timeout=timeout)
             response.raise_for_status()
             payload = response.json()
     except Exception as exc:

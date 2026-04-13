@@ -1,11 +1,9 @@
 import { useAuth } from "../../features/auth/AuthContext";
-import { useState, useEffect } from "react";
-import { doc, onSnapshot } from "firebase/firestore";
-import { db } from "../../lib/firebase";
+import { useState } from "react";
 import { Search } from "lucide-react";
 import logo from "../../assets/logo.png";
-import { span } from "framer-motion/client";
 import { useNavigate } from "react-router-dom";
+import { useFirebaseOnline } from "../../hooks/useFirebaseOnline";
 
 type TopbarProps = {
   onOpenMobileNav?: () => void;
@@ -13,28 +11,10 @@ type TopbarProps = {
 
 export const Topbar = ({ onOpenMobileNav }: TopbarProps) => {
   const { user } = useAuth();
-  const [isBackendOnline, setIsBackendOnline] = useState(true);
+  const isFirebaseOnline = useFirebaseOnline();
   const [isMenuHovered, setIsMenuHovered] = useState(false);
   const navigate = useNavigate();
   const homePath = user ? "/dashboard" : "/";
-
-  useEffect(() => {
-    const testDocRef = doc(db, "_system", "status");
-
-    const unsubscribe = onSnapshot(
-      testDocRef,
-      () => {
-        setIsBackendOnline(true);
-      },
-      () => {
-        setIsBackendOnline(false);
-      },
-    );
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
 
   return (
    
@@ -84,8 +64,8 @@ export const Topbar = ({ onOpenMobileNav }: TopbarProps) => {
         </button>
 
         {/* Status Badge - Desktop only */}
-        <span className={`${isBackendOnline ? "badge-success" : "badge-danger"} hidden md:inline-flex shrink-0`}>
-          {isBackendOnline ? "online" : "offline"}
+        <span className={`${isFirebaseOnline ? "badge-success" : "badge-danger"} hidden md:inline-flex shrink-0`}>
+          {isFirebaseOnline ? "online" : "offline"}
         </span>
 
         {/* Desktop Avatar */}

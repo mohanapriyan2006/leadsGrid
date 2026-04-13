@@ -7,7 +7,12 @@ from bs4 import BeautifulSoup
 logger = logging.getLogger(__name__)
 
 
-async def fetch_google_like_search(query: str, limit: int = 20, timeout: int = 15) -> list[dict]:
+async def fetch_google_like_search(
+    query: str,
+    limit: int = 20,
+    timeout: int = 15,
+    client: httpx.AsyncClient | None = None,
+) -> list[dict]:
     # Uses DuckDuckGo HTML results as a free search fallback to avoid paid APIs.
     url = "https://duckduckgo.com/html/"
     params = {"q": query}
@@ -16,8 +21,12 @@ async def fetch_google_like_search(query: str, limit: int = 20, timeout: int = 1
     }
 
     try:
-        async with httpx.AsyncClient(timeout=timeout, headers=headers, follow_redirects=True) as client:
-            response = await client.get(url, params=params)
+        if client is None:
+            async with httpx.AsyncClient(timeout=timeout, headers=headers, follow_redirects=True) as owned_client:
+                response = await owned_client.get(url, params=params)
+                response.raise_for_status()
+        else:
+            response = await client.get(url, params=params, headers=headers, timeout=timeout, follow_redirects=True)
             response.raise_for_status()
     except Exception as exc:
         logger.warning("Search fetch failed: %s", exc)

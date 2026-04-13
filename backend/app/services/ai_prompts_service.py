@@ -1,3 +1,4 @@
+import asyncio
 import json
 import re
 from typing import Iterable
@@ -21,7 +22,25 @@ from app.schemas.lead_analysis import (
 class AIPromptsService:
     def __init__(self):
         self.settings = get_settings()
-        self.timeout_seconds = 10
+        self.timeout_seconds = self.settings.ai_timeout_seconds
+        self.retry_attempts = max(1, self.settings.ai_retry_attempts)
+        self.retry_backoff_base = max(0.0, self.settings.ai_retry_backoff_base_seconds)
+        self._session: aiohttp.ClientSession | None = None
+        self._session_lock = asyncio.Lock()
+
+    async def _ensure_session(self) -> aiohttp.ClientSession:
+        if self._session and not self._session.closed:
+            return self._session
+
+        async with self._session_lock:
+            if self._session and not self._session.closed:
+                return self._session
+            self._session = aiohttp.ClientSession()
+            return self._session
+
+    async def aclose(self) -> None:
+        if self._session and not self._session.closed:
+            await self._session.close()
 
     def _build_prompt_1_intent_scoring(self, lead_text: str) -> str:
         return f"""You are an expert SaaS sales analyst.
@@ -503,40 +522,56 @@ Return STRICT JSON ONLY:
 
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
 
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                url,
-                json={
-                    "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-                    "generationConfig": {"temperature": 0.3, "topP": 0.9},
-                },
-                timeout=aiohttp.ClientTimeout(total=self.timeout_seconds),
-            ) as response:
-                if response.status != 200:
-                    raise RuntimeError(f"Gemini API error: {response.status}")
-                data = await response.json()
-                return data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+        session = await self._ensure_session()
+        last_exc: Exception | None = None
+        for attempt in range(self.retry_attempts):
+            try:
+                async with session.post(
+                    url,
+                    json={
+                        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+                        "generationConfig": {"temperature": 0.3, "topP": 0.9},
+                    },
+                    timeout=aiohttp.ClientTimeout(total=self.timeout_seconds),
+                ) as response:
+                    if response.status != 200:
+                        raise RuntimeError(f"Gemini API error: {response.status}")
+                    data = await response.json()
+                    return data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+            except Exception as exc:  # pragma: no cover - network variability
+                last_exc = exc
+                if attempt < self.retry_attempts - 1:
+                    await asyncio.sleep(self.retry_backoff_base * (2 ** attempt))
+        raise RuntimeError(f"Gemini API request failed: {last_exc}")
 
     async def _call_groq(self, prompt: str) -> str:
         api_key = getattr(self.settings, "groq_api_key", None)
         if not api_key:
             raise ValueError("Groq API key not configured")
 
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-                json={
-                    "model": getattr(self.settings, "groq_model", "llama-3.1-8b-instant"),
-                    "temperature": 0.3,
-                    "messages": [{"role": "user", "content": prompt}],
-                },
-                timeout=aiohttp.ClientTimeout(total=self.timeout_seconds),
-            ) as response:
-                if response.status != 200:
-                    raise RuntimeError(f"Groq API error: {response.status}")
-                data = await response.json()
-                return data.get("choices", [{}])[0].get("message", {}).get("content", "")
+        session = await self._ensure_session()
+        last_exc: Exception | None = None
+        for attempt in range(self.retry_attempts):
+            try:
+                async with session.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                    json={
+                        "model": getattr(self.settings, "groq_model", "llama-3.1-8b-instant"),
+                        "temperature": 0.3,
+                        "messages": [{"role": "user", "content": prompt}],
+                    },
+                    timeout=aiohttp.ClientTimeout(total=self.timeout_seconds),
+                ) as response:
+                    if response.status != 200:
+                        raise RuntimeError(f"Groq API error: {response.status}")
+                    data = await response.json()
+                    return data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            except Exception as exc:  # pragma: no cover - network variability
+                last_exc = exc
+                if attempt < self.retry_attempts - 1:
+                    await asyncio.sleep(self.retry_backoff_base * (2 ** attempt))
+        raise RuntimeError(f"Groq API request failed: {last_exc}")
 
     def _extract_json(self, text: str) -> dict:
         text = text.strip()
@@ -885,12 +920,16 @@ Return STRICT JSON ONLY:
         score: int = 0,
         name: str = "there",
     ) -> dict:
-        intent = await self.analyze_intent(lead_text)
-        validation = await self.validate_lead(lead_text)
-        outreach = await self.generate_outreach(lead_text, intent.pain_point, name)
-        follow_up = await self.generate_follow_up()
-        action = await self.suggest_action(lead_text, intent.score)
-        portfolio_match = await self.match_portfolio(lead_text, user_projects)
+        intent, validation, follow_up, portfolio_match = await asyncio.gather(
+            self.analyze_intent(lead_text),
+            self.validate_lead(lead_text),
+            self.generate_follow_up(),
+            self.match_portfolio(lead_text, user_projects),
+        )
+        outreach, action = await asyncio.gather(
+            self.generate_outreach(lead_text, intent.pain_point, name),
+            self.suggest_action(lead_text, intent.score),
+        )
 
         return {
             "intent": intent,

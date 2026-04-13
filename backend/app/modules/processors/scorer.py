@@ -1,6 +1,5 @@
 def _contains_any(text: str, keywords: list[str]) -> bool:
-    lower = text.lower()
-    return any(keyword in lower for keyword in keywords)
+    return any(keyword in text for keyword in keywords)
 
 
 def score_records(records: list[dict], query: str) -> list[dict]:
@@ -13,10 +12,10 @@ def score_records(records: list[dict], query: str) -> list[dict]:
 
     scored: list[dict] = []
     for item in records:
-        title = (item.get("title") or "").lower()
-        summary = (item.get("summary") or "").lower()
-        content = (item.get("content") or "").lower()
-        combined = f"{title} {summary} {content}".strip()
+        title = item.get("title") or ""
+        summary = item.get("summary") or ""
+        content = item.get("content") or ""
+        combined = f"{title} {summary} {content}".strip().lower()
 
         score = 0.0
 

@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from datetime import datetime, timezone
 from uuid import uuid4
 from typing import Any
@@ -131,6 +132,9 @@ class FirebaseClient:
         batch.commit()
         return {"saved": True, "count": len(leads)}
 
+    async def save_leads_async(self, user_id: str, leads: list[dict]) -> dict:
+        return await asyncio.to_thread(self.save_leads, user_id, leads)
+
     def log_agent_run(self, user_id: str, task: str, status: str, steps: list[dict]) -> dict:
         if not self._enabled or not self._db:
             return {"logged": False, "reason": "firebase-disabled"}
@@ -146,6 +150,9 @@ class FirebaseClient:
         )
         return {"logged": True, "runId": run_ref.id}
 
+    async def log_agent_run_async(self, user_id: str, task: str, status: str, steps: list[dict]) -> dict:
+        return await asyncio.to_thread(self.log_agent_run, user_id, task, status, steps)
+
     def upsert_agent_run_state(self, user_id: str, run_id: str, payload: dict[str, Any]) -> dict:
         if not self._enabled or not self._db:
             return {"saved": False, "reason": "firebase-disabled"}
@@ -159,6 +166,9 @@ class FirebaseClient:
             merge=True,
         )
         return {"saved": True, "runId": run_id}
+
+    async def upsert_agent_run_state_async(self, user_id: str, run_id: str, payload: dict[str, Any]) -> dict:
+        return await asyncio.to_thread(self.upsert_agent_run_state, user_id, run_id, payload)
 
     def get_user_projects(self, user_id: str) -> list[dict]:
         if not self._enabled or not self._db or not user_id:

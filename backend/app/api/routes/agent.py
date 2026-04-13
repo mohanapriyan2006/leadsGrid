@@ -155,7 +155,7 @@ async def abort_run(
     user: UserContext = Depends(get_current_user),
 ) -> AgentRunStateResponse:
     run_service = _run_service_from_request(request)
-    run_state = run_service.abort_run(run_id, user.user_id)
+    run_state = await run_service.abort_run(run_id, user.user_id)
     return AgentRunStateResponse(run=run_state)
 
 

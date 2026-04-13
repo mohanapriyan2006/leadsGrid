@@ -75,7 +75,7 @@ class AgentRunService:
             leads=[lead.model_dump() for lead in leads],
         )
         self._runs[run_id] = record
-        self._persist_snapshot(record, event="started")
+        await self._persist_snapshot(record, event="started")
 
         await self._advance(record, force_current_step=False)
         return self._to_run_state(record)
@@ -115,7 +115,7 @@ class AgentRunService:
 
         next_index = self._next_pending_index(record.plan)
         if next_index >= len(record.plan.steps):
-            self._mark_completed(record)
+            await self._mark_completed(record)
             return self._to_run_state(record)
 
         step = record.plan.steps[next_index]
@@ -126,12 +126,12 @@ class AgentRunService:
 
         record.current_step_index = next_index + 1
         record.updated_at = datetime.now(timezone.utc)
-        self._persist_snapshot(record, event="step_skipped")
+        await self._persist_snapshot(record, event="step_skipped")
 
         await self._advance(record, force_current_step=False)
         return self._to_run_state(record)
 
-    def abort_run(self, run_id: str, user_id: str) -> AgentRunState:
+    async def abort_run(self, run_id: str, user_id: str) -> AgentRunState:
         record = self._get_record(run_id, user_id)
         if record.status in TERMINAL_RUN_STATUSES:
             return self._to_run_state(record)
@@ -140,8 +140,8 @@ class AgentRunService:
         now = datetime.now(timezone.utc)
         record.updated_at = now
         record.completed_at = now
-        self._persist_snapshot(record, event="aborted")
-        self._log_if_needed(record)
+        await self._persist_snapshot(record, event="aborted")
+        await self._log_if_needed(record)
         return self._to_run_state(record)
 
     async def _advance(self, record: _RunRecord, force_current_step: bool) -> None:
@@ -150,7 +150,7 @@ class AgentRunService:
 
         record.status = "running"
         record.updated_at = datetime.now(timezone.utc)
-        self._persist_snapshot(record, event="running")
+        await self._persist_snapshot(record, event="running")
         force_this_step = force_current_step
 
         while True:
@@ -158,7 +158,7 @@ class AgentRunService:
             record.current_step_index = next_index
 
             if next_index >= len(record.plan.steps):
-                self._mark_completed(record)
+                await self._mark_completed(record)
                 return
 
             step = record.plan.steps[next_index]
@@ -170,7 +170,7 @@ class AgentRunService:
             if needs_approval and not force_this_step:
                 record.status = "paused"
                 record.updated_at = datetime.now(timezone.utc)
-                self._persist_snapshot(record, event="paused_for_approval")
+                await self._persist_snapshot(record, event="paused_for_approval")
                 return
 
             force_this_step = False
@@ -178,7 +178,7 @@ class AgentRunService:
             step.result = None
             step.error = None
             record.updated_at = datetime.now(timezone.utc)
-            self._persist_snapshot(record, event="step_started")
+            await self._persist_snapshot(record, event="step_started")
 
             try:
                 current_leads = [LeadItem(**lead) for lead in record.leads if lead.get("title")]
@@ -203,12 +203,12 @@ class AgentRunService:
                 step.error = None
                 self._merge_runtime_leads(record, result)
                 record.updated_at = datetime.now(timezone.utc)
-                self._persist_snapshot(record, event="step_completed")
+                await self._persist_snapshot(record, event="step_completed")
                 continue
 
             step.status = "failed"
             step.error = result.message
-            self._mark_failed(record, failed_index=next_index)
+            await self._mark_failed(record, failed_index=next_index)
             return
 
     def _merge_runtime_leads(self, record: _RunRecord, result: AgentActionResult) -> None:
@@ -222,7 +222,7 @@ class AgentRunService:
         if isinstance(scored_from_step, list):
             record.leads = [lead for lead in scored_from_step if isinstance(lead, dict)]
 
-    def _mark_failed(self, record: _RunRecord, failed_index: int) -> None:
+    async def _mark_failed(self, record: _RunRecord, failed_index: int) -> None:
         for step in record.plan.steps[failed_index + 1 :]:
             if step.status not in TERMINAL_STEP_STATUSES:
                 step.status = "skipped"
@@ -231,22 +231,22 @@ class AgentRunService:
         now = datetime.now(timezone.utc)
         record.updated_at = now
         record.completed_at = now
-        self._persist_snapshot(record, event="failed")
-        self._log_if_needed(record)
+        await self._persist_snapshot(record, event="failed")
+        await self._log_if_needed(record)
 
-    def _mark_completed(self, record: _RunRecord) -> None:
+    async def _mark_completed(self, record: _RunRecord) -> None:
         record.status = "completed"
         now = datetime.now(timezone.utc)
         record.updated_at = now
         record.completed_at = now
-        self._persist_snapshot(record, event="completed")
-        self._log_if_needed(record)
+        await self._persist_snapshot(record, event="completed")
+        await self._log_if_needed(record)
 
-    def _log_if_needed(self, record: _RunRecord) -> None:
+    async def _log_if_needed(self, record: _RunRecord) -> None:
         if record.logged:
             return
 
-        self._executor.firebase_client.log_agent_run(
+        await self._executor.firebase_client.log_agent_run_async(
             user_id=record.user_id,
             task=record.prompt,
             status=record.status,
@@ -285,11 +285,11 @@ class AgentRunService:
             results=record.results,
         )
 
-    def _persist_snapshot(self, record: _RunRecord, event: str) -> None:
+    async def _persist_snapshot(self, record: _RunRecord, event: str) -> None:
         run_state = self._to_run_state(record).model_dump(mode="json")
         step_statuses = [step.model_dump(mode="json") for step in record.plan.steps]
 
-        self._executor.firebase_client.upsert_agent_run_state(
+        await self._executor.firebase_client.upsert_agent_run_state_async(
             user_id=record.user_id,
             run_id=record.run_id,
             payload={

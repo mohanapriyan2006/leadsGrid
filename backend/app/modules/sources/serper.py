@@ -10,7 +10,12 @@ from app.core.config import get_settings
 logger = logging.getLogger(__name__)
 
 
-async def fetch_serper(query: str, limit: int = 20, timeout: int = 15) -> list[dict]:
+async def fetch_serper(
+    query: str,
+    limit: int = 20,
+    timeout: int = 15,
+    client: httpx.AsyncClient | None = None,
+) -> list[dict]:
     settings = get_settings()
     if not settings.serper_api_key:
         return []
@@ -26,8 +31,13 @@ async def fetch_serper(query: str, limit: int = 20, timeout: int = 15) -> list[d
     }
 
     try:
-        async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
-            response = await client.post(url, json=payload)
+        if client is None:
+            async with httpx.AsyncClient(timeout=timeout, headers=headers) as owned_client:
+                response = await owned_client.post(url, json=payload)
+                response.raise_for_status()
+                data = response.json()
+        else:
+            response = await client.post(url, json=payload, headers=headers, timeout=timeout)
             response.raise_for_status()
             data = response.json()
     except Exception as exc:

@@ -36,6 +36,15 @@ class AgentExecutor:
         auto_save: bool,
     ) -> AgentActionResult:
         lead_records = [lead.model_dump() for lead in leads]
+        discovered_records: list[dict] | None = None
+
+        async def ensure_source_records() -> list[dict]:
+            nonlocal discovered_records
+            if lead_records:
+                return lead_records
+            if discovered_records is None:
+                discovered_records = await self.aggregator.discover(prompt)
+            return discovered_records
 
         if step.actionType == "lead_discovery":
             discovered = await self.aggregator.discover(prompt)
@@ -47,9 +56,7 @@ class AgentExecutor:
             )
 
         if step.actionType == "lead_scoring":
-            source_records = lead_records
-            if not source_records:
-                source_records = await self.aggregator.discover(prompt)
+            source_records = await ensure_source_records()
             scored = score_records(clean_records(source_records), prompt)
             ranked = sorted(scored, key=lambda item: float(item.get("score") or 0), reverse=True)
             top = ranked[:10]
@@ -64,12 +71,10 @@ class AgentExecutor:
             )
 
         if step.actionType == "crm_update":
-            source_records = lead_records
-            if not source_records:
-                source_records = await self.aggregator.discover(prompt)
+            source_records = await ensure_source_records()
 
             if auto_save:
-                save_result = self.firebase_client.save_leads(user_id, source_records)
+                save_result = await self.firebase_client.save_leads_async(user_id, source_records)
                 if save_result.get("saved"):
                     return AgentActionResult(
                         success=True,
@@ -90,9 +95,7 @@ class AgentExecutor:
             )
 
         if step.actionType == "message_draft":
-            source_records = lead_records
-            if not source_records:
-                source_records = await self.aggregator.discover(prompt)
+            source_records = await ensure_source_records()
 
             ranked = sorted(
                 source_records,
@@ -115,9 +118,7 @@ class AgentExecutor:
             )
 
         if step.actionType == "follow_up_schedule":
-            source_records = lead_records
-            if not source_records:
-                source_records = await self.aggregator.discover(prompt)
+            source_records = await ensure_source_records()
 
             ranked = sorted(
                 source_records,
@@ -186,7 +187,7 @@ class AgentExecutor:
                 break
 
         if plan.steps:
-            self.firebase_client.log_agent_run(
+            await self.firebase_client.log_agent_run_async(
                 user_id=user_id,
                 task=prompt,
                 status="failed" if failed else "completed",

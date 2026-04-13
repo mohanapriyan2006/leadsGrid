@@ -64,7 +64,7 @@ export const MessageLeadPanel = ({
   };
 
   return (
-    <aside className="glass-card space-y-3 p-4">
+    <aside className="glass-card overflow-auto space-y-3 p-4">
       <label className="text-xs tracking-[0.1em] text-content-tertiary">
         SELECT LEAD
       </label>
@@ -136,7 +136,7 @@ export const MessageLeadPanel = ({
               <p className="text-xs text-content-tertiary">{selectedLead.company}</p>
             </div>
           </div>
-          <p className="mt-2 text-sm text-content-secondary">
+          <p className="mt-2 text-sm text-content-secondary overflow-auto">
             {contextExpanded ? leadContext : trimmedContent}
           </p>
           {leadContext.length > contextPreviewLimit ? (

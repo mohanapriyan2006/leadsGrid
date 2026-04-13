@@ -227,7 +227,7 @@ export const LeadsDiscoveryInsightPanel = ({
           </button>
 
           {showScrapedDetails ? (
-            <div className="space-y-2 rounded-lg border border-accent/15 bg-surface/40 p-2.5 text-xs text-content-secondary">
+            <div className="space-y-2 overflow-auto rounded-lg border border-accent/15 bg-surface/40 p-2.5 text-xs text-content-secondary">
               <p className="text-[11px] uppercase tracking-[0.08em] text-content-tertiary">
                 Scraped Details
               </p>

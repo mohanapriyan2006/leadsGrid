@@ -43,7 +43,7 @@ export const LeadsDiscoveryResultCard = ({
   return (
     <article
       onClick={() => onSelect(lead.id)}
-      className={`relative cursor-pointer overflow-hidden rounded-2xl border p-4 transition-all ${
+      className={`relative cursor-pointer overflow-auto rounded-2xl border p-4 transition-all ${
         isSelected
           ? "border-accent/40 bg-surface-secondary/95 shadow-[0_8px_28px_rgba(167,139,250,0.18)]"
           : "border-accent/12 bg-surface-secondary/75 hover:border-accent/30 hover:bg-surface-secondary/90"
@@ -134,7 +134,7 @@ export const LeadsDiscoveryResultCard = ({
           ) : null}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex md:flex-row flex-col items-center gap-2">
           <button
             type="button"
             className="glass-btn px-3 py-1.5 text-[11px]"

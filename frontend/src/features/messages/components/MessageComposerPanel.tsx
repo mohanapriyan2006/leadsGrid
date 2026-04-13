@@ -138,7 +138,7 @@ export const MessageComposerPanel = ({
         </div>
       ) : (
         <>
-          <div className="mb-3 flex items-center gap-2">
+          <div className="mb-3 flex md:flex-row flex-col items-center gap-2">
             {TONES.map((option) => (
               <button
                 key={option}

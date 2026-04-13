@@ -22,7 +22,7 @@ const iconByKey: Record<SettingsTabKey, typeof UserCircle2> = {
 
 export const SettingsTabNav = ({ activeTab, onChange }: SettingsTabNavProps) => {
   return (
-    <aside className="glass-card-sm h-fit p-2">
+    <aside className="glass-card-sm md:w-full w-[calc(100dvw-2rem)]  h-fit p-2">
       <nav className="flex gap-2 overflow-x-auto md:flex-col">
         {SETTINGS_TABS.map((tab) => {
           const Icon = iconByKey[tab.key];

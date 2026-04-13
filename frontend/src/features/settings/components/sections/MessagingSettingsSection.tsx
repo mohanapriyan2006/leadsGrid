@@ -21,7 +21,7 @@ export const MessagingSettingsSection = ({ messaging, userEmail, onChange }: Mes
     >
       <div>
         <p className="text-xs font-semibold tracking-[0.08em] text-content-secondary uppercase">Default Tone</p>
-        <div className="mt-2 grid grid-cols-3 gap-2">
+        <div className="mt-2 grid md:grid-cols-3 grid-cols-2 gap-2">
           {TONE_OPTIONS.map((tone) => (
             <button
               key={tone}

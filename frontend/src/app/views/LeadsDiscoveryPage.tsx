@@ -538,7 +538,7 @@ export const LeadsDiscoveryPage = () => {
         contentClassName="w-full h-screen min-w-0 overflow-x-hidden space-y-4"
       >
         <header className="glass-card-lg p-5">
-          <div className="flex items-start justify-between gap-5">
+          <div className="flex md:flex-row flex-col items-start justify-between gap-5">
             <div>
               <p className="text-[11px] uppercase tracking-[0.14em] text-content-tertiary">Lead Intelligence</p>
               <h2 className="mt-1 text-2xl font-semibold text-content sm:text-3xl">

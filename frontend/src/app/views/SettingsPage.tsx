@@ -226,7 +226,7 @@ export const SettingsPage = () => {
       <PageBackground image={bgDataAtWork} tint="rgba(159, 175, 12, 0.49)" />
       <ResponsivePageLayout contentClassName="space-y-4">
         <header className="glass-card p-5">
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex md:flex-row flex-col items-start justify-between gap-3">
             <div>
               <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-2xl font-semibold text-transparent sm:text-3xl">
                 AI Sales Engine Control Center

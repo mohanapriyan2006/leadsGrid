@@ -1,6 +1,18 @@
 import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { X, User, LayoutDashboard, Search, Inbox, Settings, Trash2, Brain, Users, Sparkles, Zap } from "lucide-react";
+import {
+  X,
+  User,
+  LayoutDashboard,
+  Search,
+  Inbox,
+  Settings,
+  Trash2,
+  Brain,
+  Users,
+  Sparkles,
+  Zap,
+} from "lucide-react";
 import { useAuth } from "../../features/auth/AuthContext";
 import logo from "../../assets/logo1.png";
 
@@ -9,20 +21,32 @@ import { useFirebaseOnline } from "../../hooks/useFirebaseOnline";
 
 // Custom icon renderers with special effects for AI and Leads Discovery
 const renderIcon = (label: string, isActive: boolean) => {
-  const baseClasses = "flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300";
-  
+  const baseClasses =
+    "flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300";
+
   switch (label) {
     case "AI":
       return (
-        <div className={`${baseClasses} ${
-          isActive 
-            ? "bg-gradient-to-br from-purple-600 to-violet-800 shadow-[0_0_20px_rgba(139,92,246,0.6)]" 
-            : "bg-gradient-to-br from-purple-500/20 to-violet-600/20"
-        }`}>
-          <Brain className={`w-4 h-4 ${isActive ? "text-white" : "text-purple-400"}`} />
+        <div
+          className={`${baseClasses} ${
+            isActive
+              ? "bg-gradient-to-br from-purple-600 to-violet-800 shadow-[0_0_20px_rgba(139,92,246,0.6)]"
+              : "bg-gradient-to-br from-purple-500/20 to-violet-600/20"
+          }`}
+        >
+          <Brain
+            className={`w-4 h-4 ${isActive ? "text-white" : "text-purple-400"}`}
+          />
+          {/* Sparkle effects */}
+          <Sparkles
+            className={`absolute -top-1 -right-1 w-3 h-3 text-yellow-400 animate-pulse `}
+          />
+          {/* Pulsing glow rings */}
+          <span
+            className={`absolute inset-0 rounded-lg animate-ping bg-purple-500/40 `}
+          />
           {isActive && (
             <>
-              <span className="absolute inset-0 rounded-lg animate-ping bg-purple-500/30" />
               <span className="absolute -inset-1 rounded-xl blur-sm bg-gradient-to-r from-purple-600 to-violet-600 animate-pulse" />
             </>
           )}
@@ -30,12 +54,16 @@ const renderIcon = (label: string, isActive: boolean) => {
       );
     case "Leads Discovery":
       return (
-        <div className={`${baseClasses} ${
-          isActive 
-            ? "bg-gradient-to-br from-cyan-500 to-blue-600 shadow-[0_0_15px_rgba(6,182,212,0.5)]" 
-            : "bg-gradient-to-br from-cyan-500/20 to-blue-600/20"
-        }`}>
-          <Search className={`w-4 h-4 ${isActive ? "text-white" : "text-cyan-400"}`} />
+        <div
+          className={`${baseClasses} ${
+            isActive
+              ? "bg-gradient-to-br from-cyan-500 to-blue-600 shadow-[0_0_15px_rgba(6,182,212,0.5)]"
+              : "bg-gradient-to-br from-cyan-500/20 to-blue-600/20"
+          }`}
+        >
+          <Search
+            className={`w-4 h-4 ${isActive ? "text-white" : "text-cyan-400"}`}
+          />
           {isActive && (
             <Sparkles className="absolute -top-1 -right-1 w-3 h-3 text-yellow-400 animate-pulse" />
           )}
@@ -43,43 +71,57 @@ const renderIcon = (label: string, isActive: boolean) => {
       );
     case "Dashboard":
       return (
-        <div className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}>
+        <div
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}
+        >
           <LayoutDashboard className="w-4 h-4" />
         </div>
       );
     case "Manage Leads":
       return (
-        <div className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}>
+        <div
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}
+        >
           <Users className="w-4 h-4" />
         </div>
       );
     case "Messages":
       return (
-        <div className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}>
+        <div
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}
+        >
           <Inbox className="w-4 h-4" />
         </div>
       );
     case "CRM":
       return (
-        <div className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}>
+        <div
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}
+        >
           <Zap className="w-4 h-4" />
         </div>
       );
     case "Settings":
       return (
-        <div className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}>
+        <div
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}
+        >
           <Settings className="w-4 h-4" />
         </div>
       );
     case "Recycle Bin":
       return (
-        <div className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}>
+        <div
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}
+        >
           <Trash2 className="w-4 h-4" />
         </div>
       );
     default:
       return (
-        <div className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}>
+        <div
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}
+        >
           <LayoutDashboard className="w-4 h-4" />
         </div>
       );
@@ -136,18 +178,24 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 md:hidden " role="dialog" aria-modal="true" aria-label="Mobile navigation">
+    <div
+      className="fixed inset-0 z-50 md:hidden "
+      role="dialog"
+      aria-modal="true"
+      aria-label="Mobile navigation"
+    >
       {/* Backdrop with enhanced blur */}
       <button
         type="button"
         aria-label="Close menu"
-        className={`absolute inset-0 bg-surface/80 backdrop-blur-xl transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
+        className={`absolute inset-0 bg-surface/80 backdrop-blur-xl transition-opacity duration-300 ${isClosing ? "opacity-0" : "opacity-100"}`}
         onClick={handleClose}
       />
 
       {/* Drawer Panel */}
-      <aside className={`relative z-10 h-screen overflow-y-auto w-[min(85vw,340px)] border-r border-accent/20 bg-gradient-to-b from-surface via-surface-secondary to-surface-tertiary/50 p-0 backdrop-blur-glass shadow-2xl transition-transform duration-300 ease-out ${isClosing ? '-translate-x-full' : 'translate-x-0'}`}>
-
+      <aside
+        className={`relative z-10 h-screen overflow-y-auto w-[min(85vw,340px)] border-r border-accent/20 bg-gradient-to-b from-surface via-surface-secondary to-surface-tertiary/50 p-0 backdrop-blur-glass shadow-2xl transition-transform duration-300 ease-out ${isClosing ? "-translate-x-full" : "translate-x-0"}`}
+      >
         {/* Header with Logo & User */}
         <div className="relative overflow-hidden">
           {/* Animated gradient background */}
@@ -165,13 +213,20 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
             </button>
 
             {/* Logo & Brand */}
-            <div className="flex items-center gap-3 mb-4 cursor-pointer" onClick={() => navigate(homePath)}>
+            <div
+              className="flex items-center gap-3 mb-4 cursor-pointer"
+              onClick={() => navigate(homePath)}
+            >
               <div className="relative flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-700 to-purple-900 shadow-glow animate-float">
                 <img src={logo} alt="leadsGrid" className="h-6 w-6" />
               </div>
               <div>
-                <span className="text-xl uppercase tracking-[0.10em] text-content-tertiary">LeadsGrid</span>
-                <p className="text-[10px] text-content-tertiary uppercase tracking-widest">Lead Intelligence</p>
+                <span className="text-xl uppercase tracking-[0.10em] text-content-tertiary">
+                  LeadsGrid
+                </span>
+                <p className="text-[10px] text-content-tertiary uppercase tracking-widest">
+                  Lead Intelligence
+                </p>
               </div>
             </div>
 
@@ -180,22 +235,34 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
               <div className="relative">
                 <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-accent/20 shadow-lg">
                   {user?.photoURL ? (
-                    <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
+                    <img
+                      src={user.photoURL}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent/40 to-accent-secondary/40 text-white">
                       <User className="w-6 h-6" />
                     </div>
                   )}
                 </div>
-                <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ${isFirebaseOnline ? 'bg-green-500' : 'bg-red-500'} border-2 border-surface`} />
+                <div
+                  className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ${isFirebaseOnline ? "bg-green-500" : "bg-red-500"} border-2 border-surface`}
+                />
               </div>
               <div className="flex-1 min-w-0">
                 {isFirebaseOnline ? (
-                  <p className="font-medium text-sm text-content truncate">{user?.displayName || "Welcome"}</p>
+                  <p className="font-medium text-sm text-content truncate">
+                    {user?.displayName || "Welcome"}
+                  </p>
                 ) : (
-                  <p className="font-medium text-sm truncate text-red-500">Offline</p>
+                  <p className="font-medium text-sm truncate text-red-500">
+                    Offline
+                  </p>
                 )}
-                <p className="text-xs text-content-tertiary truncate">{user?.email || "Sign in to continue"}</p>
+                <p className="text-xs text-content-tertiary truncate">
+                  {user?.email || "Sign in to continue"}
+                </p>
               </div>
             </div>
           </div>
@@ -203,12 +270,14 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
 
         {/* Navigation with staggered animations */}
         <nav className="p-4 space-y-1">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-content-tertiary mb-3 px-2">Navigation</p>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-content-tertiary mb-3 px-2">
+            Navigation
+          </p>
           {navigationItems.map((item, index) => {
             const isActive = window.location.pathname === item.path;
             const isAI = item.label === "AI";
             const isLeadsDiscovery = item.label === "Leads Discovery";
-            
+
             return (
               <NavLink
                 key={item.path}
@@ -222,7 +291,7 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
                         ? "border-cyan-500/50 bg-gradient-to-r from-cyan-500/20 to-blue-600/10 text-white shadow-[0_0_20px_rgba(6,182,212,0.25)] translate-x-1"
                         : "border-accent/40 bg-gradient-to-r from-accent-soft to-accent-soft/50 text-content shadow-glow translate-x-1"
                     : "border-transparent text-content-secondary hover:border-accent/20 hover:bg-accent-soft/30 hover:text-content"
-                } ${activeIndex !== null ? 'translate-x-0 opacity-100' : '-translate-x-4 opacity-0'}`}
+                } ${activeIndex !== null ? "translate-x-0 opacity-100" : "-translate-x-4 opacity-0"}`}
                 style={{
                   transitionDelay: `${index * 50}ms`,
                 }}
@@ -240,27 +309,30 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
                     <div className="absolute -right-2 -top-2 w-16 h-16 bg-cyan-500/20 rounded-full blur-2xl" />
                   </>
                 )}
-                
+
                 {/* Icon with special effects */}
                 <div className="relative z-10">
                   {renderIcon(item.label, isActive)}
                 </div>
-                
+
                 <span className="relative z-10 font-medium">{item.label}</span>
-                
+
                 {/* Active indicator dot with special colors */}
                 {isActive && (
-                  <span className={`ml-auto relative z-10 w-1.5 h-1.5 rounded-full animate-pulse ${
-                    isAI ? "bg-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.8)]" : 
-                    isLeadsDiscovery ? "bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)]" : 
-                    "bg-accent"
-                  }`} />
+                  <span
+                    className={`ml-auto relative z-10 w-1.5 h-1.5 rounded-full animate-pulse ${
+                      isAI
+                        ? "bg-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.8)]"
+                        : isLeadsDiscovery
+                          ? "bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)]"
+                          : "bg-accent"
+                    }`}
+                  />
                 )}
               </NavLink>
             );
           })}
         </nav>
-
       </aside>
     </div>
   );

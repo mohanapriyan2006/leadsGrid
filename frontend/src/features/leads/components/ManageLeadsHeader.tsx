@@ -44,7 +44,7 @@ export const ManageLeadsHeader = ({
             Not a CRM. A lead conversion engine.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 md:flex-row flex-col">
           {utilityControl}
 
           <div className="glass-card-sm  gap-1 inline-flex p-1 text-[11px]">

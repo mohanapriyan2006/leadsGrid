@@ -2,6 +2,8 @@
 
 Find high-intent leads, qualify them fast, and run personalized outreach with **Agentic AI** — all from one clean workspace.
 
+![logo](./frontend/public/logo.png)
+
 **LeadsGrid** combines:
 - **Lead discovery** (search + enrich)
 - **Lightweight CRM** (pipeline + notes + tracking)

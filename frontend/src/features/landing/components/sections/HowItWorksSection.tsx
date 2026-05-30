@@ -40,7 +40,7 @@ export const HowItWorksSection = () => {
         <h2 className="mb-4 font-display text-4xl font-bold md:text-5xl">
           How <GradientText>It Works</GradientText>
         </h2>
-        <p className="mx-auto max-w-lg text-lg text-white/50">
+        <p className="mx-auto max-w-lg text-lg text-content-secondary">
           Three simple steps to automated lead generation
         </p>
       </div>
@@ -67,15 +67,15 @@ export const HowItWorksSection = () => {
               className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-accent/30 bg-accent-soft text-3xl shadow-[0_0_20px_rgba(167,139,250,0.2)]"
             >
               {step.icon}
-              <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-accent to-accent-secondary text-[10px] font-bold text-white">
+              <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-accent to-accent-secondary text-[10px] font-bold text-content-inverse">
                 {step.step}
               </span>
             </motion.div>
 
-            <h3 className="mb-2 font-display text-xl font-bold text-white">
+            <h3 className="mb-2 font-display text-xl font-bold text-content">
               {step.title}
             </h3>
-            <p className="text-sm text-white/50">{step.description}</p>
+            <p className="text-sm text-content-secondary">{step.description}</p>
           </motion.div>
         ))}
       </div>

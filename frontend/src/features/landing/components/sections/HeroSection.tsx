@@ -51,7 +51,7 @@ export const HeroSection = () => {
 
           <motion.p
             variants={itemVariants}
-            className="mb-10 max-w-lg text-lg leading-relaxed text-white/60"
+            className="mb-10 max-w-lg text-lg leading-relaxed text-content-secondary"
           >
             LeadsGrid scans the internet, finds real buyers, scores them with AI,
             and helps you close deals faster.
@@ -68,7 +68,7 @@ export const HeroSection = () => {
 
           <motion.div
             variants={itemVariants}
-            className="mt-8 flex items-center gap-6 text-sm text-white/40"
+            className="mt-8 flex items-center gap-6 text-sm text-content-tertiary"
           >
             <span className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
@@ -88,13 +88,13 @@ export const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
           className="relative hidden lg:flex lg:items-center"
         >
-          <div className="w-full rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl">
+          <div className="w-full rounded-2xl border border-content/10 bg-surface-tertiary/40 p-6 backdrop-blur-xl">
             {/* Mock dashboard header */}
             <div className="mb-6 flex items-center gap-3">
               <div className="h-3 w-3 rounded-full bg-red-500/60" />
               <div className="h-3 w-3 rounded-full bg-yellow-500/60" />
               <div className="h-3 w-3 rounded-full bg-green-500/60" />
-              <span className="ml-3 text-xs text-white/30">LeadsGrid Dashboard</span>
+              <span className="ml-3 text-xs text-content-tertiary">LeadsGrid Dashboard</span>
             </div>
 
             {/* Live lead notifications */}
@@ -113,10 +113,10 @@ export const HeroSection = () => {
               ].map((stat) => (
                 <div
                   key={stat.label}
-                  className="rounded-lg border border-white/5 bg-white/[0.03] p-3 text-center"
+                  className="rounded-lg border border-content/5 bg-surface-tertiary/40 p-3 text-center"
                 >
-                  <p className="text-lg font-bold text-white">{stat.value}</p>
-                  <p className="text-[10px] text-white/40">{stat.label}</p>
+                  <p className="text-lg font-bold text-content">{stat.value}</p>
+                  <p className="text-[10px] text-content-tertiary">{stat.label}</p>
                 </div>
               ))}
             </div>

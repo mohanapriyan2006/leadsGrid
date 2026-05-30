@@ -12,7 +12,7 @@ import { FinalCtaSection } from "../../features/landing/components/sections/Fina
 
 export const LandingPage = () => {
   return (
-    <div className="min-h-screen bg-surface text-white">
+    <div className="min-h-screen bg-surface text-content">
       <Navbar />
       <HeroSection />
       <LiveDemoSection />

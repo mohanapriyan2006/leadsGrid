@@ -35,7 +35,7 @@ const renderIcon = (label: string, isActive: boolean) => {
           }`}
         >
           <Brain
-            className={`w-4 h-4 ${isActive ? "text-white" : "text-purple-400"}`}
+            className={`w-4 h-4 ${isActive ? "text-content" : "text-purple-400"}`}
           />
           {/* Sparkle effects */}
           <Sparkles
@@ -62,7 +62,7 @@ const renderIcon = (label: string, isActive: boolean) => {
           }`}
         >
           <Search
-            className={`w-4 h-4 ${isActive ? "text-white" : "text-cyan-400"}`}
+            className={`w-4 h-4 ${isActive ? "text-content" : "text-cyan-400"}`}
           />
           {isActive && (
             <Sparkles className="absolute -top-1 -right-1 w-3 h-3 text-yellow-400 animate-pulse" />
@@ -241,7 +241,7 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent/40 to-accent-secondary/40 text-white">
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent/40 to-accent-secondary/40 text-content-inverse">
                       <User className="w-6 h-6" />
                     </div>
                   )}
@@ -286,9 +286,9 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
                 className={`group flex items-center gap-3 rounded-xl border px-3 py-3 text-sm transition-all duration-300 hover:scale-[1.02] relative overflow-hidden ${
                   isActive
                     ? isAI
-                      ? "border-purple-500/50 bg-gradient-to-r from-purple-500/20 to-violet-600/10 text-white shadow-[0_0_25px_rgba(139,92,246,0.3)] translate-x-1"
+                      ? "border-purple-500/50 bg-gradient-to-r from-purple-500/20 to-violet-600/10 text-content shadow-[0_0_25px_rgba(139,92,246,0.3)] translate-x-1"
                       : isLeadsDiscovery
-                        ? "border-cyan-500/50 bg-gradient-to-r from-cyan-500/20 to-blue-600/10 text-white shadow-[0_0_20px_rgba(6,182,212,0.25)] translate-x-1"
+                        ? "border-cyan-500/50 bg-gradient-to-r from-cyan-500/20 to-blue-600/10 text-content shadow-[0_0_20px_rgba(6,182,212,0.25)] translate-x-1"
                         : "border-accent/40 bg-gradient-to-r from-accent-soft to-accent-soft/50 text-content shadow-glow translate-x-1"
                     : "border-transparent text-content-secondary hover:border-accent/20 hover:bg-accent-soft/30 hover:text-content"
                 } ${activeIndex !== null ? "translate-x-0 opacity-100" : "-translate-x-4 opacity-0"}`}

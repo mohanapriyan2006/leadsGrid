@@ -51,16 +51,16 @@ export const SocialProofSection = () => {
             viewport={{ once: true, margin: "-60px" }}
           >
             <GlassCard className="h-full">
-              <p className="mb-6 text-sm leading-relaxed text-white/70">
+              <p className="mb-6 text-sm leading-relaxed text-content-secondary">
                 "{testimonial.quote}"
               </p>
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent-secondary text-xs font-bold text-white">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent-secondary text-xs font-bold text-content-inverse">
                   {testimonial.author.charAt(0)}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white">{testimonial.author}</p>
-                  <p className="text-xs text-white/40">{testimonial.role}</p>
+                  <p className="text-sm font-semibold text-content">{testimonial.author}</p>
+                  <p className="text-xs text-content-tertiary">{testimonial.role}</p>
                 </div>
               </div>
             </GlassCard>

@@ -4,6 +4,7 @@ import { Search } from "lucide-react";
 import logo from "../../assets/logo.png";
 import { useNavigate } from "react-router-dom";
 import { useFirebaseOnline } from "../../hooks/useFirebaseOnline";
+import { ThemeToggle } from "../../components/ui/ThemeToggle";
 
 type TopbarProps = {
   onOpenMobileNav?: () => void;
@@ -42,8 +43,9 @@ export const Topbar = ({ onOpenMobileNav }: TopbarProps) => {
         </div>
       </div>
 
-      {/* Right Side - Menu Icon (Avatar inside menu) */}
+      {/* Right Side - Theme Toggle + Menu Icon (Avatar inside menu) */}
       <div className="flex items-center gap-2 shrink-0">
+        <ThemeToggle />
         {/* Unique Animated Menu Icon */}
         <button
           type="button"

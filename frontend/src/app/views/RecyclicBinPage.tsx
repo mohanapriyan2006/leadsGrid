@@ -261,7 +261,7 @@ export const RecyclicBinPage = () => {
                   onClick={() => {
                     void handleConfirmAction();
                   }}
-                  className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold text-white transition ${
+                  className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold text-content-inverse transition ${
                     pendingAction === "restore" ? "bg-accent hover:bg-accent-secondary" : "bg-danger hover:bg-danger/80"
                   }`}
                 >

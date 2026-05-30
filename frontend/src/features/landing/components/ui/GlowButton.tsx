@@ -13,9 +13,9 @@ type Props = {
 
 const variantStyles: Record<GlowButtonVariant, string> = {
   primary:
-    "bg-gradient-to-r from-accent to-accent-secondary text-white shadow-[0_0_30px_rgba(167,139,250,0.4)]",
+    "bg-gradient-to-r from-accent to-accent-secondary text-content-inverse shadow-[0_0_30px_rgba(167,139,250,0.4)]",
   secondary:
-    "bg-white/5 border border-white/10 text-white backdrop-blur-sm hover:bg-white/10",
+    "bg-surface-tertiary/50 border border-content/10 text-content backdrop-blur-sm hover:bg-surface-tertiary/70",
 };
 
 export const GlowButton = ({ children, variant = "primary", className = "", onClick, disabled }: Props) => {

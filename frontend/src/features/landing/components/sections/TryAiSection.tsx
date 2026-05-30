@@ -51,7 +51,7 @@ export const TryAiSection = () => {
         <h2 className="mb-4 font-display text-4xl font-bold md:text-5xl">
           Try <GradientText>AI Search</GradientText>
         </h2>
-        <p className="mx-auto max-w-lg text-lg text-white/50">
+        <p className="mx-auto max-w-lg text-lg text-content-secondary">
           See how LeadsGrid finds leads in seconds
         </p>
       </div>
@@ -72,7 +72,7 @@ export const TryAiSection = () => {
             whileTap={{ scale: 0.95 }}
             onClick={startSearch}
             disabled={isSearching || !query.trim()}
-            className="rounded-xl bg-gradient-to-r from-accent to-accent-secondary px-6 py-4 text-sm font-semibold text-white shadow-[0_0_30px_rgba(167,139,250,0.3)] transition-opacity disabled:opacity-50"
+            className="rounded-xl bg-gradient-to-r from-accent to-accent-secondary px-6 py-4 text-sm font-semibold text-content-inverse shadow-[0_0_30px_rgba(167,139,250,0.3)] transition-opacity disabled:opacity-50"
           >
             Search
           </motion.button>
@@ -112,8 +112,8 @@ export const TryAiSection = () => {
                 >
                   <GlassCard className="flex items-center justify-between !p-4">
                     <div>
-                      <p className="text-sm font-medium text-white/90">{result.title}</p>
-                      <p className="text-xs text-white/40">{result.source}</p>
+                      <p className="text-sm font-medium text-content">{result.title}</p>
+                      <p className="text-xs text-content-tertiary">{result.source}</p>
                     </div>
                     <span className="rounded-full bg-green-500/10 px-3 py-1 text-xs font-bold text-green-400">
                       {result.score}

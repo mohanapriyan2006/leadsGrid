@@ -43,7 +43,7 @@ export const FeaturesSection = () => {
         <h2 className="mb-4 font-display text-4xl font-bold md:text-5xl">
           Powerful <GradientText>Features</GradientText>
         </h2>
-        <p className="mx-auto max-w-lg text-lg text-white/50">
+        <p className="mx-auto max-w-lg text-lg text-content-secondary">
           Everything you need to find and close high-intent clients
         </p>
       </div>
@@ -59,11 +59,11 @@ export const FeaturesSection = () => {
             viewport={{ once: true, margin: "-60px" }}
           >
             <GlassCard hoverTilt className="group h-full">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-2xl transition-shadow group-hover:shadow-[0_0_20px_rgba(167,139,250,0.3)]">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-content/10 bg-surface-tertiary/30 text-2xl transition-shadow group-hover:shadow-[0_0_20px_rgba(167,139,250,0.3)]">
                 {feature.icon}
               </div>
-              <h3 className="mb-2 text-lg font-bold text-white">{feature.title}</h3>
-              <p className="text-sm leading-relaxed text-white/50">{feature.description}</p>
+              <h3 className="mb-2 text-lg font-bold text-content">{feature.title}</h3>
+              <p className="text-sm leading-relaxed text-content-secondary">{feature.description}</p>
             </GlassCard>
           </motion.div>
         ))}

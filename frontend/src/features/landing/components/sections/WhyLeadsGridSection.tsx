@@ -49,7 +49,7 @@ export const WhyLeadsGridSection = () => {
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
-                className="flex items-center gap-3 text-sm text-white/60"
+                className="flex items-center gap-3 text-sm text-content-secondary"
               >
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-500/20 text-xs text-red-400">
                   ✕
@@ -74,7 +74,7 @@ export const WhyLeadsGridSection = () => {
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
-                className="flex items-center gap-3 text-sm text-white/60"
+                className="flex items-center gap-3 text-sm text-content-secondary"
               >
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500/20 text-xs text-green-400">
                   ✓

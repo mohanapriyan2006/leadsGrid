@@ -92,7 +92,7 @@ export const ManageLeadsTableView = ({
               </button>
               <button
                 type="button"
-                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2 py-1 text-[11px] text-danger"
+                className="rounded-glass-sm  border border-danger/30 bg-danger-soft px-2 py-1 text-[11px]"
                 onClick={() => onDelete(lead.id)}
               >
                 Delete
@@ -139,7 +139,7 @@ export const ManageLeadsTableView = ({
             </button>
             <button
               type="button"
-              className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2 py-1 text-[11px] text-danger"
+              className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2 py-1 text-[11px] "
               onClick={() => onDelete(lead.id)}
             >
               Delete

@@ -105,7 +105,7 @@ export const MessageComposerPanel = ({
           onClick={() => onTabChange("compose")}
           className={`rounded-glass-sm border px-3 py-2 text-xs uppercase tracking-[0.1em] transition-all ${
             activeTab === "compose"
-              ? "border-accent/50 bg-accent-soft text-accent shadow-glow"
+              ? "border-accent/50 bg-accent-soft shadow-glow"
               : "border-accent/10 bg-surface-secondary/70 text-content-tertiary hover:border-accent/30"
           }`}
         >
@@ -116,7 +116,7 @@ export const MessageComposerPanel = ({
           onClick={() => onTabChange("templates")}
           className={`rounded-glass-sm animate-pulseGlow border px-3 py-2 text-xs uppercase tracking-[0.1em] transition-all ${
             activeTab === "templates"
-              ? "border-accent/50 bg-accent-soft text-accent shadow-glow"
+              ? "border-accent/50 bg-accent-soft shadow-glow"
               : "border-accent/10 bg-surface-secondary/70 text-content-tertiary hover:border-accent/30"
           }`}
         >
@@ -146,7 +146,7 @@ export const MessageComposerPanel = ({
                 onClick={() => onToneChange(option)}
                 className={`rounded-glass-sm border px-3 py-1 text-xs uppercase tracking-[0.1em] transition-all duration-200 ${
                   tone === option
-                    ? "border-accent/50 bg-accent-soft text-accent shadow-glow"
+                    ? "border-accent/50 bg-accent-soft shadow-glow"
                     : "border-accent/10 text-content-tertiary hover:border-accent/30 hover:text-content-secondary"
                 }`}
               >
@@ -315,14 +315,14 @@ export const MessageComposerPanel = ({
                   type="button"
                   onClick={onSend}
                   disabled={sending || !email || !localDraft.trim()}
-                  className="flex-1 rounded-glass-sm bg-success px-4 py-1.5 text-xs font-semibold tracking-[0.08em] text-content-inverse shadow-[0_0_16px_rgba(16,185,129,0.3)] transition hover:shadow-[0_0_24px_rgba(16,185,129,0.5)] disabled:opacity-60"
+                  className="flex-1 rounded-glass-sm bg-success  px-4 py-1.5 text-xs font-semibold tracking-[0.08em] text-content-inverse shadow-[0_0_16px_rgba(16,185,129,0.3)] transition hover:shadow-[0_0_24px_rgba(16,185,129,0.5)] disabled:opacity-60"
                 >
                   {sending ? "SENDING..." : sent ? "SENT" : "SEND EMAIL"}
                 </button>
                 <button
                   type="button"
                   onClick={onCopy}
-                  className="rounded-glass-sm border border-success/30 bg-success-soft px-4 py-1.5 text-xs font-semibold tracking-[0.08em] text-success transition hover:border-success/50 hover:shadow-[0_0_16px_rgba(16,185,129,0.2)]"
+                  className="rounded-glass-sm border border-success/30 bg-success-soft px-4 py-1.5 text-xs font-semibold tracking-[0.08em]  transition hover:border-success/50 hover:shadow-[0_0_16px_rgba(16,185,129,0.2)]"
                 >
                   {copied ? "COPIED" : "COPY"}
                 </button>

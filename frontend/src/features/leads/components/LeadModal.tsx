@@ -146,32 +146,32 @@ export const LeadModal = ({
               )}
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-              <span className="badge-info">Score {lead.score}</span>
-              <span className="badge-success">Budget {formatMoney(lead.budget_estimate)}</span>
-              <span className="badge-accent">Stage {lead.stage}</span>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs ">
+              <span className="badge-info  text-white ">Score {lead.score}</span>
+              <span className="badge-success  text-white ">Budget {formatMoney(lead.budget_estimate)}</span>
+              <span className="badge-accent  text-white ">Stage {lead.stage}</span>
             </div>
 
             <div className="glass-card-sm mt-3 p-3 text-xs">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="badge-warning">
+                <span className="badge-warning  text-white ">
                   Pain: {lead.ai_analysis.pain_points[0] ?? "Unknown"}
                 </span>
                 {lead.ai_analysis.decision_maker ? (
-                  <span className="badge-info">Decision: {lead.ai_analysis.decision_maker}</span>
+                  <span className="badge-info  text-white ">Decision: {lead.ai_analysis.decision_maker}</span>
                 ) : null}
                 {lead.ai_analysis.qualification_status ? (
-                  <span className="badge-success">{lead.ai_analysis.qualification_status}</span>
+                  <span className="badge-success  text-white ">{lead.ai_analysis.qualification_status}</span>
                 ) : null}
                 {(lead.ai_analysis.buying_signals ?? []).slice(0, 3).map((signal) => (
-                  <span key={signal} className="badge-warning">
+                  <span key={signal} className="badge-warning  text-white ">
                     {signal}
                   </span>
                 ))}
-                <span className="badge-accent">
+                <span className="badge-accent  text-white ">
                   Fix: {lead.ai_analysis.suggested_pitch || "No suggestion"}
                 </span>
-                <span className="badge-success">
+                <span className="badge-success  text-white ">
                   Deal: {lead.ai_analysis.deal_probability}%
                 </span>
               </div>
@@ -273,7 +273,7 @@ export const LeadModal = ({
               <button
                 type="button"
                 onClick={onDelete}
-                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-3 py-1.5 text-xs text-danger transition hover:shadow-[0_0_16px_rgba(239,68,68,0.3)]"
+                className="rounded-glass-sm  text-white  border border-danger/30 bg-danger-soft px-3 py-1.5 text-xs text-danger transition hover:shadow-[0_0_16px_rgba(239,68,68,0.3)]"
               >
                 Delete
               </button>

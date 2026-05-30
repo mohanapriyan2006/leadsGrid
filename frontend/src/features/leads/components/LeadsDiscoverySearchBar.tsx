@@ -15,7 +15,7 @@ export const LeadsDiscoverySearchBar = ({ value, isFetching, isBackendOnline, on
         <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-content-tertiary">
           Search Intent Signals
         </label>
-        <span className={`${isBackendOnline ? "badge-success" : "badge-danger"} !px-2 !py-0.5 text-[10px] uppercase tracking-[0.08em]`}>
+        <span className={`${isBackendOnline ? "badge-success" : "badge-danger"} !px-2 !py-0.5 text-[10px] uppercase  text-white  tracking-[0.08em]`}>
           {isBackendOnline ? "API online" : "API offline"}
         </span>
       </div>

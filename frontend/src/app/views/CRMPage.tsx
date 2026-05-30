@@ -590,7 +590,7 @@ export const CRMPage = () => {
                   setConfirmBulkDeleteOpen(true);
                 }}
                 disabled={selectedDealIds.length === 0}
-                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2.5 py-1 text-[11px] text-danger disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2.5 py-1 text-[11px] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Delete Selected
               </button>

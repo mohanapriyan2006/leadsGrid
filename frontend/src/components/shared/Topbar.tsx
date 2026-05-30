@@ -66,7 +66,7 @@ export const Topbar = ({ onOpenMobileNav }: TopbarProps) => {
         </button>
 
         {/* Status Badge - Desktop only */}
-        <span className={`${isFirebaseOnline ? "badge-success" : "badge-danger"} hidden md:inline-flex shrink-0`}>
+        <span className={`${isFirebaseOnline ? "badge-success" : "badge-danger"} hidden md:inline-flex text-white shrink-0`}>
           {isFirebaseOnline ? "online" : "offline"}
         </span>
 

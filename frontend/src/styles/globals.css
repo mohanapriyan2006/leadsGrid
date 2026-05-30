@@ -26,13 +26,13 @@
   --content-inverse-rgb: 10 12 20;
 
   /* === ACCENT COLORS === */
-  --accent: #a78bfa;
+  --accent: #9371f8;
   --accent-rgb: 167 139 250;
   --accent-secondary: #8b5cf6;
   --accent-secondary-rgb: 139 92 246;
   --accent-tertiary: #6366f1;
   --accent-tertiary-rgb: 99 102 241;
-  --accent-soft: rgba(167, 139, 250, 0.15);
+  --accent-soft: rgba(153, 119, 252, 0.15);
   --accent-soft-rgb: 167 139 250;
   --accent-glow: rgba(167, 139, 250, 0.4);
   --accent-glow-rgb: 167 139 250;

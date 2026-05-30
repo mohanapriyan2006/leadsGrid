@@ -35,7 +35,7 @@ export const PipelineChart = ({ data }: PipelineChartProps) => {
                 borderRadius: 12,
                 border: "1px solid rgba(167,139,250,0.25)",
                 background: "rgba(15,20,32,0.95)",
-                color: "#e8ecff",
+                color: "#000938",
               }}
             />
           </Treemap>

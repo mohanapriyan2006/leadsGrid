@@ -41,10 +41,10 @@ export const DashboardHotLeadsWidget = ({ leads }: DashboardHotLeadsWidgetProps)
               </div>
 
               <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-content-secondary">
-                <span className="rounded-full border border-info/30 bg-info-soft px-2 py-0.5 text-info">
+                <span className="rounded-full border border-info/30 bg-info-soft  text-white  px-2 py-0.5 text-info">
                   {sourceLabel(lead.source)}
                 </span>
-                <span className="rounded-full border border-accent/20 bg-accent-soft px-2 py-0.5 text-accent">
+                <span className="rounded-full  text-white  border border-accent/20 bg-accent-soft px-2 py-0.5 text-accent">
                   {lead.stage}
                 </span>
                 {lead.urgency === "high" ? <Tag label="URGENT" /> : null}

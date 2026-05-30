@@ -564,7 +564,7 @@ export const ManageLeadsPage = () => {
                   setConfirmBulkDeleteOpen(true);
                 }}
                 disabled={selectedLeadIds.length === 0}
-                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2.5 py-1 text-[11px] text-danger disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2.5 py-1 text-[11px] text-danger  text-white  disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Delete Selected
               </button>
@@ -572,7 +572,7 @@ export const ManageLeadsPage = () => {
                 type="button"
                 onClick={handleExportSelectedLeadsCsv}
                 disabled={selectedLeadIds.length === 0}
-                className="glass-btn px-2.5 py-1 text-[11px] disabled:cursor-not-allowed disabled:opacity-50"
+                className="glass-btn px-2.5 py-1 text-[11px] disabled:cursor-not-allowed  text-white  disabled:opacity-50"
               >
                 Export Selected CSV
               </button>

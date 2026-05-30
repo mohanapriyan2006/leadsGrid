@@ -70,14 +70,14 @@ export const RecycleBinTable = ({
               <button
                 type="button"
                 onClick={() => onRestore(row.id)}
-                className="badge-success cursor-pointer transition hover:shadow-[0_0_12px_rgba(16,185,129,0.3)]"
+                className="badge-success  text-white  cursor-pointer transition hover:shadow-[0_0_12px_rgba(16,185,129,0.3)]"
               >
                 Restore
               </button>
               <button
                 type="button"
                 onClick={() => onDeleteForever(row.id)}
-                className="badge-danger cursor-pointer transition hover:shadow-[0_0_12px_rgba(239,68,68,0.3)]"
+                className="badge-danger  text-white  cursor-pointer transition hover:shadow-[0_0_12px_rgba(239,68,68,0.3)]"
               >
                 Delete forever
               </button>

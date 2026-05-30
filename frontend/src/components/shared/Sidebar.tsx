@@ -118,7 +118,7 @@ export const Sidebar = ({ className = "" }: SidebarProps) => {
                     ? "border-purple-500/50 bg-gradient-to-r from-purple-500/20 to-violet-600/10 text-content shadow-[0_0_25px_rgba(139,92,246,0.3)]"
                     : isLeadsDiscovery
                       ? "border-cyan-500/50 bg-gradient-to-r from-cyan-500/20 to-blue-600/10 text-content shadow-[0_0_20px_rgba(6,182,212,0.25)]"
-                      : "border-accent/40 bg-gradient-to-r from-accent-soft to-accent-soft/30 text-content shadow-glow"
+                      : "border-accent/40 bg-gradient-to-r  from-accent-soft/40 to-accent-soft/10 text-content shadow-glow"
                   : "border-transparent text-content-secondary hover:border-accent/20 hover:bg-accent-soft/20 hover:text-content"
                 }`}
               style={{

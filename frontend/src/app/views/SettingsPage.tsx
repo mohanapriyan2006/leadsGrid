@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { PageBackground } from "../../components/ui/PageBackground";
 import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
@@ -27,8 +27,17 @@ import type { SettingsTabKey } from "../../features/settings/types/settings";
 
 export const SettingsPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<SettingsTabKey>("profile");
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    const validTabs: SettingsTabKey[] = SETTINGS_TABS.map((t) => t.key);
+    if (tab && validTabs.includes(tab as SettingsTabKey)) {
+      setActiveTab(tab as SettingsTabKey);
+    }
+  }, [searchParams]);
   const {
     settings,
     loading,
@@ -263,7 +272,7 @@ export const SettingsPage = () => {
           <div className="space-y-4">
             <SettingsTabNav activeTab={activeTab} onChange={setActiveTab} />
             <div className="glass-card-sm p-4">
-              <p className="text-xs uppercase tracking-[0.1em] text-content-tertiary">AI Optimization Score</p>
+              <p className="text-xs uppercase tracking-[0.1em]  text-content-tertiaryy">AI Optimization Score</p>
               <p className="mt-1 text-2xl font-semibold text-content">{optimizationScore}%</p>
               <p className="mt-2 text-xs text-content-secondary">
                 Improve your setup by connecting email, adding skills, and increasing personalization.
@@ -273,7 +282,7 @@ export const SettingsPage = () => {
 
           <div className="space-y-4">
             <div className="glass-card-sm border border-accent/15 p-4">
-              <p className="text-xs uppercase tracking-[0.1em] text-content-tertiary">Active Section</p>
+              <p className="text-xs uppercase tracking-[0.1em]  text-content-tertiaryy">Active Section</p>
               <h3 className="mt-1 text-lg font-semibold text-content">{activeTabConfig?.label}</h3>
               <p className="text-sm text-content-secondary">{activeTabConfig?.description}</p>
             </div>
@@ -305,7 +314,7 @@ export const SettingsPage = () => {
             </div>
 
             {saveMessage ? (
-              <div className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-2 text-sm text-success">
+              <div className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-2 text-sm text-white">
                 {saveMessage}
               </div>
             ) : null}
@@ -317,7 +326,7 @@ export const SettingsPage = () => {
             ) : null}
 
             <div>
-              <p className="text-xs text-content-tertiary">
+              <p className="text-xs  text-content-tertiaryy">
                 Signed in as {user?.email || "unknown user"}. Configuration is persisted to Firebase when signed in, with local fallback.
               </p>
             </div>

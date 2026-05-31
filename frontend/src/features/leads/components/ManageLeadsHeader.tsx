@@ -68,7 +68,7 @@ export const ManageLeadsHeader = ({
 
       <div className="grid gap-3 md:grid-cols-3">
         <div className="glass-card-sm p-3">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-content-tertiary">
+          <p className="text-[11px] uppercase tracking-[0.18em]  text-content-tertiaryy">
             Hot leads
           </p>
           <p className="text-2xl font-semibold text-danger">
@@ -76,7 +76,7 @@ export const ManageLeadsHeader = ({
           </p>
         </div>
         <div className="glass-card-sm p-3">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-content-tertiary">
+          <p className="text-[11px] uppercase tracking-[0.18em]  text-content-tertiaryy">
             Going cold
           </p>
           <p className="text-2xl font-semibold text-warning">
@@ -84,7 +84,7 @@ export const ManageLeadsHeader = ({
           </p>
         </div>
         <div className="glass-card-sm p-3">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-content-tertiary">
+          <p className="text-[11px] uppercase tracking-[0.18em]  text-content-tertiaryy">
             Likely to close
           </p>
           <p className="text-2xl font-semibold text-success">

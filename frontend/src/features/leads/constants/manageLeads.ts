@@ -1,10 +1,12 @@
+import React from "react";
+import { Magnet, Search, MessageSquare, CheckCircle2 } from "lucide-react";
 import type { ManageLeadStage, ManageLeadView } from "../types/manageLead";
 
-export const BOARD_STAGES: { id: ManageLeadStage; label: string; icon: string }[] = [
-  { id: "NEW", label: "New", icon: "🧲" },
-  { id: "QUALIFIED", label: "Qualified", icon: "🔍" },
-  { id: "CONTACTED", label: "Contacted", icon: "💬" },
-  { id: "RESPONDED", label: "Responded", icon: "🟢" },
+export const BOARD_STAGES: { id: ManageLeadStage; label: string; icon: React.ElementType }[] = [
+  { id: "NEW", label: "New", icon: Magnet },
+  { id: "QUALIFIED", label: "Qualified", icon: Search },
+  { id: "CONTACTED", label: "Contacted", icon: MessageSquare },
+  { id: "RESPONDED", label: "Responded", icon: CheckCircle2 },
 ];
 
 export const VIEW_OPTIONS: { value: ManageLeadView; label: string }[] = [

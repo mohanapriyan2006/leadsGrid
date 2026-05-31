@@ -12,10 +12,10 @@ export const LeadsDiscoverySearchBar = ({ value, isFetching, isBackendOnline, on
   return (
     <div className="glass-card-sm p-3">
       <div className="mb-2 flex items-center justify-between">
-        <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-content-tertiary">
+        <label className="text-[11px] font-semibold uppercase tracking-[0.12em]  text-content-tertiaryy">
           Search Intent Signals
         </label>
-        <span className={`${isBackendOnline ? "badge-success" : "badge-danger"} !px-2 !py-0.5 text-[10px] uppercase tracking-[0.08em]`}>
+        <span className={`${isBackendOnline ? "badge-success" : "badge-danger"} !px-2 !py-0.5 text-[10px] uppercase  text-white  tracking-[0.08em]`}>
           {isBackendOnline ? "API online" : "API offline"}
         </span>
       </div>
@@ -29,7 +29,7 @@ export const LeadsDiscoverySearchBar = ({ value, isFetching, isBackendOnline, on
             placeholder="Try: need crm automation for startup"
           />
           <svg
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-content-tertiary"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2  text-content-tertiaryy"
             width="15"
             height="15"
             viewBox="0 0 24 24"

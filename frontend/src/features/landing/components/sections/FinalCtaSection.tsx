@@ -25,7 +25,7 @@ export const FinalCtaSection = () => {
           Stop Searching.{" "}
           <GradientText>Start Closing.</GradientText>
         </h2>
-        <p className="mx-auto mb-10 max-w-xl text-lg text-white/50">
+        <p className="mx-auto mb-10 max-w-xl text-lg text-content-secondary">
           Join thousands of professionals who let AI find their next clients
           automatically.
         </p>
@@ -42,7 +42,7 @@ export const FinalCtaSection = () => {
           </GlowButton>
         </motion.div>
 
-        <p className="mt-6 text-sm text-white/30">
+        <p className="mt-6 text-sm  text-content-tertiaryy">
           Free forever. No credit card required.
         </p>
       </motion.div>

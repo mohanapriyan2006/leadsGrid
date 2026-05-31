@@ -17,7 +17,7 @@ const FOOTER_LINKS = [
 
 export const Footer = () => {
   return (
-    <footer className="border-t border-white/5 bg-surface">
+    <footer className="border-t border-content/5 bg-surface">
       <div className="mx-auto max-w-7xl px-6 py-16">
         <div className="grid gap-12 md:grid-cols-4">
           {/* Brand */}
@@ -26,7 +26,7 @@ export const Footer = () => {
               <img src="/logo.png" alt="LeadsGrid" className="h-8 w-8" />
               <GradientText className="text-xl font-bold">LeadsGrid</GradientText>
             </div>
-            <p className="text-sm leading-relaxed text-white/40">
+            <p className="text-sm leading-relaxed  text-content-tertiaryy">
               AI-powered lead discovery platform that finds high-intent clients
               automatically.
             </p>
@@ -35,11 +35,11 @@ export const Footer = () => {
           {/* Link columns */}
           {FOOTER_LINKS.map((column) => (
             <div key={column.title}>
-              <h4 className="mb-4 text-sm font-semibold text-white/70">{column.title}</h4>
+              <h4 className="mb-4 text-sm font-semibold text-content-secondary">{column.title}</h4>
               <ul className="space-y-2">
                 {column.links.map((link) => (
                   <li key={link}>
-                    <span className="cursor-pointer text-sm text-white/30 transition-colors hover:text-white/60">
+                    <span className="cursor-pointer text-sm  text-content-tertiaryy transition-colors hover:text-content-secondary">
                       {link}
                     </span>
                   </li>
@@ -50,8 +50,8 @@ export const Footer = () => {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 border-t border-white/5 pt-8 text-center">
-          <p className="text-xs text-white/30">
+        <div className="mt-12 border-t border-content/5 pt-8 text-center">
+          <p className="text-xs  text-content-tertiaryy">
             &copy; {new Date().getFullYear()} LeadsGrid. All rights reserved.
           </p>
         </div>

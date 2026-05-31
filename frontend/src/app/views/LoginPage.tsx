@@ -149,13 +149,13 @@ export const LoginPage = () => {
         </p>
 
         {!isFirebaseConfigured && (
-          <div className="mb-4 rounded-glass-sm border border-warning/30 bg-warning-soft px-4 py-3 text-sm text-warning">
+          <div className="mb-4 rounded-glass-sm border border-warning/30 bg-warning-soft px-4 py-3 text-sm ">
             Firebase is not configured. Update VITE_FIREBASE_* in frontend/.env with your real Firebase web app config.
           </div>
         )}
 
         {error && (
-          <div className="mb-4 rounded-glass-sm border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
+          <div className="mb-4 rounded-glass-sm border border-danger/30 bg-danger-soft px-4 py-3 text-sm ">
             {error}
           </div>
         )}
@@ -186,7 +186,7 @@ export const LoginPage = () => {
               required
             />
             {isRegistering && (
-              <p className="mt-1 text-xs text-content-tertiary">Use at least 6 characters.</p>
+              <p className="mt-1 text-xs  text-content-tertiaryy">Use at least 6 characters.</p>
             )}
           </div>
           <button
@@ -200,7 +200,7 @@ export const LoginPage = () => {
 
         <div className="my-6 flex items-center gap-4">
           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
-          <span className="text-xs font-medium uppercase tracking-wider text-content-tertiary">Or continue with</span>
+          <span className="text-xs font-medium uppercase tracking-wider  text-content-tertiaryy">Or continue with</span>
           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
         </div>
 

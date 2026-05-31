@@ -12,7 +12,7 @@ export const EmailTemplatePreviewPanel = ({
   return (
     <section className="glass-card p-4">
       <div className="mb-3">
-        <p className="text-xs tracking-[0.1em] text-content-tertiary">TEMPLATE PREVIEW</p>
+        <p className="text-xs tracking-[0.1em]  text-content-tertiaryy">TEMPLATE PREVIEW</p>
         <h3 className="mt-1 text-base font-semibold text-content">{templateName}</h3>
         <p className="mt-1 text-xs text-content-secondary">Subject: {previewSubject || "No subject"}</p>
       </div>

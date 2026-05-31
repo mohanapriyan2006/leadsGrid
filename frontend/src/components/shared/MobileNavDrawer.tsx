@@ -14,7 +14,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useAuth } from "../../features/auth/AuthContext";
-import logo from "../../assets/logo1.png";
+import logo from "../../assets/logo.png";
 
 import { navigationItems } from "../../constants/navigation";
 import { useFirebaseOnline } from "../../hooks/useFirebaseOnline";
@@ -35,7 +35,7 @@ const renderIcon = (label: string, isActive: boolean) => {
           }`}
         >
           <Brain
-            className={`w-4 h-4 ${isActive ? "text-white" : "text-purple-400"}`}
+            className={`w-4 h-4 ${isActive ? "text-content" : "text-purple-400"}`}
           />
           {/* Sparkle effects */}
           <Sparkles
@@ -62,7 +62,7 @@ const renderIcon = (label: string, isActive: boolean) => {
           }`}
         >
           <Search
-            className={`w-4 h-4 ${isActive ? "text-white" : "text-cyan-400"}`}
+            className={`w-4 h-4 ${isActive ? "text-content" : "text-cyan-400"}`}
           />
           {isActive && (
             <Sparkles className="absolute -top-1 -right-1 w-3 h-3 text-yellow-400 animate-pulse" />
@@ -72,7 +72,7 @@ const renderIcon = (label: string, isActive: boolean) => {
     case "Dashboard":
       return (
         <div
-          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}
         >
           <LayoutDashboard className="w-4 h-4" />
         </div>
@@ -80,7 +80,7 @@ const renderIcon = (label: string, isActive: boolean) => {
     case "Manage Leads":
       return (
         <div
-          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}
         >
           <Users className="w-4 h-4" />
         </div>
@@ -88,7 +88,7 @@ const renderIcon = (label: string, isActive: boolean) => {
     case "Messages":
       return (
         <div
-          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}
         >
           <Inbox className="w-4 h-4" />
         </div>
@@ -96,7 +96,7 @@ const renderIcon = (label: string, isActive: boolean) => {
     case "CRM":
       return (
         <div
-          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}
         >
           <Zap className="w-4 h-4" />
         </div>
@@ -104,7 +104,7 @@ const renderIcon = (label: string, isActive: boolean) => {
     case "Settings":
       return (
         <div
-          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}
         >
           <Settings className="w-4 h-4" />
         </div>
@@ -112,7 +112,7 @@ const renderIcon = (label: string, isActive: boolean) => {
     case "Recycle Bin":
       return (
         <div
-          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}
         >
           <Trash2 className="w-4 h-4" />
         </div>
@@ -120,7 +120,7 @@ const renderIcon = (label: string, isActive: boolean) => {
     default:
       return (
         <div
-          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}
         >
           <LayoutDashboard className="w-4 h-4" />
         </div>
@@ -206,7 +206,7 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
             {/* Close Button */}
             <button
               type="button"
-              className="absolute top-4 right-4 p-2 rounded-xl bg-surface-tertiary/50 border border-accent/10 text-content-tertiary hover:text-content hover:border-accent/30 hover:scale-110 transition-all duration-200"
+              className="absolute top-4 right-4 p-2 rounded-xl bg-surface-tertiary/50 border border-accent/10  text-content-tertiaryy hover:text-content hover:border-accent/30 hover:scale-110 transition-all duration-200"
               onClick={handleClose}
             >
               <X className="w-4 h-4" />
@@ -217,14 +217,14 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
               className="flex items-center gap-3 mb-4 cursor-pointer"
               onClick={() => navigate(homePath)}
             >
-              <div className="relative flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-700 to-purple-900 shadow-glow animate-float">
-                <img src={logo} alt="leadsGrid" className="h-6 w-6" />
+              <div className="relative flex items-center justify-center w-10 h-10 rounded-2xl ">
+                <img src={logo} alt="leadsGrid" className="h-6 w-6 logo-image" />
               </div>
               <div>
-                <span className="text-xl uppercase tracking-[0.10em] text-content-tertiary">
+                <span className="text-xl uppercase tracking-[0.10em]  text-content-tertiaryy">
                   LeadsGrid
                 </span>
-                <p className="text-[10px] text-content-tertiary uppercase tracking-widest">
+                <p className="text-[10px]  text-content-tertiaryy uppercase tracking-widest">
                   Lead Intelligence
                 </p>
               </div>
@@ -241,7 +241,7 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent/40 to-accent-secondary/40 text-white">
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent/40 to-accent-secondary/40 text-content-inverse">
                       <User className="w-6 h-6" />
                     </div>
                   )}
@@ -260,7 +260,7 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
                     Offline
                   </p>
                 )}
-                <p className="text-xs text-content-tertiary truncate">
+                <p className="text-xs  text-content-tertiaryy truncate">
                   {user?.email || "Sign in to continue"}
                 </p>
               </div>
@@ -270,7 +270,7 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
 
         {/* Navigation with staggered animations */}
         <nav className="p-4 space-y-1">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-content-tertiary mb-3 px-2">
+          <p className="text-[10px] uppercase tracking-[0.2em]  text-content-tertiaryy mb-3 px-2">
             Navigation
           </p>
           {navigationItems.map((item, index) => {
@@ -286,10 +286,10 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
                 className={`group flex items-center gap-3 rounded-xl border px-3 py-3 text-sm transition-all duration-300 hover:scale-[1.02] relative overflow-hidden ${
                   isActive
                     ? isAI
-                      ? "border-purple-500/50 bg-gradient-to-r from-purple-500/20 to-violet-600/10 text-white shadow-[0_0_25px_rgba(139,92,246,0.3)] translate-x-1"
+                      ? "border-purple-500/50 bg-gradient-to-r from-purple-500/20 to-violet-600/10 text-content shadow-[0_0_25px_rgba(139,92,246,0.3)] translate-x-1"
                       : isLeadsDiscovery
-                        ? "border-cyan-500/50 bg-gradient-to-r from-cyan-500/20 to-blue-600/10 text-white shadow-[0_0_20px_rgba(6,182,212,0.25)] translate-x-1"
-                        : "border-accent/40 bg-gradient-to-r from-accent-soft to-accent-soft/50 text-content shadow-glow translate-x-1"
+                        ? "border-cyan-500/50 bg-gradient-to-r from-cyan-500/20 to-blue-600/10 text-content shadow-[0_0_20px_rgba(6,182,212,0.25)] translate-x-1"
+                        : "border-accent/40 bg-gradient-to-r from-accent-soft/40 to-accent-soft/10 text-content shadow-glow translate-x-1"
                     : "border-transparent text-content-secondary hover:border-accent/20 hover:bg-accent-soft/30 hover:text-content"
                 } ${activeIndex !== null ? "translate-x-0 opacity-100" : "-translate-x-4 opacity-0"}`}
                 style={{

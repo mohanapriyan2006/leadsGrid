@@ -126,17 +126,17 @@ export const AIMessageFeed = ({
                 <div className="space-y-2 px-3.5 py-3">
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-content-tertiary">Score</span>
+                      <span className="text-[10px] font-semibold uppercase tracking-wider  text-content-tertiaryy">Score</span>
                       <span className="text-sm font-bold text-accent">{message.card.score}%</span>
                     </div>
                     <div className="h-3 w-px bg-accent/10" />
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-content-tertiary">Budget</span>
+                      <span className="text-[10px] font-semibold uppercase tracking-wider  text-content-tertiaryy">Budget</span>
                       <span className="text-sm font-medium text-content">{message.card.budget}</span>
                     </div>
                   </div>
                   <div className="text-xs text-content-secondary">
-                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-content-tertiary">Pain Points</p>
+                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider  text-content-tertiaryy">Pain Points</p>
                     {message.card.pain.map((item) => (
                       <p key={item} className="flex items-start gap-1.5 py-0.5">
                         <span className="mt-0.5 h-1 w-1 flex-shrink-0 rounded-full bg-warning/50" />

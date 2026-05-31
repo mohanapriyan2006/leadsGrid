@@ -9,7 +9,7 @@ import {
   closestCenter,
   DragOverlay,
 } from "@dnd-kit/core";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { CSS } from "@dnd-kit/utilities";
 
 import { ConfirmDialog } from "../../features/leads/components/ConfirmDialog";
@@ -67,6 +67,7 @@ type PendingLeadUpdate = {
 
 export const ManageLeadsPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { settings } = useSettingsState(user?.email);
   const {
@@ -153,6 +154,16 @@ export const ManageLeadsPage = () => {
       setSelectedManageLeadId(manageLeads[0].id);
     }
   }, [manageLeads, selectedManageLeadId, setSelectedManageLeadId]);
+
+  // Open lead from global search
+  useEffect(() => {
+    const leadId = location.state?.selectedManageLeadId;
+    if (leadId && typeof leadId === "string") {
+      setSelectedManageLeadId(leadId);
+      setDetailsOpen(true);
+      navigate(".", { replace: true, state: {} });
+    }
+  }, []);
 
   useEffect(() => {
     setHoveredId(null);
@@ -483,7 +494,7 @@ export const ManageLeadsPage = () => {
         />
 
         {feedback ? (
-          <div className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-2 text-sm text-success">
+          <div className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-2 text-sm ">
             {feedback}
           </div>
         ) : null}
@@ -545,7 +556,7 @@ export const ManageLeadsPage = () => {
                 >
                   <p className="text-sm font-semibold text-content">{activeDragLead.name}</p>
                   <p className="text-[11px] text-content-secondary">{activeDragLead.company}</p>
-                  <div className="mt-3 flex items-center gap-2 text-[11px] text-content-tertiary">
+                  <div className="mt-3 flex items-center gap-2 text-[11px]  text-content-tertiaryy">
                     <span>Score {activeDragLead.score}</span>
                   </div>
                 </div>
@@ -564,7 +575,7 @@ export const ManageLeadsPage = () => {
                   setConfirmBulkDeleteOpen(true);
                 }}
                 disabled={selectedLeadIds.length === 0}
-                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2.5 py-1 text-[11px] text-danger disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2.5 py-1 text-[11px] text-danger  text-white  disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Delete Selected
               </button>
@@ -572,7 +583,7 @@ export const ManageLeadsPage = () => {
                 type="button"
                 onClick={handleExportSelectedLeadsCsv}
                 disabled={selectedLeadIds.length === 0}
-                className="glass-btn px-2.5 py-1 text-[11px] disabled:cursor-not-allowed disabled:opacity-50"
+                className="glass-btn px-2.5 py-1 text-[11px] disabled:cursor-not-allowed  text-white  disabled:opacity-50"
               >
                 Export Selected CSV
               </button>

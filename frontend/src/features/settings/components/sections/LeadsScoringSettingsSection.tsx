@@ -89,8 +89,8 @@ export const LeadsScoringSettingsSection = ({ leadsScoring, onChange }: LeadsSco
               onClick={() => onChange({ ...leadsScoring, refreshInterval: interval })}
               className={`rounded-glass-sm border px-3 py-2 text-sm transition-all duration-200 ${
                 leadsScoring.refreshInterval === interval
-                  ? "border-accent/50 bg-accent-soft text-accent shadow-glow"
-                  : "border-accent/10 bg-surface-secondary/80 text-content-tertiary hover:border-accent/30 hover:text-content-secondary"
+                  ? "border-accent/50 bg-accent-soft  shadow-glow"
+                  : "border-accent/10 bg-surface-secondary/80  text-content-tertiaryy hover:border-accent/30 hover:text-content-secondary"
               }`}
             >
               {interval}m

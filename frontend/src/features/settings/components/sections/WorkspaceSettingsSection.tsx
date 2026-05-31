@@ -45,7 +45,7 @@ export const WorkspaceSettingsSection = ({
       </div>
 
       <div className="glass-card-sm overflow-hidden">
-        <div className="grid grid-cols-[1.2fr_2fr] border-b border-accent/10 bg-gradient-to-r from-accent/5 to-transparent px-3 py-2 text-[10px] uppercase tracking-[0.16em] text-content-tertiary">
+        <div className="grid grid-cols-[1.2fr_2fr] border-b border-accent/10 bg-gradient-to-r from-accent/5 to-transparent px-3 py-2 text-[10px] uppercase tracking-[0.16em]  text-content-tertiaryy">
           <span>System Stage</span>
           <span>Custom Label (User View)</span>
         </div>

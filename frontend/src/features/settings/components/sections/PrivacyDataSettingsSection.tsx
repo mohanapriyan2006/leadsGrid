@@ -64,7 +64,7 @@ export const PrivacyDataSettingsSection = ({
         </button>
         <button
           type="button"
-          className="rounded-glass-sm border border-danger/30 bg-danger-soft py-2 text-xs font-semibold text-danger"
+          className="rounded-glass-sm border border-danger/30 bg-danger-soft py-2 text-xs font-semibold"
           onClick={onOpenDeleteFlow}
         >
           Delete Account

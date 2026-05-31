@@ -36,7 +36,7 @@ export const FiltersBar = ({
   return (
     <section className="glass-card-sm flex flex-col gap-3 p-3 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex items-center gap-2">
-        <span className="text-xs uppercase tracking-[0.16em] text-content-tertiary">Time</span>
+        <span className="text-xs uppercase tracking-[0.16em]  text-content-tertiaryy">Time</span>
         <div className="inline-flex rounded-full border border-accent/15 bg-surface-secondary/70 p-1">
           {RANGE_OPTIONS.map((option) => (
             <button
@@ -55,7 +55,7 @@ export const FiltersBar = ({
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="text-xs uppercase tracking-[0.16em] text-content-tertiary">Source</span>
+        <span className="text-xs uppercase tracking-[0.16em]  text-content-tertiaryy">Source</span>
         <select
           value={source}
           onChange={(event) => onSourceChange(event.target.value as LeadSourceFilter)}
@@ -70,7 +70,7 @@ export const FiltersBar = ({
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="text-xs uppercase tracking-[0.16em] text-content-tertiary">Stage</span>
+        <span className="text-xs uppercase tracking-[0.16em]  text-content-tertiaryy">Stage</span>
         <select
           value={stage}
           onChange={(event) => onStageChange(event.target.value as StageFilter)}

@@ -23,7 +23,7 @@ export const RecycleBinTable = ({
 
   return (
     <div className="glass-card overflow-hidden">
-      <div className="grid grid-cols-[44px_1.5fr_1.5fr_1fr_220px] border-b border-accent/10 bg-gradient-to-r from-accent/5 via-transparent to-transparent px-4 py-2 text-[10px] uppercase tracking-[0.18em] text-content-tertiary">
+      <div className="grid grid-cols-[44px_1.5fr_1.5fr_1fr_220px] border-b border-accent/10 bg-gradient-to-r from-accent/5 via-transparent to-transparent px-4 py-2 text-[10px] uppercase tracking-[0.18em]  text-content-tertiaryy">
         <span className="flex items-center">
           <input
             type="checkbox"
@@ -70,14 +70,14 @@ export const RecycleBinTable = ({
               <button
                 type="button"
                 onClick={() => onRestore(row.id)}
-                className="badge-success cursor-pointer transition hover:shadow-[0_0_12px_rgba(16,185,129,0.3)]"
+                className="badge-success  text-white  cursor-pointer transition hover:shadow-[0_0_12px_rgba(16,185,129,0.3)]"
               >
                 Restore
               </button>
               <button
                 type="button"
                 onClick={() => onDeleteForever(row.id)}
-                className="badge-danger cursor-pointer transition hover:shadow-[0_0_12px_rgba(239,68,68,0.3)]"
+                className="badge-danger  text-white  cursor-pointer transition hover:shadow-[0_0_12px_rgba(239,68,68,0.3)]"
               >
                 Delete forever
               </button>

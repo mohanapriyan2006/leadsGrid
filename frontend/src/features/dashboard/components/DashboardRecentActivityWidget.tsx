@@ -30,7 +30,7 @@ export const DashboardRecentActivityWidget = ({
                 <p className="text-sm font-semibold text-content">{entry.title}</p>
                 <p className="text-xs text-content-secondary">{entry.subtitle}</p>
               </div>
-              <span className="whitespace-nowrap text-[11px] text-content-tertiary">{entry.timestamp}</span>
+              <span className="whitespace-nowrap text-[11px]  text-content-tertiaryy">{entry.timestamp}</span>
             </article>
           ))
         )}

@@ -31,7 +31,7 @@ export const CRMTableView = ({
 
   return (
     <div className="glass-card overflow-hidden">
-      <div className="hidden grid-cols-[44px_2fr_1.5fr_1fr_90px_1fr_220px] border-b border-accent/10 bg-gradient-to-r from-accent/5 via-transparent to-transparent px-4 py-3 text-[10px] uppercase tracking-[0.18em] text-content-tertiary md:grid">
+      <div className="hidden grid-cols-[44px_2fr_1.5fr_1fr_90px_1fr_220px] border-b border-accent/10 bg-gradient-to-r from-accent/5 via-transparent to-transparent px-4 py-3 text-[10px] uppercase tracking-[0.18em]  text-content-tertiaryy md:grid">
         <label className="flex items-center justify-center">
           <input
             type="checkbox"
@@ -84,7 +84,7 @@ export const CRMTableView = ({
               </select>
             </div>
 
-            <p className="text-xs text-content-tertiary">Last action: {deal.lastAction}</p>
+            <p className="text-xs  text-content-tertiaryy">Last action: {deal.lastAction}</p>
 
             <div className="flex flex-wrap gap-1">
               <button
@@ -103,7 +103,7 @@ export const CRMTableView = ({
               </button>
               <button
                 type="button"
-                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2 py-1 text-[11px] text-danger"
+                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2 py-1 text-[11px] "
                 onClick={() => onDeleteRequest(deal.id)}
               >
                 Delete
@@ -166,7 +166,7 @@ export const CRMTableView = ({
               </button>
               <button
                 type="button"
-                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2 py-1 text-[11px] text-danger"
+                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2 py-1 text-[11px] "
                 onClick={() => onDeleteRequest(deal.id)}
               >
                 Delete

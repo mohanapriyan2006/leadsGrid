@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import { Mail, Smartphone, Tag, Star, MapPin, Globe, Map, Pencil, Zap, Phone, ArrowRight, Check } from "lucide-react";
 
 import type { ManageLead, ManageLeadStage } from "../types/manageLead";
 
@@ -111,7 +112,7 @@ export const LeadModal = ({
                 <p className="text-sm text-content-secondary">{lead.company}</p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-content-tertiary">⋮⋮ Drag</span>
+                <span className="text-[10px]  text-content-tertiaryy">⋮⋮ Drag</span>
                 <button
                   type="button"
                   onClick={onClose}
@@ -123,22 +124,22 @@ export const LeadModal = ({
             </div>
 
             <div className="mt-3 grid gap-2 text-xs text-content-secondary md:grid-cols-2">
-              <p>📧 {lead.email || "N/A"}</p>
-              <p>📱 {lead.phone || "N/A"}</p>
-              {lead.category && <p>🏷️ Category: {lead.category}</p>}
-              {lead.rating && <p>⭐ Rating: {lead.rating} ({lead.review_count ?? 0} reviews)</p>}
-              {lead.address && <p className="md:col-span-2">📍 {lead.address}</p>}
+              <p className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" /> {lead.email || "N/A"}</p>
+              <p className="flex items-center gap-1.5"><Smartphone className="w-3.5 h-3.5" /> {lead.phone || "N/A"}</p>
+              {lead.category && <p className="flex items-center gap-1.5"><Tag className="w-3.5 h-3.5" /> Category: {lead.category}</p>}
+              {lead.rating && <p className="flex items-center gap-1.5"><Star className="w-3.5 h-3.5" /> Rating: {lead.rating} ({lead.review_count ?? 0} reviews)</p>}
+              {lead.address && <p className="md:col-span-2 flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {lead.address}</p>}
               {lead.website_url && (
-                <p>
-                  🌐{" "}
+                <p className="flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5" />
                   <a href={lead.website_url} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
                     Website
                   </a>
                 </p>
               )}
               {lead.google_maps_url && (
-                <p>
-                  🗺️{" "}
+                <p className="flex items-center gap-1.5">
+                  <Map className="w-3.5 h-3.5" />
                   <a href={lead.google_maps_url} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
                     Google Maps
                   </a>
@@ -146,32 +147,32 @@ export const LeadModal = ({
               )}
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-              <span className="badge-info">Score {lead.score}</span>
-              <span className="badge-success">Budget {formatMoney(lead.budget_estimate)}</span>
-              <span className="badge-accent">Stage {lead.stage}</span>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs ">
+              <span className="badge-info  text-white ">Score {lead.score}</span>
+              <span className="badge-success  text-white ">Budget {formatMoney(lead.budget_estimate)}</span>
+              <span className="badge-accent  text-white ">Stage {lead.stage}</span>
             </div>
 
             <div className="glass-card-sm mt-3 p-3 text-xs">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="badge-warning">
+                <span className="badge-warning  text-white ">
                   Pain: {lead.ai_analysis.pain_points[0] ?? "Unknown"}
                 </span>
                 {lead.ai_analysis.decision_maker ? (
-                  <span className="badge-info">Decision: {lead.ai_analysis.decision_maker}</span>
+                  <span className="badge-info  text-white ">Decision: {lead.ai_analysis.decision_maker}</span>
                 ) : null}
                 {lead.ai_analysis.qualification_status ? (
-                  <span className="badge-success">{lead.ai_analysis.qualification_status}</span>
+                  <span className="badge-success  text-white ">{lead.ai_analysis.qualification_status}</span>
                 ) : null}
                 {(lead.ai_analysis.buying_signals ?? []).slice(0, 3).map((signal) => (
-                  <span key={signal} className="badge-warning">
+                  <span key={signal} className="badge-warning  text-white ">
                     {signal}
                   </span>
                 ))}
-                <span className="badge-accent">
+                <span className="badge-accent  text-white ">
                   Fix: {lead.ai_analysis.suggested_pitch || "No suggestion"}
                 </span>
-                <span className="badge-success">
+                <span className="badge-success  text-white ">
                   Deal: {lead.ai_analysis.deal_probability}%
                 </span>
               </div>
@@ -180,14 +181,14 @@ export const LeadModal = ({
             {/* Notes Section */}
             <div className="glass-card-sm mt-3 p-3">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-content-tertiary uppercase tracking-[0.08em]">Notes</span>
+                <span className="text-xs font-semibold  text-content-tertiaryy uppercase tracking-[0.08em]">Notes</span>
                 {!isEditingNotes ? (
                   <button
                     type="button"
                     onClick={() => setIsEditingNotes(true)}
                     className="text-[10px] text-accent hover:text-accent-secondary"
                   >
-                    ✏️ Edit
+                    <Pencil className="w-3.5 h-3.5 inline mr-1" /> Edit
                   </button>
                 ) : (
                   <div className="flex gap-1">
@@ -196,7 +197,7 @@ export const LeadModal = ({
                       onClick={handleSaveNotes}
                       className="text-[10px] text-success hover:text-success"
                     >
-                      ✓ Save
+                      <Check className="w-3.5 h-3.5 inline mr-1" /> Save
                     </button>
                     <button
                       type="button"
@@ -206,7 +207,7 @@ export const LeadModal = ({
                       }}
                       className="text-[10px] text-danger hover:text-danger"
                     >
-                      ✕ Cancel
+                      <span className="inline-flex items-center gap-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancel</span>
                     </button>
                   </div>
                 )}
@@ -231,14 +232,14 @@ export const LeadModal = ({
                 onClick={onSendMessage}
                 className="glass-btn px-3 py-1.5 text-xs"
               >
-                ⚡ Send Message
+                <Zap className="w-3.5 h-3.5 inline mr-1" /> Send Message
               </button>
               <button
                 type="button"
                 onClick={onScheduleCall}
                 className="glass-btn px-3 py-1.5 text-xs"
               >
-                📞 Call
+                <Phone className="w-3.5 h-3.5 inline mr-1" /> Call
               </button>
               <button
                 type="button"
@@ -247,10 +248,10 @@ export const LeadModal = ({
                 className={`rounded-glass-sm px-3 py-1.5 text-xs font-semibold transition ${
                   nextStage
                     ? "accent-btn"
-                    : "cursor-not-allowed border border-accent/10 bg-surface-secondary/80 text-content-tertiary"
+                    : "cursor-not-allowed border border-accent/10 bg-surface-secondary/80  text-content-tertiaryy"
                 }`}
               >
-                ➡ Move Next{nextStage ? ` (${nextStage})` : " (Final Stage)"}
+                <ArrowRight className="w-3.5 h-3.5 inline mr-1" /> Move Next{nextStage ? ` (${nextStage})` : " (Final Stage)"}
               </button>
               {isLastStage && onMoveToContacted ? (
                 <button
@@ -258,7 +259,7 @@ export const LeadModal = ({
                   onClick={onMoveToContacted}
                   className="rounded-glass-sm bg-success px-3 py-1.5 text-xs font-semibold text-content-inverse shadow-[0_0_16px_rgba(16,185,129,0.3)] transition hover:shadow-[0_0_24px_rgba(16,185,129,0.5)]"
                 >
-                  ✓ Move to Negotiation
+                  <Check className="w-3.5 h-3.5 inline mr-1" /> Move to Negotiation
                 </button>
               ) : null}
               {onEdit ? (
@@ -273,7 +274,7 @@ export const LeadModal = ({
               <button
                 type="button"
                 onClick={onDelete}
-                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-3 py-1.5 text-xs text-danger transition hover:shadow-[0_0_16px_rgba(239,68,68,0.3)]"
+                className="rounded-glass-sm  text-white  border border-danger/30 bg-danger-soft px-3 py-1.5 text-xs text-danger transition hover:shadow-[0_0_16px_rgba(239,68,68,0.3)]"
               >
                 Delete
               </button>

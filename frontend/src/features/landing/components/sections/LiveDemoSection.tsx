@@ -21,7 +21,7 @@ export const LiveDemoSection = () => {
           Real-time Lead Discovery.{" "}
           <GradientText>No Manual Searching.</GradientText>
         </h2>
-        <p className="mx-auto max-w-2xl text-lg text-white/50">
+        <p className="mx-auto max-w-2xl text-lg text-content-secondary">
           Watch AI discover high-intent leads across the internet — in real time.
         </p>
       </div>
@@ -33,11 +33,11 @@ export const LiveDemoSection = () => {
             key={totalDiscovered}
             initial={{ scale: 1.3, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="text-3xl font-bold text-white"
+            className="text-3xl font-bold text-content"
           >
             {(1248 + totalDiscovered).toLocaleString()}
           </motion.span>
-          <p className="text-sm text-white/40">leads discovered today</p>
+          <p className="text-sm  text-content-tertiaryy">leads discovered today</p>
         </div>
 
         {/* Streaming lead cards */}

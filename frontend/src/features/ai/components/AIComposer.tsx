@@ -1,4 +1,5 @@
 import type { KeyboardEvent } from "react";
+import { Users, CornerDownLeft } from "lucide-react";
 
 import type { ToneType } from "../../common/types/ui";
 import type { AIMode } from "../types/agent";
@@ -46,7 +47,7 @@ export const AIComposer = ({
     <div className="sticky bottom-0 z-10 overflow-hidden rounded-2xl border border-accent/[0.1] bg-surface-secondary/60">
       {attachedLeads.length > 0 ? (
         <div className="flex flex-wrap items-center gap-2 border-b border-accent/[0.08] bg-surface/35 px-3 py-2">
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-content-tertiary">
+          <span className="text-[10px] font-semibold uppercase tracking-widest  text-content-tertiaryy">
             Attached Leads
           </span>
           {attachedLeads.map((lead) => (
@@ -82,7 +83,7 @@ export const AIComposer = ({
           className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-accent/[0.1] bg-surface/50 text-sm text-content-secondary transition-all hover:bg-surface-secondary hover:text-content"
           aria-label="Attach leads"
         >
-          👥
+          <Users className="w-4 h-4" />
         </button>
 
         <textarea
@@ -111,7 +112,7 @@ export const AIComposer = ({
           aria-label="Send message"
         >
           {mode === "agent" ? "Run" : "Send"}
-          <span className="text-[11px] opacity-70">↵</span>
+          <CornerDownLeft className="w-3.5 h-3.5 opacity-70" />
         </button>
       </div>
 
@@ -132,12 +133,12 @@ export const AIComposer = ({
             {attachedLeads.length} leads attached
           </span>
         ) : (
-          <span className="text-[11px] text-content-tertiary/50">
+          <span className="text-[11px]  text-content-tertiaryy/50">
             Attach leads to focus AI context
           </span>
         )}
 
-        <label className="ml-auto flex items-center gap-2 text-[11px] text-content-tertiary">
+        <label className="ml-auto flex items-center gap-2 text-[11px]  text-content-tertiaryy">
           Tone
           <select
             value={tone}

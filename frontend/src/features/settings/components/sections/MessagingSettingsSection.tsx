@@ -29,8 +29,8 @@ export const MessagingSettingsSection = ({ messaging, userEmail, onChange }: Mes
               onClick={() => onChange({ ...messaging, defaultTone: tone })}
               className={`rounded-glass-sm border px-3 py-2 text-sm capitalize transition-all duration-200 ${
                 messaging.defaultTone === tone
-                  ? "border-accent/50 bg-accent-soft text-accent shadow-glow"
-                  : "border-accent/10 bg-surface-secondary/80 text-content-tertiary hover:border-accent/30 hover:text-content-secondary"
+                  ? "border-accent/50 bg-accent-soft shadow-glow"
+                  : "border-accent/10 bg-surface-secondary/80  text-content-tertiaryy hover:border-accent/30 hover:text-content-secondary"
               }`}
             >
               {tone}

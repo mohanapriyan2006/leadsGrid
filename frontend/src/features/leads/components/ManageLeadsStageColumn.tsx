@@ -7,7 +7,7 @@ import { ManageLeadsBoardCard } from "./ManageLeadsBoardCard";
 import type { ManageLead, ManageLeadStage } from "../types/manageLead";
 
 type ManageLeadsStageColumnProps = {
-  stage: { id: ManageLeadStage; label: string; icon: string };
+  stage: { id: ManageLeadStage; label: string; icon: React.ElementType };
   leads: ManageLead[];
   onHoverStart: (leadId: string, event: React.MouseEvent) => void;
   onHoverEnd: (leadId: string) => void;
@@ -34,10 +34,10 @@ export const ManageLeadsStageColumn = ({
     >
       <div className="mb-3 rounded-glass-sm border border-accent/15 bg-gradient-to-r from-accent/10 to-accent-secondary/5 px-3 py-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-content">
-            {stage.icon} {stage.label}
+          <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-content flex items-center gap-1.5">
+            <stage.icon className="w-3.5 h-3.5" /> {stage.label}
           </h3>
-          <span className="badge-accent px-2 py-0.5 text-[11px]">{leads.length}</span>
+          <span className="badge-accent px-2 py-0.5 text-[11px]  text-white ">{leads.length}</span>
         </div>
       </div>
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import { AnimatePresence, motion } from "framer-motion";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
@@ -49,6 +49,7 @@ const INITIAL_NEW_DEAL: NewDealDraft = {
 
 export const CRMPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [view, setView] = useState<"table" | "kanban" | "analysis">("table");
   const {
     leads: centralizedLeads,
@@ -136,6 +137,16 @@ export const CRMPage = () => {
       prev.filter((id) => deals.some((deal) => deal.id === id)),
     );
   }, [deals]);
+
+  // Open deal from global search
+  useEffect(() => {
+    const dealId = location.state?.selectedDealId;
+    if (dealId && typeof dealId === "string") {
+      setSelectedDealId(dealId);
+      setDetailsOpen(true);
+      navigate(".", { replace: true, state: {} });
+    }
+  }, []);
 
   const activeDeal = useMemo(() => {
     if (hoveredId) {
@@ -496,7 +507,7 @@ export const CRMPage = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-2 rounded-full border border-accent/10 bg-surface-secondary/80 px-3 py-1.5 text-[11px] text-content-tertiary backdrop-blur-glass md:flex">
+            <div className="hidden items-center gap-2 rounded-full border border-accent/10 bg-surface-secondary/80 px-3 py-1.5 text-[11px]  text-content-tertiaryy backdrop-blur-glass md:flex">
               <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-success" />
               Realtime scoring enabled
             </div>
@@ -558,7 +569,7 @@ export const CRMPage = () => {
               </button>
             ))}
           </div>
-          <p className="hidden text-[11px] text-content-tertiary md:block">
+          <p className="hidden text-[11px]  text-content-tertiaryy md:block">
             {view === "analysis"
               ? "Analyze pipeline trends, AI recommendations, and close probability in one place."
               : "Drag deals between stages in Kanban view to instantly update status."}
@@ -566,7 +577,7 @@ export const CRMPage = () => {
         </div>
 
         {feedback ? (
-          <div className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-2 text-sm text-success">
+          <div className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-2 text-sm ">
             {feedback}
           </div>
         ) : null}
@@ -590,7 +601,7 @@ export const CRMPage = () => {
                   setConfirmBulkDeleteOpen(true);
                 }}
                 disabled={selectedDealIds.length === 0}
-                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2.5 py-1 text-[11px] text-danger disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2.5 py-1 text-[11px] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Delete Selected
               </button>

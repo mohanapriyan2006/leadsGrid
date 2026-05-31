@@ -4,50 +4,50 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Primary backgrounds (dark spectrum)
+        // Primary backgrounds (resolved via CSS custom properties with color-mix support)
         surface: {
-          DEFAULT: "#0a0c14",      // Deepest background
-          secondary: "#0f1420",     // Secondary bg (panels)
-          tertiary: "#141b2d",      // Card/elevated surfaces
-          elevated: "#1a2340",     // Higher elevation
+          DEFAULT: "rgb(var(--surface-rgb) / <alpha-value>)",
+          secondary: "rgb(var(--surface-secondary-rgb) / <alpha-value>)",
+          tertiary: "rgb(var(--surface-tertiary-rgb) / <alpha-value>)",
+          elevated: "rgb(var(--surface-elevated-rgb) / <alpha-value>)",
         },
         // Content colors
         content: {
-          DEFAULT: "#e8ecff",      // Primary text
-          secondary: "#94a3b8",    // Secondary/muted text
-          tertiary: "#64748b",       // Tertiary/disabled text
-          inverse: "#0a0c14",      // Text on light backgrounds
+          DEFAULT: "rgb(var(--content-rgb) / <alpha-value>)",
+          secondary: "rgb(var(--content-secondary-rgb) / <alpha-value>)",
+          tertiary: "rgb(var(--content-tertiary-rgb) / <alpha-value>)",
+          inverse: "rgb(var(--content-inverse-rgb) / <alpha-value>)",
         },
         // Accent colors (purple/violet spectrum)
         accent: {
-          DEFAULT: "#a78bfa",      // Primary accent
-          secondary: "#8b5cf6",     // Secondary accent
-          tertiary: "#6366f1",      // Tertiary accent
-          soft: "rgba(167, 139, 250, 0.15)",  // Soft accent bg
-          glow: "rgba(167, 139, 250, 0.4)",   // Glow effect
+          DEFAULT: "rgb(var(--accent-rgb) / <alpha-value>)",
+          secondary: "rgb(var(--accent-secondary-rgb) / <alpha-value>)",
+          tertiary: "rgb(var(--accent-tertiary-rgb) / <alpha-value>)",
+          soft: "var(--accent-soft)",
+          glow: "var(--accent-glow)",
         },
         // Semantic colors
         success: {
-          DEFAULT: "#10b981",
-          soft: "rgba(16, 185, 129, 0.15)",
+          DEFAULT: "rgb(var(--success-rgb) / <alpha-value>)",
+          soft: "var(--success-soft)",
         },
         warning: {
-          DEFAULT: "#f59e0b",
-          soft: "rgba(245, 158, 11, 0.15)",
+          DEFAULT: "rgb(var(--warning-rgb) / <alpha-value>)",
+          soft: "var(--warning-soft)",
         },
         danger: {
-          DEFAULT: "#ef4444",
-          soft: "rgba(239, 68, 68, 0.15)",
+          DEFAULT: "rgb(var(--danger-rgb) / <alpha-value>)",
+          soft: "var(--danger-soft)",
         },
         info: {
-          DEFAULT: "#06b6d4",
-          soft: "rgba(6, 182, 212, 0.15)",
+          DEFAULT: "rgb(var(--info-rgb) / <alpha-value>)",
+          soft: "var(--info-soft)",
         },
         // Legacy aliases (for gradual migration)
-        ink: "#0a0c14",
-        panel: "#0f1420",
-        panelSoft: "#141b2d",
-        textDim: "#94a3b8",
+        ink: "rgb(var(--ink-rgb) / <alpha-value>)",
+        panel: "rgb(var(--panel-rgb) / <alpha-value>)",
+        panelSoft: "rgb(var(--panel-soft-rgb) / <alpha-value>)",
+        textDim: "rgb(var(--text-dim-rgb) / <alpha-value>)",
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
@@ -56,17 +56,17 @@ export default {
       },
       boxShadow: {
         // Glassmorphism shadows
-        glass: "0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-        "glass-lg": "0 16px 48px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-        glow: "0 0 20px rgba(167, 139, 250, 0.3)",
-        "glow-lg": "0 0 40px rgba(167, 139, 250, 0.4)",
+        glass: "var(--shadow-glass)",
+        "glass-lg": "var(--shadow-glass-lg)",
+        glow: "var(--shadow-glow)",
+        "glow-lg": "var(--shadow-glow-lg)",
         // Legacy alias
-        aura: "0 0 0 1px rgba(181,149,255,0.22), 0 20px 45px rgba(0,0,0,0.45)",
+        aura: "var(--shadow-aura)",
       },
       borderRadius: {
-        glass: "16px",
-        "glass-sm": "12px",
-        "glass-lg": "24px",
+        glass: "var(--radius-glass)",
+        "glass-sm": "var(--radius-glass-sm)",
+        "glass-lg": "var(--radius-glass-lg)",
       },
       backdropBlur: {
         glass: "16px",

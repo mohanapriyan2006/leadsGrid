@@ -517,7 +517,7 @@ export const MessagesPage = () => {
           <h2 className="bg-gradient-to-r from-content via-accent to-accent-secondary bg-clip-text text-2xl font-semibold text-transparent sm:text-3xl">
             Message Synthesis
           </h2>
-          <p className="mt-1 text-sm text-content-secondary">
+          <p className="mt-1 text-sm  ">
             Generate personalized outbound drafts from live lead context.
           </p>
         </header>

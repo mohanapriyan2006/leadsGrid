@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { leadService } from "../../features/leads/services/leadService";
 import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLeads";
 import type { BinLead } from "../../features/leads/types/manageLead";
@@ -9,6 +10,9 @@ import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import bgBusinessPlan from "../../assets/bg-images/business-plan.svg";
 
 export const RecyclicBinPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   // Use centralized leads hook for real-time bin data
   const {
     binLeads,
@@ -123,6 +127,19 @@ export const RecyclicBinPage = () => {
 
   const isRestoreAction = pendingAction === "restore";
 
+  // Open lead from global search
+  useEffect(() => {
+    const leadId = location.state?.selectedLeadId;
+    if (leadId && typeof leadId === "string") {
+      const lead = binLeads.find((b) => b.id === leadId);
+      if (lead) {
+        setSelectedLead(lead);
+        setDetailsOpen(true);
+        navigate(".", { replace: true, state: {} });
+      }
+    }
+  }, [binLeads, location.state, navigate]);
+
   if (loading) {
     return (
       <div className="glass-card p-8 text-sm text-content-secondary">
@@ -144,7 +161,7 @@ export const RecyclicBinPage = () => {
           <p className="mt-1 text-sm text-content-secondary">Restore soft deleted leads or delete permanently.</p>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <p className="text-xs text-content-tertiary">
+            <p className="text-xs  text-content-tertiaryy">
               {selectedCount > 0 ? `${selectedCount} selected` : "Select leads to run bulk actions"}
             </p>
             <button
@@ -153,7 +170,7 @@ export const RecyclicBinPage = () => {
                 handleBulkRestore();
               }}
               disabled={selectedCount === 0}
-              className="badge-success cursor-pointer transition disabled:cursor-not-allowed disabled:opacity-50"
+              className="badge-success  text-white  cursor-pointer transition disabled:cursor-not-allowed disabled:opacity-50"
             >
               Restore Selected
             </button>
@@ -163,7 +180,7 @@ export const RecyclicBinPage = () => {
                 handleBulkDelete();
               }}
               disabled={selectedCount === 0}
-              className="badge-danger cursor-pointer transition disabled:cursor-not-allowed disabled:opacity-50"
+              className="badge-danger text-white  cursor-pointer transition disabled:cursor-not-allowed disabled:opacity-50"
             >
               Delete Selected
             </button>
@@ -261,7 +278,7 @@ export const RecyclicBinPage = () => {
                   onClick={() => {
                     void handleConfirmAction();
                   }}
-                  className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold text-white transition ${
+                  className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold text-content-inverse transition ${
                     pendingAction === "restore" ? "bg-accent hover:bg-accent-secondary" : "bg-danger hover:bg-danger/80"
                   }`}
                 >

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { GradientText } from "../ui/GradientText";
 import { GlowButton } from "../ui/GlowButton";
+import { ThemeToggle } from "../../../../components/ui/ThemeToggle";
 
 const NAV_LINKS = [
   { label: "Features", href: "#features" },
@@ -31,7 +32,7 @@ export const Navbar = () => {
       animate={{ y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
       className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${scrolled
-          ? "border-b border-white/5 bg-surface/80 backdrop-blur-xl"
+          ? "border-b border-content/5 bg-surface/80 backdrop-blur-xl"
           : "bg-transparent"
         }`}
     >
@@ -51,7 +52,7 @@ export const Navbar = () => {
             <button
               key={link.label}
               onClick={() => handleNavClick(link.href)}
-              className="text-sm text-white/60 transition-colors hover:text-white"
+              className="text-sm text-content-secondary transition-colors hover:text-content"
             >
               {link.label}
             </button>
@@ -59,9 +60,10 @@ export const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <button
             onClick={() => navigate("/login")}
-            className="text-sm text-white/60 transition-colors hover:text-white"
+            className="text-sm text-content-secondary transition-colors hover:text-content"
           >
             Log in
           </button>

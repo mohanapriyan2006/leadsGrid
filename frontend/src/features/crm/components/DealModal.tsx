@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { Mail, Smartphone, Calendar, Timer, Pencil, Trash2 } from "lucide-react";
 
 import type { DealStatus } from "../../common/types/ui";
 import type { Deal } from "../types/crm";
@@ -156,7 +157,7 @@ export const DealModal = ({
                 <p className="text-sm text-content-secondary">{deal.company}</p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-content-tertiary">⋮⋮ Drag</span>
+                <span className="text-[10px]  text-content-tertiaryy">⋮⋮ Drag</span>
                 <button type="button" onClick={onClose} className="glass-btn px-2 py-1 text-xs">
                   Close
                 </button>
@@ -179,40 +180,40 @@ export const DealModal = ({
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
-              <span className="badge-info">Score {deal.score}</span>
-              <span className={`badge-success ${getStatusColor(deal.status)}`}>
+              <span className="badge-info  text-white ">Score {deal.score}</span>
+              <span className={`badge-success  text-white  ${getStatusColor(deal.status)}`}>
                 Status {deal.status}
               </span>
-              <span className="badge-accent">Value {deal.value}</span>
-              <span className="badge-warning">Health {health}</span>
-              <span className="badge-danger">Risk {risk}</span>
+              <span className="badge-accent  text-white ">Value {deal.value}</span>
+              <span className="badge-warning  text-white ">Health {health}</span>
+              <span className="badge-danger text-white ">Risk {risk}</span>
             </div>
 
             <div className="glass-card-sm mt-4 p-3 text-xs">
               <p className="text-content-tertiary uppercase tracking-[0.08em] mb-2">Contact Info</p>
               <div className="grid gap-1 text-content-secondary md:grid-cols-2">
-                {deal.email && <p>📧 {deal.email}</p>}
-                {deal.phone && <p>📱 {deal.phone}</p>}
-                <p>📅 Last Action: {deal.lastAction}</p>
-                <p>⏱️ Days in Stage: {deal.daysInStage}</p>
+                {deal.email && <p className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" /> {deal.email}</p>}
+                {deal.phone && <p className="flex items-center gap-1.5"><Smartphone className="w-3.5 h-3.5" /> {deal.phone}</p>}
+                <p className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Last Action: {deal.lastAction}</p>
+                <p className="flex items-center gap-1.5"><Timer className="w-3.5 h-3.5" /> Days in Stage: {deal.daysInStage}</p>
               </div>
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4">
               <div className="glass-card-sm p-2 text-center">
-                <p className="text-[10px] text-content-tertiary uppercase tracking-[0.08em]">Deal Value</p>
+                <p className="text-[10px]  text-content-tertiaryy uppercase tracking-[0.08em]">Deal Value</p>
                 <p className="text-sm font-semibold text-success">{deal.value}</p>
               </div>
               <div className="glass-card-sm p-2 text-center">
-                <p className="text-[10px] text-content-tertiary uppercase tracking-[0.08em]">Quality Score</p>
+                <p className="text-[10px]  text-content-tertiaryy uppercase tracking-[0.08em]">Quality Score</p>
                 <p className="text-sm font-semibold text-accent">{deal.score}/100</p>
               </div>
               <div className="glass-card-sm p-2 text-center">
-                <p className="text-[10px] text-content-tertiary uppercase tracking-[0.08em]">Progress</p>
+                <p className="text-[10px]  text-content-tertiaryy uppercase tracking-[0.08em]">Progress</p>
                 <p className="text-sm font-semibold text-info">{getProgress(deal.status)}%</p>
               </div>
               <div className="glass-card-sm p-2 text-center">
-                <p className="text-[10px] text-content-tertiary uppercase tracking-[0.08em]">Stage Time</p>
+                <p className="text-[10px]  text-content-tertiaryy uppercase tracking-[0.08em]">Stage Time</p>
                 <p className="text-sm font-semibold text-warning">{deal.daysInStage}d</p>
               </div>
             </div>
@@ -225,7 +226,7 @@ export const DealModal = ({
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
                 {playbook.map((item) => (
-                  <span key={item} className="badge-accent">
+                  <span key={item} className="badge-accent  text-white ">
                     {item}
                   </span>
                 ))}
@@ -289,7 +290,7 @@ export const DealModal = ({
                   disabled={isFinalStage}
                   className={`rounded-glass-sm px-3 py-1.5 text-xs font-semibold transition ${
                     isFinalStage
-                      ? "cursor-not-allowed border border-accent/10 bg-surface-secondary/80 text-content-tertiary"
+                      ? "cursor-not-allowed border border-accent/10 bg-surface-secondary/80  text-content-tertiaryy"
                       : "accent-btn"
                   }`}
                 >
@@ -298,15 +299,15 @@ export const DealModal = ({
               ) : null}
               {onEdit && (
                 <button type="button" onClick={onEdit} className="glass-btn px-3 py-1.5 text-xs">
-                  ✏️ Edit
+                  <Pencil className="w-3.5 h-3.5 inline mr-1" /> Edit
                 </button>
               )}
               <button
                 type="button"
                 onClick={onDelete}
-                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-3 py-1.5 text-xs text-danger transition hover:shadow-[0_0_16px_rgba(239,68,68,0.3)]"
+                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-3 py-1.5 text-xs transition hover:shadow-[0_0_16px_rgba(239,68,68,0.3)]"
               >
-                🗑️ Delete
+                <Trash2 className="w-3.5 h-3.5 inline mr-1" /> Delete
               </button>
             </div>
           </motion.section>

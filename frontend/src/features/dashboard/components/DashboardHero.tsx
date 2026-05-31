@@ -27,7 +27,7 @@ export const DashboardHero = ({
           <p className="mt-2 text-sm text-content-secondary">
             Live signal overview across discovery, pipeline, and outreach.
           </p>
-          <p className="mt-1 text-xs text-content-tertiary">
+          <p className="mt-1 text-xs  text-content-tertiaryy">
             {totalLeads} active leads | Updated at {updatedLabel}
           </p>
         </div>

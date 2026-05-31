@@ -149,13 +149,13 @@ export const LoginPage = () => {
         </p>
 
         {!isFirebaseConfigured && (
-          <div className="mb-4 rounded-glass-sm border border-warning/30 bg-warning-soft px-4 py-3 text-sm text-warning">
+          <div className="mb-4 rounded-glass-sm border border-warning/30 bg-warning-soft px-4 py-3 text-sm ">
             Firebase is not configured. Update VITE_FIREBASE_* in frontend/.env with your real Firebase web app config.
           </div>
         )}
 
         {error && (
-          <div className="mb-4 rounded-glass-sm border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
+          <div className="mb-4 rounded-glass-sm border border-danger/30 bg-danger-soft px-4 py-3 text-sm ">
             {error}
           </div>
         )}

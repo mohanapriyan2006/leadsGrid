@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Plus, History } from "lucide-react";
 
 import type { ChatSession } from "../types/chat";
 import type { AIMode, AIStatus, ActiveContext } from "../types/agent";
@@ -66,7 +67,7 @@ export const AIHeader = ({
             title="Start new chat"
             aria-label="Start new chat"
           >
-            ➕
+            <Plus className="w-4 h-4" />
           </button>
           <button
             type="button"
@@ -75,7 +76,7 @@ export const AIHeader = ({
             title="Chat history"
             aria-label="Toggle chat history"
           >
-            🕘
+            <History className="w-4 h-4" />
           </button>
         </div>
       </div>

@@ -23,25 +23,25 @@ export default {
           DEFAULT: "rgb(var(--accent-rgb) / <alpha-value>)",
           secondary: "rgb(var(--accent-secondary-rgb) / <alpha-value>)",
           tertiary: "rgb(var(--accent-tertiary-rgb) / <alpha-value>)",
-          soft: "rgb(var(--accent-soft-rgb) / <alpha-value>)",
-          glow: "rgb(var(--accent-glow-rgb) / <alpha-value>)",
+          soft: "var(--accent-soft)",
+          glow: "var(--accent-glow)",
         },
         // Semantic colors
         success: {
           DEFAULT: "rgb(var(--success-rgb) / <alpha-value>)",
-          soft: "rgb(var(--success-soft-rgb) / <alpha-value>)",
+          soft: "var(--success-soft)",
         },
         warning: {
           DEFAULT: "rgb(var(--warning-rgb) / <alpha-value>)",
-          soft: "rgb(var(--warning-soft-rgb) / <alpha-value>)",
+          soft: "var(--warning-soft)",
         },
         danger: {
           DEFAULT: "rgb(var(--danger-rgb) / <alpha-value>)",
-          soft: "rgb(var(--danger-soft-rgb) / <alpha-value>)",
+          soft: "var(--danger-soft)",
         },
         info: {
           DEFAULT: "rgb(var(--info-rgb) / <alpha-value>)",
-          soft: "rgb(var(--info-soft-rgb) / <alpha-value>)",
+          soft: "var(--info-soft)",
         },
         // Legacy aliases (for gradual migration)
         ink: "rgb(var(--ink-rgb) / <alpha-value>)",

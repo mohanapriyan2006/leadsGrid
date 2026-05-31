@@ -1,3 +1,4 @@
+import { Check, Circle, X, Zap } from "lucide-react";
 import type { AgentPlan, AgentStep } from "../types/agent";
 import { AGENT_ACTIONS } from "../constants/agentActions";
 
@@ -48,12 +49,12 @@ const StepRow = ({
               ? "bg-danger/15 text-danger"
               : "bg-accent/[0.06]  text-content-tertiaryy"
       }`}>
-        {step.status === "completed" ? "✓" : step.status === "running" ? "●" : step.status === "failed" ? "✕" : index + 1}
+        {step.status === "completed" ? <Check className="w-3 h-3" /> : step.status === "running" ? <Circle className="w-2.5 h-2.5 fill-current" /> : step.status === "failed" ? <X className="w-3 h-3" /> : index + 1}
       </div>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[11px]">{action.icon}</span>
+          <action.icon className="w-3.5 h-3.5 text-content-secondary" />
           <span className="text-[13px] font-medium text-content">{step.label}</span>
           <span className={`rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${risk.className}`}>
             {risk.label}
@@ -88,7 +89,7 @@ const StepRow = ({
           title="Remove step"
           aria-label={`Remove step: ${step.label}`}
         >
-          ✕
+          <X className="w-3 h-3" />
         </button>
       ) : null}
     </div>
@@ -106,7 +107,7 @@ export const AgentPlanCard = ({
     <div className="rounded-2xl border border-info/[0.1] bg-surface-secondary/40 p-4 animate-fadeIn">
       <div className="flex items-center gap-2 mb-3">
         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-info/[0.08] text-sm">
-          ⚡
+          <Zap className="w-4 h-4 text-info" />
         </div>
         <div className="flex-1">
           <h4 className="text-[13px] font-semibold text-content">Execution Plan</h4>
@@ -134,7 +135,7 @@ export const AgentPlanCard = ({
             onClick={onApproveAll}
             className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-info to-info/80 px-4 py-2 text-[12px] font-semibold text-surface shadow-[0_2px_12px_rgba(6,182,212,0.2)] transition-all hover:shadow-[0_2px_20px_rgba(6,182,212,0.3)]"
           >
-            ✓ Approve All
+            <Check className="w-3.5 h-3.5 inline mr-1" /> Approve All
           </button>
           <button
             type="button"

@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Check } from "lucide-react";
 import { SectionWrapper } from "../ui/SectionWrapper";
 import { GradientText } from "../ui/GradientText";
 import { GlowButton } from "../ui/GlowButton";
@@ -162,7 +163,7 @@ export const PricingSection = () => {
                       {plan.compactHighlights.map((feature) => (
                         <li key={feature} className="flex items-center gap-2 text-sm text-content-secondary">
                           <span className="mt-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full border border-accent/30 bg-accent-soft text-[10px] text-accent">
-                            ✓
+                            <Check className="w-3 h-3" />
                           </span>
                           {feature}
                         </li>

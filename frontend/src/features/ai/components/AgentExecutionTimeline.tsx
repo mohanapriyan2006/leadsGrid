@@ -1,3 +1,4 @@
+import { Zap, Check, Circle, X, Pause, OctagonAlert } from "lucide-react";
 import type { AgentPlan, AgentExecutionState } from "../types/agent";
 
 type AgentExecutionTimelineProps = {
@@ -23,7 +24,7 @@ export const AgentExecutionTimeline = ({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-info/[0.08] text-sm">
-            ⚡
+            <Zap className="w-4 h-4 text-info" />
           </div>
           <div>
             <h4 className="text-[13px] font-semibold text-content">Execution Progress</h4>
@@ -60,7 +61,7 @@ export const AgentExecutionTimeline = ({
                           : "bg-accent/[0.06]  text-content-tertiaryy"
                   }`}
                 >
-                  {step.status === "completed" ? "✓" : step.status === "running" ? "●" : step.status === "failed" ? "✕" : index + 1}
+                  {step.status === "completed" ? <Check className="w-3 h-3" /> : step.status === "running" ? <Circle className="w-2.5 h-2.5 fill-current" /> : step.status === "failed" ? <X className="w-3 h-3" /> : index + 1}
                 </div>
                 {!isLast ? (
                   <div
@@ -115,7 +116,7 @@ export const AgentExecutionTimeline = ({
       {executionState.isPaused ? (
         <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-warning/[0.1] bg-warning/[0.04] px-3.5 py-2.5">
           <span className="text-[12px] text-warning/80 font-medium">
-            ⏸ Waiting for approval on step {executionState.currentStepIndex + 1}
+            <Pause className="w-3.5 h-3.5 inline mr-1" /> Waiting for approval on step {executionState.currentStepIndex + 1}
           </span>
           <span className="ml-auto text-[11px]  text-content-tertiaryy">Review the permission modal to continue.</span>
         </div>
@@ -124,20 +125,20 @@ export const AgentExecutionTimeline = ({
       {executionState.status === "completed" && executionState.completedAt ? (
         <div className="mt-3 rounded-xl border border-success/[0.1] bg-success/[0.04] px-3.5 py-2.5">
           <p className="text-[12px] font-medium text-success/80">
-            ✓ All steps completed successfully
+            <Check className="w-3.5 h-3.5 inline mr-1" /> All steps completed successfully
           </p>
         </div>
       ) : null}
 
       {executionState.status === "failed" ? (
         <div className="mt-3 rounded-xl border border-danger/[0.1] bg-danger/[0.04] px-3.5 py-2.5">
-          <p className="text-[12px] font-medium text-danger/80">✕ Execution stopped due to a failed step</p>
+          <p className="text-[12px] font-medium text-danger/80"><X className="w-3.5 h-3.5 inline mr-1" /> Execution stopped due to a failed step</p>
         </div>
       ) : null}
 
       {executionState.status === "aborted" ? (
         <div className="mt-3 rounded-xl border border-warning/[0.1] bg-warning/[0.04] px-3.5 py-2.5">
-          <p className="text-[12px] font-medium text-warning/80">⛔ Execution aborted</p>
+          <p className="text-[12px] font-medium text-warning/80"><OctagonAlert className="w-3.5 h-3.5 inline mr-1" /> Execution aborted</p>
         </div>
       ) : null}
 

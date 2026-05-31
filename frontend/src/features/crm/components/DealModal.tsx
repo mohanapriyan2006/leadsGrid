@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { Mail, Smartphone, Calendar, Timer, Pencil, Trash2 } from "lucide-react";
 
 import type { DealStatus } from "../../common/types/ui";
 import type { Deal } from "../types/crm";
@@ -191,10 +192,10 @@ export const DealModal = ({
             <div className="glass-card-sm mt-4 p-3 text-xs">
               <p className="text-content-tertiary uppercase tracking-[0.08em] mb-2">Contact Info</p>
               <div className="grid gap-1 text-content-secondary md:grid-cols-2">
-                {deal.email && <p>📧 {deal.email}</p>}
-                {deal.phone && <p>📱 {deal.phone}</p>}
-                <p>📅 Last Action: {deal.lastAction}</p>
-                <p>⏱️ Days in Stage: {deal.daysInStage}</p>
+                {deal.email && <p className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" /> {deal.email}</p>}
+                {deal.phone && <p className="flex items-center gap-1.5"><Smartphone className="w-3.5 h-3.5" /> {deal.phone}</p>}
+                <p className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Last Action: {deal.lastAction}</p>
+                <p className="flex items-center gap-1.5"><Timer className="w-3.5 h-3.5" /> Days in Stage: {deal.daysInStage}</p>
               </div>
             </div>
 
@@ -298,7 +299,7 @@ export const DealModal = ({
               ) : null}
               {onEdit && (
                 <button type="button" onClick={onEdit} className="glass-btn px-3 py-1.5 text-xs">
-                  ✏️ Edit
+                  <Pencil className="w-3.5 h-3.5 inline mr-1" /> Edit
                 </button>
               )}
               <button
@@ -306,7 +307,7 @@ export const DealModal = ({
                 onClick={onDelete}
                 className="rounded-glass-sm border border-danger/30 bg-danger-soft px-3 py-1.5 text-xs transition hover:shadow-[0_0_16px_rgba(239,68,68,0.3)]"
               >
-                🗑️ Delete
+                <Trash2 className="w-3.5 h-3.5 inline mr-1" /> Delete
               </button>
             </div>
           </motion.section>

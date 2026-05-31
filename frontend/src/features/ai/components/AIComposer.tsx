@@ -1,4 +1,5 @@
 import type { KeyboardEvent } from "react";
+import { Users, CornerDownLeft } from "lucide-react";
 
 import type { ToneType } from "../../common/types/ui";
 import type { AIMode } from "../types/agent";
@@ -82,7 +83,7 @@ export const AIComposer = ({
           className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-accent/[0.1] bg-surface/50 text-sm text-content-secondary transition-all hover:bg-surface-secondary hover:text-content"
           aria-label="Attach leads"
         >
-          👥
+          <Users className="w-4 h-4" />
         </button>
 
         <textarea
@@ -111,7 +112,7 @@ export const AIComposer = ({
           aria-label="Send message"
         >
           {mode === "agent" ? "Run" : "Send"}
-          <span className="text-[11px] opacity-70">↵</span>
+          <CornerDownLeft className="w-3.5 h-3.5 opacity-70" />
         </button>
       </div>
 

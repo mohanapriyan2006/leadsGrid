@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import { Mail, Smartphone, Tag, Star, MapPin, Globe, Map, Pencil, Zap, Phone, ArrowRight, Check } from "lucide-react";
 
 import type { ManageLead, ManageLeadStage } from "../types/manageLead";
 
@@ -123,22 +124,22 @@ export const LeadModal = ({
             </div>
 
             <div className="mt-3 grid gap-2 text-xs text-content-secondary md:grid-cols-2">
-              <p>📧 {lead.email || "N/A"}</p>
-              <p>📱 {lead.phone || "N/A"}</p>
-              {lead.category && <p>🏷️ Category: {lead.category}</p>}
-              {lead.rating && <p>⭐ Rating: {lead.rating} ({lead.review_count ?? 0} reviews)</p>}
-              {lead.address && <p className="md:col-span-2">📍 {lead.address}</p>}
+              <p className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" /> {lead.email || "N/A"}</p>
+              <p className="flex items-center gap-1.5"><Smartphone className="w-3.5 h-3.5" /> {lead.phone || "N/A"}</p>
+              {lead.category && <p className="flex items-center gap-1.5"><Tag className="w-3.5 h-3.5" /> Category: {lead.category}</p>}
+              {lead.rating && <p className="flex items-center gap-1.5"><Star className="w-3.5 h-3.5" /> Rating: {lead.rating} ({lead.review_count ?? 0} reviews)</p>}
+              {lead.address && <p className="md:col-span-2 flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {lead.address}</p>}
               {lead.website_url && (
-                <p>
-                  🌐{" "}
+                <p className="flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5" />
                   <a href={lead.website_url} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
                     Website
                   </a>
                 </p>
               )}
               {lead.google_maps_url && (
-                <p>
-                  🗺️{" "}
+                <p className="flex items-center gap-1.5">
+                  <Map className="w-3.5 h-3.5" />
                   <a href={lead.google_maps_url} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
                     Google Maps
                   </a>
@@ -187,7 +188,7 @@ export const LeadModal = ({
                     onClick={() => setIsEditingNotes(true)}
                     className="text-[10px] text-accent hover:text-accent-secondary"
                   >
-                    ✏️ Edit
+                    <Pencil className="w-3.5 h-3.5 inline mr-1" /> Edit
                   </button>
                 ) : (
                   <div className="flex gap-1">
@@ -196,7 +197,7 @@ export const LeadModal = ({
                       onClick={handleSaveNotes}
                       className="text-[10px] text-success hover:text-success"
                     >
-                      ✓ Save
+                      <Check className="w-3.5 h-3.5 inline mr-1" /> Save
                     </button>
                     <button
                       type="button"
@@ -206,7 +207,7 @@ export const LeadModal = ({
                       }}
                       className="text-[10px] text-danger hover:text-danger"
                     >
-                      ✕ Cancel
+                      <span className="inline-flex items-center gap-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancel</span>
                     </button>
                   </div>
                 )}
@@ -231,14 +232,14 @@ export const LeadModal = ({
                 onClick={onSendMessage}
                 className="glass-btn px-3 py-1.5 text-xs"
               >
-                ⚡ Send Message
+                <Zap className="w-3.5 h-3.5 inline mr-1" /> Send Message
               </button>
               <button
                 type="button"
                 onClick={onScheduleCall}
                 className="glass-btn px-3 py-1.5 text-xs"
               >
-                📞 Call
+                <Phone className="w-3.5 h-3.5 inline mr-1" /> Call
               </button>
               <button
                 type="button"
@@ -250,7 +251,7 @@ export const LeadModal = ({
                     : "cursor-not-allowed border border-accent/10 bg-surface-secondary/80  text-content-tertiaryy"
                 }`}
               >
-                ➡ Move Next{nextStage ? ` (${nextStage})` : " (Final Stage)"}
+                <ArrowRight className="w-3.5 h-3.5 inline mr-1" /> Move Next{nextStage ? ` (${nextStage})` : " (Final Stage)"}
               </button>
               {isLastStage && onMoveToContacted ? (
                 <button
@@ -258,7 +259,7 @@ export const LeadModal = ({
                   onClick={onMoveToContacted}
                   className="rounded-glass-sm bg-success px-3 py-1.5 text-xs font-semibold text-content-inverse shadow-[0_0_16px_rgba(16,185,129,0.3)] transition hover:shadow-[0_0_24px_rgba(16,185,129,0.5)]"
                 >
-                  ✓ Move to Negotiation
+                  <Check className="w-3.5 h-3.5 inline mr-1" /> Move to Negotiation
                 </button>
               ) : null}
               {onEdit ? (

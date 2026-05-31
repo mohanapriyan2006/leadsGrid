@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { X, Check } from "lucide-react";
 import { SectionWrapper } from "../ui/SectionWrapper";
 import { GradientText } from "../ui/GradientText";
 
@@ -52,7 +53,7 @@ export const WhyLeadsGridSection = () => {
                 className="flex items-center gap-3 text-sm text-content-secondary"
               >
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-500/20 text-xs text-red-400">
-                  ✕
+                  <X className="w-3 h-3" />
                 </span>
                 {item}
               </motion.li>
@@ -77,7 +78,7 @@ export const WhyLeadsGridSection = () => {
                 className="flex items-center gap-3 text-sm text-content-secondary"
               >
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500/20 text-xs text-green-400">
-                  ✓
+                  <Check className="w-3 h-3" />
                 </span>
                 {item}
               </motion.li>

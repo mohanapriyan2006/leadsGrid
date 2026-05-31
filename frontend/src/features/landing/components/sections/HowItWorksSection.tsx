@@ -1,26 +1,28 @@
+import React from "react";
 import { motion } from "framer-motion";
+import { Globe, Brain, MessageSquare } from "lucide-react";
 import { SectionWrapper } from "../ui/SectionWrapper";
 import { GradientText } from "../ui/GradientText";
 import type { HowItWorksStep } from "../../types/landing";
 
-const STEPS: HowItWorksStep[] = [
+const STEPS: (HowItWorksStep & { icon: React.ElementType })[] = [
   {
     step: 1,
     title: "Discover",
     description: "AI scans Reddit, LinkedIn, Google",
-    icon: "🌐",
+    icon: Globe,
   },
   {
     step: 2,
     title: "Analyze",
     description: "AI detects real buying intent",
-    icon: "🧠",
+    icon: Brain,
   },
   {
     step: 3,
     title: "Convert",
     description: "Get ready-to-contact leads",
-    icon: "💬",
+    icon: MessageSquare,
   },
 ];
 
@@ -66,7 +68,7 @@ export const HowItWorksSection = () => {
               whileHover={{ scale: 1.1, boxShadow: "0 0 40px rgba(167,139,250,0.5)" }}
               className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-accent/30 bg-accent-soft text-3xl shadow-[0_0_20px_rgba(167,139,250,0.2)]"
             >
-              {step.icon}
+              <step.icon className="w-6 h-6 text-accent" />
               <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-accent to-accent-secondary text-[10px] font-bold text-content-inverse">
                 {step.step}
               </span>

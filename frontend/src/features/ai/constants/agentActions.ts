@@ -1,10 +1,12 @@
+import React from "react";
+import { Search, BarChart3, FileText, Mail, Calendar } from "lucide-react";
 import type { AgentActionType, RiskLevel, SmartSuggestion } from "../types/agent";
 
 export type AgentActionDefinition = {
   type: AgentActionType;
   label: string;
   description: string;
-  icon: string;
+  icon: React.ElementType;
   riskLevel: RiskLevel;
 };
 
@@ -13,35 +15,35 @@ export const AGENT_ACTIONS: Record<AgentActionType, AgentActionDefinition> = {
     type: "lead_discovery",
     label: "Lead Discovery",
     description: "Scan sources and find high-quality leads",
-    icon: "🔍",
+    icon: Search,
     riskLevel: "low",
   },
   lead_scoring: {
     type: "lead_scoring",
     label: "Lead Scoring",
     description: "Score and rank leads by quality signals",
-    icon: "📊",
+    icon: BarChart3,
     riskLevel: "low",
   },
   crm_update: {
     type: "crm_update",
     label: "CRM Update",
     description: "Move stage, add tags, or update lead data",
-    icon: "📝",
+    icon: FileText,
     riskLevel: "medium",
   },
   message_draft: {
     type: "message_draft",
     label: "Message Draft",
     description: "Generate personalized outreach messages",
-    icon: "✉️",
+    icon: Mail,
     riskLevel: "medium",
   },
   follow_up_schedule: {
     type: "follow_up_schedule",
     label: "Follow-up Schedule",
     description: "Queue follow-up reminders and tasks",
-    icon: "📅",
+    icon: Calendar,
     riskLevel: "low",
   },
 };

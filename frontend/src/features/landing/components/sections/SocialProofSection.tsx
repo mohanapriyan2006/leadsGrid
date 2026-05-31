@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Star } from "lucide-react";
 import { SectionWrapper } from "../ui/SectionWrapper";
 import { GlassCard } from "../ui/GlassCard";
 import { GradientText } from "../ui/GradientText";
@@ -49,8 +50,24 @@ export const SocialProofSection = () => {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-60px" }}
+            whileHover={{ scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
           >
             <GlassCard className="h-full">
+              {/* Star rating */}
+              <div className="mb-4 flex gap-0.5">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <motion.div
+                    key={s}
+                    initial={{ opacity: 0, scale: 0 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.15 + s * 0.08 }}
+                  >
+                    <Star className="h-3.5 w-3.5 fill-warning text-warning" />
+                  </motion.div>
+                ))}
+              </div>
               <p className="mb-6 text-sm leading-relaxed text-content-secondary">
                 "{testimonial.quote}"
               </p>
@@ -60,7 +77,7 @@ export const SocialProofSection = () => {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-content">{testimonial.author}</p>
-                  <p className="text-xs  ">{testimonial.role}</p>
+                  <p className="text-xs text-content-secondary">{testimonial.role}</p>
                 </div>
               </div>
             </GlassCard>

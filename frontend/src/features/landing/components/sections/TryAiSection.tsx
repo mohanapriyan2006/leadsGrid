@@ -56,7 +56,13 @@ export const TryAiSection = () => {
         </p>
       </div>
 
-      <div className="mx-auto max-w-2xl">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="mx-auto max-w-2xl"
+      >
         {/* Search input */}
         <div className="mb-8 flex gap-3">
           <input
@@ -124,7 +130,7 @@ export const TryAiSection = () => {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
     </SectionWrapper>
   );
 };

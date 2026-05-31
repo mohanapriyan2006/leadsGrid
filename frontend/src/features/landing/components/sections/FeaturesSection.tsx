@@ -4,6 +4,7 @@ import { Zap, Search, Bot, BarChart3 } from "lucide-react";
 import { SectionWrapper } from "../ui/SectionWrapper";
 import { GlassCard } from "../ui/GlassCard";
 import { GradientText } from "../ui/GradientText";
+import { TiltCard } from "../ui/TiltCard";
 import type { FeatureItem } from "../../types/landing";
 
 const FEATURES: FeatureItem[] = [
@@ -60,13 +61,15 @@ export const FeaturesSection = () => {
             whileInView="visible"
             viewport={{ once: true, margin: "-60px" }}
           >
-            <GlassCard hoverTilt className="group h-full">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-content/10 bg-surface-tertiary/30 text-2xl transition-shadow group-hover:shadow-[0_0_20px_rgba(167,139,250,0.3)]">
-                <feature.icon className="w-5 h-5 text-accent" />
-              </div>
-              <h3 className="mb-2 text-lg font-bold text-content">{feature.title}</h3>
-              <p className="text-sm leading-relaxed text-content-secondary">{feature.description}</p>
-            </GlassCard>
+            <TiltCard className="h-full">
+              <GlassCard className="group h-full">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-content/10 bg-surface-tertiary/30 text-2xl transition-shadow group-hover:shadow-[0_0_20px_rgba(167,139,250,0.3)]">
+                  <feature.icon className="w-5 h-5 text-accent" />
+                </div>
+                <h3 className="mb-2 text-lg font-bold text-content">{feature.title}</h3>
+                <p className="text-sm leading-relaxed text-content-secondary">{feature.description}</p>
+              </GlassCard>
+            </TiltCard>
           </motion.div>
         ))}
       </div>

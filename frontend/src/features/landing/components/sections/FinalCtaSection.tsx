@@ -2,17 +2,24 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { GlowButton } from "../ui/GlowButton";
 import { GradientText } from "../ui/GradientText";
+import { CounterStat } from "../ui/CounterStat";
 
 export const FinalCtaSection = () => {
   const navigate = useNavigate();
 
   return (
     <section className="relative overflow-hidden py-32">
-      {/* Background glow */}
-      <div className="absolute inset-0">
+      {/* Background glow - expands on scroll */}
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0.5 }}
+        whileInView={{ scale: 1, opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 1.2, ease: "easeOut" }}
+        className="absolute inset-0"
+      >
         <div className="absolute left-1/2 top-1/2 h-[500px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/10 blur-[150px]" />
         <div className="absolute left-1/3 top-1/2 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent-secondary/10 blur-[120px]" />
-      </div>
+      </motion.div>
 
       <motion.div
         initial={{ opacity: 0, y: 40 }}
@@ -30,19 +37,26 @@ export const FinalCtaSection = () => {
           automatically.
         </p>
 
+        {/* Stats row */}
+        <div className="mb-10 grid grid-cols-3 gap-4">
+          <CounterStat target={1248} suffix="+" className="text-2xl font-bold text-content" label="Leads Found" duration={2} />
+          <CounterStat target={87} suffix="%" className="text-2xl font-bold text-content" label="Avg Score" duration={2} />
+          <CounterStat target={34} suffix="%" className="text-2xl font-bold text-content" label="Conversion" duration={2} />
+        </div>
+
         <motion.div
           whileHover={{ scale: 1.05 }}
           className="inline-block"
         >
           <GlowButton
             onClick={() => navigate("/login")}
-            className="!px-10 !py-5 !text-base shadow-[0_0_60px_rgba(167,139,250,0.5)]"
+            className="!px-10 !py-5 !text-base shadow-[0_0_60px_rgba(167,139,250,0.5)] transition-shadow hover:shadow-[0_0_80px_rgba(167,139,250,0.7)]"
           >
             Get Your First Leads Now
           </GlowButton>
         </motion.div>
 
-        <p className="mt-6 text-sm  ">
+        <p className="mt-6 text-sm text-content-secondary">
           Free forever. No credit card required.
         </p>
       </motion.div>

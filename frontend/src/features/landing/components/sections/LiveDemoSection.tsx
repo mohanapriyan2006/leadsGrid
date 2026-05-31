@@ -2,6 +2,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { SectionWrapper } from "../ui/SectionWrapper";
 import { GradientText } from "../ui/GradientText";
 import { LeadNotificationCard } from "../ui/LeadNotificationCard";
+import { MarqueeBand } from "../ui/MarqueeBand";
+import { CounterStat } from "../ui/CounterStat";
 import { useLeadSimulation } from "../../hooks/useLeadSimulation";
 
 export const LiveDemoSection = () => {
@@ -11,8 +13,10 @@ export const LiveDemoSection = () => {
     <SectionWrapper id="live-demo">
       <div className="mb-12 text-center">
         <motion.span
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
           className="mb-4 inline-block rounded-full border border-accent-secondary/30 bg-accent-secondary/10 px-4 py-1.5 text-xs font-medium text-accent-secondary"
         >
           Live Demo
@@ -26,18 +30,25 @@ export const LiveDemoSection = () => {
         </p>
       </div>
 
+      {/* Trust marquee */}
+      <MarqueeBand speed={40} className="mb-12 border-y border-content/5 py-4">
+        {["Reddit", "LinkedIn", "Google", "Twitter/X", "Quora", "GitHub", "Product Hunt", "Indie Hackers"].map((source) => (
+          <span key={source} className="text-sm font-medium text-content-secondary whitespace-nowrap flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+            {source}
+          </span>
+        ))}
+      </MarqueeBand>
+
       <div className="mx-auto max-w-xl">
         {/* Live counter */}
         <div className="mb-6 text-center">
-          <motion.span
-            key={totalDiscovered}
-            initial={{ scale: 1.3, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
+          <CounterStat
+            target={1248 + totalDiscovered}
             className="text-3xl font-bold text-content"
-          >
-            {(1248 + totalDiscovered).toLocaleString()}
-          </motion.span>
-          <p className="text-sm  ">leads discovered today</p>
+            label="leads discovered today"
+            duration={1.5}
+          />
         </div>
 
         {/* Streaming lead cards */}

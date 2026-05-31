@@ -48,10 +48,16 @@ export const HowItWorksSection = () => {
       </div>
 
       <div className="relative mx-auto grid max-w-5xl gap-8 md:grid-cols-3">
-        {/* Connector line */}
-        <div className="absolute left-0 right-0 top-1/2 hidden h-px -translate-y-1/2 md:block">
-          <div className="h-full w-full bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
-        </div>
+        {/* Connector line - animated draw on scroll */}
+        <motion.div
+          initial={{ scaleX: 0 }}
+          whileInView={{ scaleX: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          className="absolute left-0 right-0 top-[40px] hidden origin-left md:block"
+        >
+          <div className="h-full w-full bg-gradient-to-r from-transparent via-accent/40 to-transparent" style={{ height: "2px" }} />
+        </motion.div>
 
         {STEPS.map((step, idx) => (
           <motion.div
@@ -63,10 +69,10 @@ export const HowItWorksSection = () => {
             viewport={{ once: true, margin: "-80px" }}
             className="relative flex flex-col items-center text-center"
           >
-            {/* Step number ring */}
+            {/* Step number ring with glow */}
             <motion.div
               whileHover={{ scale: 1.1, boxShadow: "0 0 40px rgba(167,139,250,0.5)" }}
-              className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-accent/30 bg-accent-soft text-3xl shadow-[0_0_20px_rgba(167,139,250,0.2)]"
+              className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-accent/30 bg-accent-soft text-3xl shadow-[0_0_20px_rgba(167,139,250,0.2)] animate-glow-pulse"
             >
               <step.icon className="w-6 h-6 text-accent" />
               <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-accent to-accent-secondary text-[10px] font-bold text-content-inverse">

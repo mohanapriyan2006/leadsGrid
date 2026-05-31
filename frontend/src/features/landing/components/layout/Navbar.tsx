@@ -13,10 +13,16 @@ const NAV_LINKS = [
 
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
+  const [progress, setProgress] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
+      setProgress(pct);
+    };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -36,10 +42,18 @@ export const Navbar = () => {
           : "bg-transparent"
         }`}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+      {/* Scroll progress bar */}
+      <div className="absolute bottom-0 left-0 h-[2px] w-full bg-transparent">
+        <div
+          className="h-full bg-gradient-to-r from-accent to-accent-secondary transition-all duration-150"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+
+      <div className={`mx-auto flex max-w-7xl items-center justify-between px-6 transition-all duration-300 ${scrolled ? "py-2.5" : "py-4"}`}>
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="text-xl font-bold tracking-tight"
+          className={`text-xl font-bold tracking-tight transition-transform duration-300 ${scrolled ? "scale-95" : "scale-100"}`}
         >
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="LeadsGrid" className="h-8 w-8" />
@@ -52,9 +66,10 @@ export const Navbar = () => {
             <button
               key={link.label}
               onClick={() => handleNavClick(link.href)}
-              className="text-sm text-content-secondary transition-colors hover:text-content"
+              className="relative text-sm text-content-secondary transition-colors hover:text-content"
             >
               {link.label}
+              <span className="absolute -bottom-0.5 left-0 h-[2px] w-0 bg-accent transition-all duration-300 hover:w-full" />
             </button>
           ))}
         </div>

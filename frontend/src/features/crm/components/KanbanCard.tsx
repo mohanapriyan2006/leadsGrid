@@ -45,7 +45,7 @@ export const KanbanCard = ({
         <ScoreBadge score={deal.score} />
       </div>
       <p className="text-[11px] text-content-secondary">{deal.company}</p>
-      <p className="mt-1 text-[11px]  text-content-tertiaryy">{deal.lastAction}</p>
+      <p className="mt-1 text-[11px]  ">{deal.lastAction}</p>
       <p className="mt-1 text-sm font-semibold text-success">{deal.value}</p>
     </div>
   );

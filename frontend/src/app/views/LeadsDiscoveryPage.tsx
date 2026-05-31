@@ -540,7 +540,7 @@ export const LeadsDiscoveryPage = () => {
         <header className="glass-card-lg p-5">
           <div className="flex md:flex-row flex-col items-start justify-between gap-5">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.14em]  text-content-tertiaryy">Lead Intelligence</p>
+              <p className="text-[11px] uppercase tracking-[0.14em]  ">Lead Intelligence</p>
               <h2 className="mt-1 text-2xl font-semibold text-content sm:text-3xl">
                 Discovery Console
                 <span className="ml-3 inline-block rounded-full border border-accent/30 bg-accent/10 px-3 py-1 align-middle text-xs text-accent">
@@ -585,7 +585,7 @@ export const LeadsDiscoveryPage = () => {
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             <div className="rounded-xl border border-accent/15 bg-surface/45 px-4 py-3">
-              <p className="text-[11px] uppercase tracking-[0.1em]  text-content-tertiaryy">Average Score</p>
+              <p className="text-[11px] uppercase tracking-[0.1em]  ">Average Score</p>
               <p className="mt-1 text-2xl font-semibold text-content">{averageScore}</p>
             </div>
             <div className="rounded-xl border border-accent-secondary/25 bg-accent-secondary/10 px-4 py-3">

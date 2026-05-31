@@ -5,7 +5,7 @@ import { SectionWrapper } from "../ui/SectionWrapper";
 import { GradientText } from "../ui/GradientText";
 import type { HowItWorksStep } from "../../types/landing";
 
-const STEPS: (HowItWorksStep & { icon: React.ElementType })[] = [
+const STEPS: HowItWorksStep[] = [
   {
     step: 1,
     title: "Discover",

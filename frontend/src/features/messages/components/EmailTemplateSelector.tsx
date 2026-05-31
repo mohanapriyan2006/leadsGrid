@@ -22,7 +22,7 @@ export const EmailTemplateSelector = ({
 }: EmailTemplateSelectorProps) => {
   return (
     <div className="space-y-3">
-      <p className="text-xs tracking-[0.1em]  text-content-tertiaryy">EMAIL TEMPLATE</p>
+      <p className="text-xs tracking-[0.1em]  ">EMAIL TEMPLATE</p>
       <div className="grid gap-2">
         {EMAIL_TEMPLATES.map((template) => {
           const active = template.id === selectedTemplateId;
@@ -38,7 +38,7 @@ export const EmailTemplateSelector = ({
               }`}
             >
               <p className="text-sm font-semibold">{template.name}</p>
-              <p className="mt-1 text-xs  text-content-tertiaryy">{template.layoutDescription}</p>
+              <p className="mt-1 text-xs  ">{template.layoutDescription}</p>
             </button>
           );
         })}
@@ -65,7 +65,7 @@ export const EmailTemplateSelector = ({
         </label>
       </div>
 
-      <p className="text-[11px]  text-content-tertiaryy">
+      <p className="text-[11px]  ">
         Use high-contrast colors for readability. CTA buttons should remain clearly visible on white backgrounds.
       </p>
 

@@ -28,11 +28,11 @@ export const LeadCard = ({ lead, isSelected, onSelect, onGenerateDraft }: LeadCa
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em]  text-content-tertiaryy">{lead.source} · {lead.author}</p>
+          <p className="text-xs uppercase tracking-[0.2em]  ">{lead.source} · {lead.author}</p>
           <p className="mt-2 text-sm text-content">{lead.summary}</p>
         </div>
         <div className="text-right">
-          <p className="text-xs  text-content-tertiaryy">Intent</p>
+          <p className="text-xs  ">Intent</p>
           <p className="text-2xl font-bold text-highlight">{lead.score}</p>
           <p className="text-[11px] text-accent">{lead.intent_label}</p>
         </div>

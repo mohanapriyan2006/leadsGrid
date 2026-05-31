@@ -6,7 +6,7 @@ import { GlassCard } from "../ui/GlassCard";
 import { GradientText } from "../ui/GradientText";
 import type { FeatureItem } from "../../types/landing";
 
-const FEATURES: (FeatureItem & { icon: React.ElementType })[] = [
+const FEATURES: FeatureItem[] = [
   {
     icon: Zap,
     title: "AI Lead Scoring",

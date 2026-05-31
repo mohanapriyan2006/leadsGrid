@@ -90,7 +90,7 @@ export const LeadsScoringSettingsSection = ({ leadsScoring, onChange }: LeadsSco
               className={`rounded-glass-sm border px-3 py-2 text-sm transition-all duration-200 ${
                 leadsScoring.refreshInterval === interval
                   ? "border-accent/50 bg-accent-soft  shadow-glow"
-                  : "border-accent/10 bg-surface-secondary/80  text-content-tertiaryy hover:border-accent/30 hover:text-content-secondary"
+                  : "border-accent/10 bg-surface-secondary/80   hover:border-accent/30 hover:text-content-secondary"
               }`}
             >
               {interval}m

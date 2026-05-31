@@ -17,7 +17,7 @@ const ACTION_ICONS: Record<string, React.ElementType> = {
 export const AIQuickActions = ({ actions, onAction }: AIQuickActionsProps) => {
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-xl border border-accent/[0.06] bg-surface-secondary/40 px-4 py-2.5 backdrop-blur-sm">
-      <span className="text-[10px] font-semibold uppercase tracking-widest  text-content-tertiaryy">
+      <span className="text-[10px] font-semibold uppercase tracking-widest  ">
         Quick
       </span>
       <div className="h-3 w-px bg-accent/10" />

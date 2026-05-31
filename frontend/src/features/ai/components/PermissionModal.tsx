@@ -1,3 +1,4 @@
+import React from "react";
 import type { AgentStep } from "../types/agent";
 import { AGENT_ACTIONS } from "../constants/agentActions";
 
@@ -41,19 +42,19 @@ export const PermissionModal = ({
           </div>
           <div>
             <h3 className="text-[15px] font-semibold text-content">Permission Required</h3>
-            <p className="text-[11px]  text-content-tertiaryy">Approve this action before execution</p>
+            <p className="text-[11px] ">Approve this action before execution</p>
           </div>
         </div>
 
         <div className="rounded-xl border border-accent/[0.06] bg-surface/40 p-3.5 mb-4">
           <div className="flex items-center gap-1.5 mb-1.5">
-            <span className="text-[12px]">{action.icon}</span>
+            <span className="text-[12px]"><action.icon className="w-4 h-4 text-content-secondary" /></span>
             <span className="text-[13px] font-medium text-content">{step.label}</span>
             <span className={`rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${risk.className}`}>
               {risk.label}
             </span>
           </div>
-          <p className="text-[12px]  text-content-tertiaryy leading-relaxed">{step.description}</p>
+          <p className="text-[12px]  leading-relaxed">{step.description}</p>
         </div>
 
         <label className="flex items-center gap-2 mb-4 cursor-pointer">
@@ -63,7 +64,7 @@ export const PermissionModal = ({
             onChange={onToggleAutoApprove}
             className="h-3.5 w-3.5 rounded border-accent/20 bg-surface accent-accent"
           />
-          <span className="text-[12px]  text-content-tertiaryy">
+          <span className="text-[12px] ">
             Auto-approve low-risk actions
           </span>
         </label>

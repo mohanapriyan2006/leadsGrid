@@ -76,7 +76,7 @@ export const AddDealForm = ({
           <button
             type="button"
             onClick={onCancel}
-            className="text-xs  text-content-tertiaryy hover:text-content-secondary transition"
+            className="text-xs   hover:text-content-secondary transition"
           >
             Cancel
           </button>

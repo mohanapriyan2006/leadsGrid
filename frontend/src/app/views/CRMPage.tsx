@@ -507,7 +507,7 @@ export const CRMPage = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-2 rounded-full border border-accent/10 bg-surface-secondary/80 px-3 py-1.5 text-[11px]  text-content-tertiaryy backdrop-blur-glass md:flex">
+            <div className="hidden items-center gap-2 rounded-full border border-accent/10 bg-surface-secondary/80 px-3 py-1.5 text-[11px]   backdrop-blur-glass md:flex">
               <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-success" />
               Realtime scoring enabled
             </div>
@@ -569,7 +569,7 @@ export const CRMPage = () => {
               </button>
             ))}
           </div>
-          <p className="hidden text-[11px]  text-content-tertiaryy md:block">
+          <p className="hidden text-[11px]   md:block">
             {view === "analysis"
               ? "Analyze pipeline trends, AI recommendations, and close probability in one place."
               : "Drag deals between stages in Kanban view to instantly update status."}

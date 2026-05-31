@@ -1,3 +1,5 @@
+import type { ElementType } from "react";
+
 export type SimulatedLead = {
   id: number;
   title: string;
@@ -16,7 +18,7 @@ export type PricingTier = {
 };
 
 export type FeatureItem = {
-  icon: string;
+  icon: ElementType;
   title: string;
   description: string;
 };
@@ -31,5 +33,5 @@ export type HowItWorksStep = {
   step: number;
   title: string;
   description: string;
-  icon: string;
+  icon: ElementType;
 };

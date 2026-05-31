@@ -60,7 +60,7 @@ export const SocialProofSection = () => {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-content">{testimonial.author}</p>
-                  <p className="text-xs  text-content-tertiaryy">{testimonial.role}</p>
+                  <p className="text-xs  ">{testimonial.role}</p>
                 </div>
               </div>
             </GlassCard>

@@ -28,7 +28,7 @@ export const AgentExecutionTimeline = ({
           </div>
           <div>
             <h4 className="text-[13px] font-semibold text-content">Execution Progress</h4>
-            <p className="text-[10px]  text-content-tertiaryy">
+            <p className="text-[10px]  ">
               {executionState.completedSteps}/{executionState.totalSteps} steps
             </p>
           </div>
@@ -58,7 +58,7 @@ export const AgentExecutionTimeline = ({
                         ? "bg-info/15 text-info animate-pulse"
                         : step.status === "failed"
                           ? "bg-danger/15 text-danger"
-                          : "bg-accent/[0.06]  text-content-tertiaryy"
+                          : "bg-accent/[0.06]  "
                   }`}
                 >
                   {step.status === "completed" ? <Check className="w-3 h-3" /> : step.status === "running" ? <Circle className="w-2.5 h-2.5 fill-current" /> : step.status === "failed" ? <X className="w-3 h-3" /> : index + 1}
@@ -87,10 +87,10 @@ export const AgentExecutionTimeline = ({
                   {step.label}
                 </p>
                 {step.result ? (
-                  <p className="mt-0.5 text-[11px]  text-content-tertiaryy">{step.result}</p>
+                  <p className="mt-0.5 text-[11px]  ">{step.result}</p>
                 ) : null}
                 {step.evaluation ? (
-                  <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px]  text-content-tertiaryy">
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px]  ">
                     <span className="rounded-md border border-accent/[0.08] bg-surface/60 px-1.5 py-0.5">
                       Quality {step.evaluation.score}/100
                     </span>
@@ -118,7 +118,7 @@ export const AgentExecutionTimeline = ({
           <span className="text-[12px] text-warning/80 font-medium">
             <Pause className="w-3.5 h-3.5 inline mr-1" /> Waiting for approval on step {executionState.currentStepIndex + 1}
           </span>
-          <span className="ml-auto text-[11px]  text-content-tertiaryy">Review the permission modal to continue.</span>
+          <span className="ml-auto text-[11px]  ">Review the permission modal to continue.</span>
         </div>
       ) : null}
 

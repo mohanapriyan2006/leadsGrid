@@ -43,7 +43,7 @@ export const LeadsDiscoveryFilters = ({
 
       <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr_1fr]">
         <div>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em]  text-content-tertiaryy">Sources</p>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em]  ">Sources</p>
           <div className="flex flex-wrap gap-2">
             {LEAD_SOURCES.map((source) => {
               const active = sources.includes(source);
@@ -66,7 +66,7 @@ export const LeadsDiscoveryFilters = ({
         </div>
 
         <div>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em]  text-content-tertiaryy">Minimum Score</p>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em]  ">Minimum Score</p>
           <div className="rounded-xl border border-accent/15 bg-surface/50 px-3 py-2">
             <input
               type="range"
@@ -85,7 +85,7 @@ export const LeadsDiscoveryFilters = ({
         </div>
 
         <div>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em]  text-content-tertiaryy">Industry</p>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em]  ">Industry</p>
           <select
             className="glass-input h-[42px] px-3"
             value={industry}

@@ -10,7 +10,7 @@ export const SettingsField = ({ label, hint, children }: SettingsFieldProps) => 
     <label className="block space-y-1.5">
       <span className="text-xs font-semibold tracking-[0.08em] text-content-secondary uppercase">{label}</span>
       {children}
-      {hint ? <span className="block text-[11px]  text-content-tertiaryy">{hint}</span> : null}
+      {hint ? <span className="block text-[11px]  ">{hint}</span> : null}
     </label>
   );
 };

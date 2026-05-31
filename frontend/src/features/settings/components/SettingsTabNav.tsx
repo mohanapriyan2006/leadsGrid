@@ -35,7 +35,7 @@ export const SettingsTabNav = ({ activeTab, onChange }: SettingsTabNavProps) => 
               onClick={() => onChange(tab.key)}
               className={`group min-w-[180px] rounded-glass-sm border px-3 py-2.5 text-left transition-all duration-200 md:min-w-0 ${
                 isActive
-                  ? "border-accent/40 bg-accent-soft text-content shadow-glow"
+                  ? "border-accent/40 bg-accent-soft text-content "
                   : "border-accent/10 bg-surface-secondary/70 text-content-secondary hover:border-accent/30 hover:text-content"
               }`}
             >
@@ -43,7 +43,7 @@ export const SettingsTabNav = ({ activeTab, onChange }: SettingsTabNavProps) => 
                 <Icon className="h-4 w-4" />
                 {tab.label}
               </span>
-              <span className="mt-1 block text-[11px] text-content-tertiary group-hover:text-content-secondary">
+              <span className="mt-1 block text-[11px]  text-content-secondary group-hover:text-content">
                 {tab.description}
               </span>
             </button>

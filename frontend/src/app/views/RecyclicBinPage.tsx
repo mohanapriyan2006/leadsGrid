@@ -144,7 +144,7 @@ export const RecyclicBinPage = () => {
           <p className="mt-1 text-sm text-content-secondary">Restore soft deleted leads or delete permanently.</p>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <p className="text-xs text-content-tertiary">
+            <p className="text-xs  text-content-tertiaryy">
               {selectedCount > 0 ? `${selectedCount} selected` : "Select leads to run bulk actions"}
             </p>
             <button

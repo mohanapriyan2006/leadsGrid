@@ -42,7 +42,7 @@ export const FinalCtaSection = () => {
           </GlowButton>
         </motion.div>
 
-        <p className="mt-6 text-sm text-content-tertiary">
+        <p className="mt-6 text-sm  text-content-tertiaryy">
           Free forever. No credit card required.
         </p>
       </motion.div>

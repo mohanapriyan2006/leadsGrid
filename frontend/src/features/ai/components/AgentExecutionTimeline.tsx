@@ -27,7 +27,7 @@ export const AgentExecutionTimeline = ({
           </div>
           <div>
             <h4 className="text-[13px] font-semibold text-content">Execution Progress</h4>
-            <p className="text-[10px] text-content-tertiary">
+            <p className="text-[10px]  text-content-tertiaryy">
               {executionState.completedSteps}/{executionState.totalSteps} steps
             </p>
           </div>
@@ -57,7 +57,7 @@ export const AgentExecutionTimeline = ({
                         ? "bg-info/15 text-info animate-pulse"
                         : step.status === "failed"
                           ? "bg-danger/15 text-danger"
-                          : "bg-accent/[0.06] text-content-tertiary"
+                          : "bg-accent/[0.06]  text-content-tertiaryy"
                   }`}
                 >
                   {step.status === "completed" ? "✓" : step.status === "running" ? "●" : step.status === "failed" ? "✕" : index + 1}
@@ -86,10 +86,10 @@ export const AgentExecutionTimeline = ({
                   {step.label}
                 </p>
                 {step.result ? (
-                  <p className="mt-0.5 text-[11px] text-content-tertiary">{step.result}</p>
+                  <p className="mt-0.5 text-[11px]  text-content-tertiaryy">{step.result}</p>
                 ) : null}
                 {step.evaluation ? (
-                  <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-content-tertiary">
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px]  text-content-tertiaryy">
                     <span className="rounded-md border border-accent/[0.08] bg-surface/60 px-1.5 py-0.5">
                       Quality {step.evaluation.score}/100
                     </span>
@@ -117,7 +117,7 @@ export const AgentExecutionTimeline = ({
           <span className="text-[12px] text-warning/80 font-medium">
             ⏸ Waiting for approval on step {executionState.currentStepIndex + 1}
           </span>
-          <span className="ml-auto text-[11px] text-content-tertiary">Review the permission modal to continue.</span>
+          <span className="ml-auto text-[11px]  text-content-tertiaryy">Review the permission modal to continue.</span>
         </div>
       ) : null}
 

@@ -26,7 +26,7 @@ export const Footer = () => {
               <img src="/logo.png" alt="LeadsGrid" className="h-8 w-8" />
               <GradientText className="text-xl font-bold">LeadsGrid</GradientText>
             </div>
-            <p className="text-sm leading-relaxed text-content-tertiary">
+            <p className="text-sm leading-relaxed  text-content-tertiaryy">
               AI-powered lead discovery platform that finds high-intent clients
               automatically.
             </p>
@@ -39,7 +39,7 @@ export const Footer = () => {
               <ul className="space-y-2">
                 {column.links.map((link) => (
                   <li key={link}>
-                    <span className="cursor-pointer text-sm text-content-tertiary transition-colors hover:text-content-secondary">
+                    <span className="cursor-pointer text-sm  text-content-tertiaryy transition-colors hover:text-content-secondary">
                       {link}
                     </span>
                   </li>
@@ -51,7 +51,7 @@ export const Footer = () => {
 
         {/* Bottom bar */}
         <div className="mt-12 border-t border-content/5 pt-8 text-center">
-          <p className="text-xs text-content-tertiary">
+          <p className="text-xs  text-content-tertiaryy">
             &copy; {new Date().getFullYear()} LeadsGrid. All rights reserved.
           </p>
         </div>

@@ -68,7 +68,7 @@ export const HeroSection = () => {
 
           <motion.div
             variants={itemVariants}
-            className="mt-8 flex items-center gap-6 text-sm text-content-tertiary"
+            className="mt-8 flex items-center gap-6 text-sm  text-content-tertiaryy"
           >
             <span className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
@@ -94,7 +94,7 @@ export const HeroSection = () => {
               <div className="h-3 w-3 rounded-full bg-red-500/60" />
               <div className="h-3 w-3 rounded-full bg-yellow-500/60" />
               <div className="h-3 w-3 rounded-full bg-green-500/60" />
-              <span className="ml-3 text-xs text-content-tertiary">LeadsGrid Dashboard</span>
+              <span className="ml-3 text-xs  text-content-tertiaryy">LeadsGrid Dashboard</span>
             </div>
 
             {/* Live lead notifications */}
@@ -116,7 +116,7 @@ export const HeroSection = () => {
                   className="rounded-lg border border-content/5 bg-surface-tertiary/40 p-3 text-center"
                 >
                   <p className="text-lg font-bold text-content">{stat.value}</p>
-                  <p className="text-[10px] text-content-tertiary">{stat.label}</p>
+                  <p className="text-[10px]  text-content-tertiaryy">{stat.label}</p>
                 </div>
               ))}
             </div>

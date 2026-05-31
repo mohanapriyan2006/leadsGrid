@@ -210,7 +210,7 @@ export const LeadsDiscoveryInsightPanel = ({
           </div>
 
           <div>
-            <p className="mb-1 text-[11px] uppercase tracking-[0.08em] text-content-tertiary">
+            <p className="mb-1 text-[11px] uppercase tracking-[0.08em]  text-content-tertiaryy">
               Intent Summary
             </p>
             <p className="text-xs leading-5 text-content-secondary">
@@ -228,7 +228,7 @@ export const LeadsDiscoveryInsightPanel = ({
 
           {showScrapedDetails ? (
             <div className="space-y-2 overflow-auto rounded-lg border border-accent/15 bg-surface/40 p-2.5 text-xs text-content-secondary">
-              <p className="text-[11px] uppercase tracking-[0.08em] text-content-tertiary">
+              <p className="text-[11px] uppercase tracking-[0.08em]  text-content-tertiaryy">
                 Scraped Details
               </p>
               <p>
@@ -248,7 +248,7 @@ export const LeadsDiscoveryInsightPanel = ({
                 {selectedLead.id}
               </p>
               <div>
-                <p className="mb-1 text-content-tertiary">Raw snippet</p>
+                <p className="mb-1  text-content-tertiaryy">Raw snippet</p>
                 <div className="max-h-40 overflow-y-auto whitespace-pre-wrap rounded border border-accent/10 bg-surface/50 p-2 leading-5 text-content-secondary">
                   {selectedLead.content ||
                     selectedLead.summary ||
@@ -260,7 +260,7 @@ export const LeadsDiscoveryInsightPanel = ({
 
           {selectedIntent ? (
             <div className="rounded-lg border border-accent-secondary/20 bg-accent-secondary/10 p-2.5">
-              <p className="mb-1 text-[11px] uppercase tracking-[0.08em] text-content-tertiary">
+              <p className="mb-1 text-[11px] uppercase tracking-[0.08em]  text-content-tertiaryy">
                 Advanced Qualification
               </p>
               <div className="flex flex-wrap gap-1.5">
@@ -302,13 +302,13 @@ export const LeadsDiscoveryInsightPanel = ({
           ) : null}
         </div>
       ) : (
-        <p className="rounded-xl border border-accent/10 bg-surface/40 p-3 text-center text-xs text-content-tertiary">
+        <p className="rounded-xl border border-accent/10 bg-surface/40 p-3 text-center text-xs  text-content-tertiaryy">
           Select a lead to inspect details and generate AI insights.
         </p>
       )}
 
       <div>
-        <p className="mb-2 text-xs uppercase tracking-[0.1em] text-content-tertiary">
+        <p className="mb-2 text-xs uppercase tracking-[0.1em]  text-content-tertiaryy">
           AI Insights
         </p>
         <div
@@ -377,12 +377,12 @@ export const LeadsDiscoveryInsightPanel = ({
       </div>
 
       <div className="space-y-2 rounded-xl border border-accent/10 bg-surface/40 p-3">
-        <p className="text-xs uppercase tracking-[0.1em] text-content-tertiary">
+        <p className="text-xs uppercase tracking-[0.1em]  text-content-tertiaryy">
           Hyper-Personalized Outreach
         </p>
 
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-[0.08em] text-content-tertiary">
+          <label className="text-[11px] uppercase tracking-[0.08em]  text-content-tertiaryy">
             Pain Point
           </label>
           <textarea
@@ -395,7 +395,7 @@ export const LeadsDiscoveryInsightPanel = ({
         </div>
 
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-[0.08em] text-content-tertiary">
+          <label className="text-[11px] uppercase tracking-[0.08em]  text-content-tertiaryy">
             Your Skills
           </label>
           <input
@@ -404,13 +404,13 @@ export const LeadsDiscoveryInsightPanel = ({
             placeholder="FastAPI, React, CRM automation"
             className="glass-input w-full px-2 py-2 text-xs text-content"
           />
-          <p className="text-[11px] text-content-tertiary">
+          <p className="text-[11px]  text-content-tertiaryy">
             {skillsCount} skills detected
           </p>
         </div>
 
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-[0.08em] text-content-tertiary">
+          <label className="text-[11px] uppercase tracking-[0.08em]  text-content-tertiaryy">
             Portfolio Summary
           </label>
           <textarea
@@ -420,7 +420,7 @@ export const LeadsDiscoveryInsightPanel = ({
             placeholder="Relevant outcomes you've delivered"
             className="glass-input w-full resize-none px-2 py-2 text-xs text-content"
           />
-          <p className="text-[11px] text-content-tertiary">
+          <p className="text-[11px]  text-content-tertiaryy">
             {portfolioSummaryInput.trim().length}/2000 chars
           </p>
         </div>
@@ -503,7 +503,7 @@ export const LeadsDiscoveryInsightPanel = ({
 
       {selectedLead ? (
         <div>
-          <p className="mb-2 text-xs uppercase tracking-[0.1em] text-content-tertiary">
+          <p className="mb-2 text-xs uppercase tracking-[0.1em]  text-content-tertiaryy">
             Signal Highlights
           </p>
           <div className="space-y-1.5">

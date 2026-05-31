@@ -25,7 +25,7 @@ export const EmptyState = ({ mode, suggestions, onSuggestionClick }: EmptyStateP
       </p>
 
       <div className="mt-5 w-full max-w-md">
-        <p className="mb-2 text-center text-[10px] font-semibold uppercase tracking-widest text-content-tertiary/70">
+        <p className="mb-2 text-center text-[10px] font-semibold uppercase tracking-widest  text-content-tertiaryy/70">
           Suggested Prompts
         </p>
         <SmartChipGroup suggestions={suggestions.slice(0, 3)} onChipClick={onSuggestionClick} />

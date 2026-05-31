@@ -38,7 +38,7 @@ export const ManageLeadsBoardCard = ({
     >
       <p className="text-sm font-semibold text-content">{lead.name}</p>
       <p className="text-[11px] text-content-secondary">{lead.company}</p>
-      <div className="mt-3 flex items-center gap-2 text-[11px] text-content-tertiary">
+      <div className="mt-3 flex items-center gap-2 text-[11px]  text-content-tertiaryy">
         <span>Score {lead.score}</span>
         <span>|</span>
         <span>{formatMoney(lead.budget_estimate)}</span>

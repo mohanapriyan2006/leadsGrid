@@ -46,7 +46,7 @@ export const AIComposer = ({
     <div className="sticky bottom-0 z-10 overflow-hidden rounded-2xl border border-accent/[0.1] bg-surface-secondary/60">
       {attachedLeads.length > 0 ? (
         <div className="flex flex-wrap items-center gap-2 border-b border-accent/[0.08] bg-surface/35 px-3 py-2">
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-content-tertiary">
+          <span className="text-[10px] font-semibold uppercase tracking-widest  text-content-tertiaryy">
             Attached Leads
           </span>
           {attachedLeads.map((lead) => (
@@ -132,12 +132,12 @@ export const AIComposer = ({
             {attachedLeads.length} leads attached
           </span>
         ) : (
-          <span className="text-[11px] text-content-tertiary/50">
+          <span className="text-[11px]  text-content-tertiaryy/50">
             Attach leads to focus AI context
           </span>
         )}
 
-        <label className="ml-auto flex items-center gap-2 text-[11px] text-content-tertiary">
+        <label className="ml-auto flex items-center gap-2 text-[11px]  text-content-tertiaryy">
           Tone
           <select
             value={tone}

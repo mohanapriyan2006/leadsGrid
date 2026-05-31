@@ -62,7 +62,7 @@ export const MessageLeadDetailsModal = ({
 
         {lead.notes ? (
           <div className="glass-card-sm mt-4 p-3 max-h-40 overflow-y-auto">
-            <p className="text-xs uppercase tracking-[0.08em] text-content-tertiary">Notes</p>
+            <p className="text-xs uppercase tracking-[0.08em]  text-content-tertiaryy">Notes</p>
             <p className="mt-2 text-sm leading-6 text-content">{lead.notes}</p>
           </div>
         ) : null}

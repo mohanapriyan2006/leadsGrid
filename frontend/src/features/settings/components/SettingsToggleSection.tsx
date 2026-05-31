@@ -16,7 +16,7 @@ export const SettingsToggleSection = ({
 }: SettingsToggleSectionProps) => {
   return (
     <section className="glass-card overflow-hidden">
-      <div className="border-b border-accent/10 bg-gradient-to-r from-accent/5 via-transparent to-transparent px-4 py-3 text-xs tracking-[0.1em] text-content-tertiary">
+      <div className="border-b border-accent/10 bg-gradient-to-r from-accent/5 via-transparent to-transparent px-4 py-3 text-xs tracking-[0.1em]  text-content-tertiaryy">
         {title}
       </div>
       <div className="space-y-2 p-3">

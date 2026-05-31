@@ -43,34 +43,34 @@ const LeadsDiscoveryIcon = ({ isActive }: { isActive: boolean }) => (
 
 const iconMap: Record<string, (isActive: boolean) => React.ReactNode> = {
   "Dashboard": (isActive) => (
-    <div className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}>
+    <div className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}>
       <LayoutDashboard className="w-4 h-4" />
     </div>
   ),
   "Leads Discovery": (isActive) => <LeadsDiscoveryIcon isActive={isActive} />,
   "Manage Leads": (isActive) => (
-    <div className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}>
+    <div className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}>
       <Layers className="w-4 h-4" />
     </div>
   ),
   "Messages": (isActive) => (
-    <div className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}>
+    <div className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}>
       <Inbox className="w-4 h-4" />
     </div>
   ),
   "CRM": (isActive) => (
-    <div className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}>
+    <div className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}>
       <Zap className="w-4 h-4" />
     </div>
   ),
   "AI": (isActive) => <AIIcon isActive={isActive} />,
   "Settings": (isActive) => (
-    <div className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}>
+    <div className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}>
       <Settings className="w-4 h-4" />
     </div>
   ),
   "Recycle Bin": (isActive) => (
-    <div className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}>
+    <div className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}>
       <Trash2 className="w-4 h-4" />
     </div>
   ),
@@ -93,14 +93,14 @@ export const Sidebar = ({ className = "" }: SidebarProps) => {
           <img src={logo} alt="leadsGrid" className="h-10 w-10" />
         </div>
         <div>
-          <span className="text-xl uppercase tracking-[0.10em] text-content-tertiary">LeadsGrid</span>
-          <p className="text-[10px] text-content-tertiary uppercase tracking-widest">Lead Intelligence</p>
+          <span className="text-xl uppercase tracking-[0.10em]  text-content-tertiaryy">LeadsGrid</span>
+          <p className="text-[10px]  text-content-tertiaryy uppercase tracking-widest">Lead Intelligence</p>
         </div>
       </div>
 
       {/* Navigation - Pro Level with Icons */}
       <nav className="space-y-1">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-content-tertiary mb-3 px-2 font-medium">Menu</p>
+        <p className="text-[10px] uppercase tracking-[0.2em]  text-content-tertiaryy mb-3 px-2 font-medium">Menu</p>
         {navigationItems.map((item, index) => {
           const isActive = location.pathname === item.path;
           const isAI = item.label === "AI";
@@ -142,7 +142,7 @@ export const Sidebar = ({ className = "" }: SidebarProps) => {
               {/* Icon */}
               <div className="relative z-10">
                 {iconMap[item.label]?.(isActive) || (
-                  <div className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50 text-content-tertiary"}`}>
+                  <div className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}>
                     <LayoutDashboard className="w-4 h-4" />
                   </div>
                 )}
@@ -161,7 +161,7 @@ export const Sidebar = ({ className = "" }: SidebarProps) => {
 
               {/* Hover arrow */}
               {!isActive && isHovered && (
-                <span className="ml-auto text-content-tertiary opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <span className="ml-auto  text-content-tertiaryy opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   →
                 </span>
               )}

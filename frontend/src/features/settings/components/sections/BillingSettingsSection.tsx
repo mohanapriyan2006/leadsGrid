@@ -23,7 +23,7 @@ export const BillingSettingsSection = ({ billing, onChange }: BillingSettingsSec
       <div className="space-y-3">
         {families.map((family) => (
           <div key={family} className="space-y-2">
-            <p className="text-[11px] uppercase tracking-[0.12em] text-content-tertiary">
+            <p className="text-[11px] uppercase tracking-[0.12em]  text-content-tertiaryy">
               {family === "single" ? "Single User" : "Organisation"}
             </p>
             <div className="grid gap-2 md:grid-cols-3">

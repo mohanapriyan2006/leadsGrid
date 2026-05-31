@@ -14,9 +14,9 @@ const nextStatus: Record<IntegrationStatus, IntegrationStatus> = {
 };
 
 const statusClassName: Record<IntegrationStatus, string> = {
-  connected: "badge-success",
-  needs_auth: "badge-warning",
-  disconnected: "badge-danger",
+  connected: "badge-success text-content",
+  needs_auth: "badge-warning text-content",
+  disconnected: "badge-danger text-content",
 };
 
 export const IntegrationsSettingsSection = ({
@@ -42,7 +42,7 @@ export const IntegrationsSettingsSection = ({
           return (
             <div key={provider.key} className="glass-card-sm flex items-center justify-between px-3 py-3">
               <div>
-                <p className="text-sm font-medium text-content">{provider.label}</p>
+                <p className="text-sm font-medium text-content ">{provider.label}</p>
                 <span className={statusClassName[status]}>{status.replace("_", " ")}</span>
               </div>
               <button

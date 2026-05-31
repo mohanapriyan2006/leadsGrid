@@ -27,7 +27,7 @@ export const ManageLeadsTableView = ({
 
   return (
     <div className="glass-card overflow-hidden">
-      <div className="hidden grid-cols-[44px_1.2fr_1.2fr_1.4fr_130px_80px_110px_220px] border-b border-accent/10 bg-gradient-to-r from-accent/5 via-transparent to-transparent px-4 py-2 text-[10px] uppercase tracking-[0.16em] text-content-tertiary md:grid">
+      <div className="hidden grid-cols-[44px_1.2fr_1.2fr_1.4fr_130px_80px_110px_220px] border-b border-accent/10 bg-gradient-to-r from-accent/5 via-transparent to-transparent px-4 py-2 text-[10px] uppercase tracking-[0.16em]  text-content-tertiaryy md:grid">
         <label className="flex items-center justify-center">
           <input
             type="checkbox"

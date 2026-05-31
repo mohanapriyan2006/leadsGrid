@@ -545,7 +545,7 @@ export const ManageLeadsPage = () => {
                 >
                   <p className="text-sm font-semibold text-content">{activeDragLead.name}</p>
                   <p className="text-[11px] text-content-secondary">{activeDragLead.company}</p>
-                  <div className="mt-3 flex items-center gap-2 text-[11px] text-content-tertiary">
+                  <div className="mt-3 flex items-center gap-2 text-[11px]  text-content-tertiaryy">
                     <span>Score {activeDragLead.score}</span>
                   </div>
                 </div>

@@ -41,7 +41,7 @@ export const SourcePerformanceChart = ({ data }: SourcePerformanceChartProps) =>
           </RadarChart>
         </ResponsiveContainer>
       </div>
-      <p className="text-xs text-content-tertiary">
+      <p className="text-xs  text-content-tertiaryy">
         Tip: prioritize channels where high-intent grows while total volume stays stable.
       </p>
     </PanelCard>

@@ -113,7 +113,7 @@ export const TryAiSection = () => {
                   <GlassCard className="flex items-center justify-between !p-4">
                     <div>
                       <p className="text-sm font-medium text-content">{result.title}</p>
-                      <p className="text-xs text-content-tertiary">{result.source}</p>
+                      <p className="text-xs  text-content-tertiaryy">{result.source}</p>
                     </div>
                     <span className="rounded-full bg-green-500/10 px-3 py-1 text-xs font-bold text-green-400">
                       {result.score}

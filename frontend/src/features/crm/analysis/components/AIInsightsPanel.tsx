@@ -44,7 +44,7 @@ export const AIInsightsPanel = ({ insights }: AIInsightsPanelProps) => {
       </div>
 
       <div className="rounded-glass-sm border border-accent/25 bg-surface-secondary/70 p-3">
-        <p className="text-xs uppercase tracking-[0.18em] text-content-tertiary">Next Best Action</p>
+        <p className="text-xs uppercase tracking-[0.18em]  text-content-tertiaryy">Next Best Action</p>
         <p className="mt-2 text-sm text-content">{insights.nextBestAction}</p>
       </div>
     </section>

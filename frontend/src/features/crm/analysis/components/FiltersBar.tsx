@@ -19,7 +19,7 @@ export const FiltersBar = ({
   return (
     <div className="glass-card-sm flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-content-tertiary">Window</span>
+        <span className="text-xs uppercase tracking-[0.18em]  text-content-tertiaryy">Window</span>
         <div className="inline-flex rounded-full border border-accent/15 bg-surface-secondary/70 p-1">
           {DATE_OPTIONS.map((option) => (
             <button
@@ -38,7 +38,7 @@ export const FiltersBar = ({
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-content-tertiary">Pipeline</span>
+        <span className="text-xs uppercase tracking-[0.18em]  text-content-tertiaryy">Pipeline</span>
         <div className="inline-flex rounded-full border border-accent/15 bg-surface-secondary/70 p-1">
           {PIPELINE_OPTIONS.map((option) => (
             <button

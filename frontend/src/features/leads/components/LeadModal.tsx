@@ -111,7 +111,7 @@ export const LeadModal = ({
                 <p className="text-sm text-content-secondary">{lead.company}</p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-content-tertiary">⋮⋮ Drag</span>
+                <span className="text-[10px]  text-content-tertiaryy">⋮⋮ Drag</span>
                 <button
                   type="button"
                   onClick={onClose}
@@ -180,7 +180,7 @@ export const LeadModal = ({
             {/* Notes Section */}
             <div className="glass-card-sm mt-3 p-3">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-content-tertiary uppercase tracking-[0.08em]">Notes</span>
+                <span className="text-xs font-semibold  text-content-tertiaryy uppercase tracking-[0.08em]">Notes</span>
                 {!isEditingNotes ? (
                   <button
                     type="button"
@@ -247,7 +247,7 @@ export const LeadModal = ({
                 className={`rounded-glass-sm px-3 py-1.5 text-xs font-semibold transition ${
                   nextStage
                     ? "accent-btn"
-                    : "cursor-not-allowed border border-accent/10 bg-surface-secondary/80 text-content-tertiary"
+                    : "cursor-not-allowed border border-accent/10 bg-surface-secondary/80  text-content-tertiaryy"
                 }`}
               >
                 ➡ Move Next{nextStage ? ` (${nextStage})` : " (Final Stage)"}

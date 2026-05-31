@@ -156,7 +156,7 @@ export const DealModal = ({
                 <p className="text-sm text-content-secondary">{deal.company}</p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-content-tertiary">⋮⋮ Drag</span>
+                <span className="text-[10px]  text-content-tertiaryy">⋮⋮ Drag</span>
                 <button type="button" onClick={onClose} className="glass-btn px-2 py-1 text-xs">
                   Close
                 </button>
@@ -200,19 +200,19 @@ export const DealModal = ({
 
             <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4">
               <div className="glass-card-sm p-2 text-center">
-                <p className="text-[10px] text-content-tertiary uppercase tracking-[0.08em]">Deal Value</p>
+                <p className="text-[10px]  text-content-tertiaryy uppercase tracking-[0.08em]">Deal Value</p>
                 <p className="text-sm font-semibold text-success">{deal.value}</p>
               </div>
               <div className="glass-card-sm p-2 text-center">
-                <p className="text-[10px] text-content-tertiary uppercase tracking-[0.08em]">Quality Score</p>
+                <p className="text-[10px]  text-content-tertiaryy uppercase tracking-[0.08em]">Quality Score</p>
                 <p className="text-sm font-semibold text-accent">{deal.score}/100</p>
               </div>
               <div className="glass-card-sm p-2 text-center">
-                <p className="text-[10px] text-content-tertiary uppercase tracking-[0.08em]">Progress</p>
+                <p className="text-[10px]  text-content-tertiaryy uppercase tracking-[0.08em]">Progress</p>
                 <p className="text-sm font-semibold text-info">{getProgress(deal.status)}%</p>
               </div>
               <div className="glass-card-sm p-2 text-center">
-                <p className="text-[10px] text-content-tertiary uppercase tracking-[0.08em]">Stage Time</p>
+                <p className="text-[10px]  text-content-tertiaryy uppercase tracking-[0.08em]">Stage Time</p>
                 <p className="text-sm font-semibold text-warning">{deal.daysInStage}d</p>
               </div>
             </div>
@@ -289,7 +289,7 @@ export const DealModal = ({
                   disabled={isFinalStage}
                   className={`rounded-glass-sm px-3 py-1.5 text-xs font-semibold transition ${
                     isFinalStage
-                      ? "cursor-not-allowed border border-accent/10 bg-surface-secondary/80 text-content-tertiary"
+                      ? "cursor-not-allowed border border-accent/10 bg-surface-secondary/80  text-content-tertiaryy"
                       : "accent-btn"
                   }`}
                 >

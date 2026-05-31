@@ -41,7 +41,7 @@ export const PermissionModal = ({
           </div>
           <div>
             <h3 className="text-[15px] font-semibold text-content">Permission Required</h3>
-            <p className="text-[11px] text-content-tertiary">Approve this action before execution</p>
+            <p className="text-[11px]  text-content-tertiaryy">Approve this action before execution</p>
           </div>
         </div>
 
@@ -53,7 +53,7 @@ export const PermissionModal = ({
               {risk.label}
             </span>
           </div>
-          <p className="text-[12px] text-content-tertiary leading-relaxed">{step.description}</p>
+          <p className="text-[12px]  text-content-tertiaryy leading-relaxed">{step.description}</p>
         </div>
 
         <label className="flex items-center gap-2 mb-4 cursor-pointer">
@@ -63,7 +63,7 @@ export const PermissionModal = ({
             onChange={onToggleAutoApprove}
             className="h-3.5 w-3.5 rounded border-accent/20 bg-surface accent-accent"
           />
-          <span className="text-[12px] text-content-tertiary">
+          <span className="text-[12px]  text-content-tertiaryy">
             Auto-approve low-risk actions
           </span>
         </label>

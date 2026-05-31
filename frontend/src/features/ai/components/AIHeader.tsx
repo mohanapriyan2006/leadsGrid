@@ -44,7 +44,7 @@ export const AIHeader = ({
             <h2 className="text-2xl font-bold tracking-tight text-content">
               AI Sales Engine
             </h2>
-            <p className="mt-0.5 text-xs text-content-tertiary">
+            <p className="mt-0.5 text-xs  text-content-tertiaryy">
               {mode === "ask"
                 ? "Ask anything about leads, pipeline, or outreach"
                 : "Tell the agent what to do. It will plan and execute."}
@@ -82,7 +82,7 @@ export const AIHeader = ({
 
       {historyOpen ? (
         <div className="absolute right-0 top-14 z-30 w-full max-w-sm rounded-xl border border-accent/10 bg-surface-secondary/95 p-3 shadow-glass md:w-96">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-content-tertiary">
+          <p className="text-[10px] font-semibold uppercase tracking-widest  text-content-tertiaryy">
             Recent Chats
           </p>
           <div className="mt-2 max-h-64 space-y-1.5 overflow-y-auto pr-1">
@@ -95,12 +95,12 @@ export const AIHeader = ({
                   className="w-full rounded-lg border border-accent/[0.06] bg-surface-tertiary/40 px-3 py-2 text-left transition-all hover:border-accent/15 hover:bg-surface-tertiary/70"
                 >
                   <p className="text-sm font-medium text-content">{session.title}</p>
-                  <p className="mt-0.5 line-clamp-1 text-[11px] text-content-tertiary">{session.preview}</p>
+                  <p className="mt-0.5 line-clamp-1 text-[11px]  text-content-tertiaryy">{session.preview}</p>
                   <p className="mt-0.5 text-[10px] text-accent/60">{session.createdAt}</p>
                 </button>
               ))
             ) : (
-              <p className="rounded-lg border border-dashed border-accent/10 bg-surface-tertiary/30 px-3 py-4 text-center text-xs text-content-tertiary">
+              <p className="rounded-lg border border-dashed border-accent/10 bg-surface-tertiary/30 px-3 py-4 text-center text-xs  text-content-tertiaryy">
                 No saved chats yet.
               </p>
             )}

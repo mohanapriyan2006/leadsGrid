@@ -9,7 +9,7 @@ import {
   closestCenter,
   DragOverlay,
 } from "@dnd-kit/core";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { CSS } from "@dnd-kit/utilities";
 
 import { ConfirmDialog } from "../../features/leads/components/ConfirmDialog";
@@ -67,6 +67,7 @@ type PendingLeadUpdate = {
 
 export const ManageLeadsPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { settings } = useSettingsState(user?.email);
   const {
@@ -153,6 +154,16 @@ export const ManageLeadsPage = () => {
       setSelectedManageLeadId(manageLeads[0].id);
     }
   }, [manageLeads, selectedManageLeadId, setSelectedManageLeadId]);
+
+  // Open lead from global search
+  useEffect(() => {
+    const leadId = location.state?.selectedManageLeadId;
+    if (leadId && typeof leadId === "string") {
+      setSelectedManageLeadId(leadId);
+      setDetailsOpen(true);
+      navigate(".", { replace: true, state: {} });
+    }
+  }, []);
 
   useEffect(() => {
     setHoveredId(null);

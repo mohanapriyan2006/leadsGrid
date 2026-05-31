@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import { AnimatePresence, motion } from "framer-motion";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
@@ -49,6 +49,7 @@ const INITIAL_NEW_DEAL: NewDealDraft = {
 
 export const CRMPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [view, setView] = useState<"table" | "kanban" | "analysis">("table");
   const {
     leads: centralizedLeads,
@@ -136,6 +137,16 @@ export const CRMPage = () => {
       prev.filter((id) => deals.some((deal) => deal.id === id)),
     );
   }, [deals]);
+
+  // Open deal from global search
+  useEffect(() => {
+    const dealId = location.state?.selectedDealId;
+    if (dealId && typeof dealId === "string") {
+      setSelectedDealId(dealId);
+      setDetailsOpen(true);
+      navigate(".", { replace: true, state: {} });
+    }
+  }, []);
 
   const activeDeal = useMemo(() => {
     if (hoveredId) {

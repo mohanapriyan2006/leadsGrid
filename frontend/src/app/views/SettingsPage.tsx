@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { PageBackground } from "../../components/ui/PageBackground";
 import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
@@ -27,8 +27,17 @@ import type { SettingsTabKey } from "../../features/settings/types/settings";
 
 export const SettingsPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<SettingsTabKey>("profile");
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    const validTabs: SettingsTabKey[] = SETTINGS_TABS.map((t) => t.key);
+    if (tab && validTabs.includes(tab as SettingsTabKey)) {
+      setActiveTab(tab as SettingsTabKey);
+    }
+  }, [searchParams]);
   const {
     settings,
     loading,

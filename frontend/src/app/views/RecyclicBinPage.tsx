@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { leadService } from "../../features/leads/services/leadService";
 import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLeads";
 import type { BinLead } from "../../features/leads/types/manageLead";
@@ -9,6 +10,9 @@ import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import bgBusinessPlan from "../../assets/bg-images/business-plan.svg";
 
 export const RecyclicBinPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   // Use centralized leads hook for real-time bin data
   const {
     binLeads,
@@ -122,6 +126,19 @@ export const RecyclicBinPage = () => {
   }, [selectedLead, getLeadById]);
 
   const isRestoreAction = pendingAction === "restore";
+
+  // Open lead from global search
+  useEffect(() => {
+    const leadId = location.state?.selectedLeadId;
+    if (leadId && typeof leadId === "string") {
+      const lead = binLeads.find((b) => b.id === leadId);
+      if (lead) {
+        setSelectedLead(lead);
+        setDetailsOpen(true);
+        navigate(".", { replace: true, state: {} });
+      }
+    }
+  }, [binLeads, location.state, navigate]);
 
   if (loading) {
     return (

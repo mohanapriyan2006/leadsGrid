@@ -43,7 +43,7 @@ export const SettingsTabNav = ({ activeTab, onChange }: SettingsTabNavProps) => 
                 <Icon className="h-4 w-4" />
                 {tab.label}
               </span>
-              <span className="mt-1 block text-[11px]  text-content-secondary group-hover:text-content">
+              <span className="mt-1 block text-[11px] text-content">
                 {tab.description}
               </span>
             </button>

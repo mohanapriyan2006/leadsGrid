@@ -1,10 +1,10 @@
 import { useAuth } from "../../features/auth/AuthContext";
 import { useState } from "react";
-import { Search } from "lucide-react";
 import logo from "../../assets/logo.png";
 import { useNavigate } from "react-router-dom";
 import { useFirebaseOnline } from "../../hooks/useFirebaseOnline";
 import { ThemeToggle } from "../../components/ui/ThemeToggle";
+import { GlobalSearch } from "./GlobalSearch";
 
 type TopbarProps = {
   onOpenMobileNav?: () => void;
@@ -19,7 +19,7 @@ export const Topbar = ({ onOpenMobileNav }: TopbarProps) => {
 
   return (
    
-    <header className="sticky top-0 z-5 flex items-center gap-3 border-b border-accent/10 bg-surface/70 px-3 py-2 backdrop-blur-glass sm:gap-4 sm:px-4 sm:py-3">
+    <header className="sticky top-0 z-6 flex items-center gap-3 border-b border-accent/10 bg-surface/70 px-3 py-2 backdrop-blur-glass sm:gap-4 sm:px-4 sm:py-3">
       {/* Logo - LeadsGrid only */}
       <div className="flex items-center gap-2 shrink-0 md:hidden cursor-pointer" onClick={() => navigate(homePath)}>
         <div className="relative flex items-center justify-center w-fit h-fit rounded-xl shadow-glow">
@@ -29,18 +29,7 @@ export const Topbar = ({ onOpenMobileNav }: TopbarProps) => {
 
       {/* Search Bar - Center */}
       <div className="flex-1 max-w-xl mx-auto">
-        <div className="relative group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4  text-content-tertiaryy transition-colors group-focus-within:text-accent" />
-          <input
-            type="search"
-            placeholder="Search signals or accounts..."
-            className="w-full glass-input h-9 pl-9 pr-4 py-2 text-xs rounded-full border-accent/10 focus:border-accent/40 focus:shadow-glow transition-all duration-300 sm:h-10 sm:text-sm"
-          />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 text-[10px]  text-content-tertiaryy bg-surface-tertiary/50 px-1.5 py-0.5 rounded">
-            <span>⌘</span>
-            <span>K</span>
-          </div>
-        </div>
+        <GlobalSearch />
       </div>
 
       {/* Right Side - Theme Toggle + Menu Icon (Avatar inside menu) */}

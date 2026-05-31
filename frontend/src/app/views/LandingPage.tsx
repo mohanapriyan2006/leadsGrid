@@ -1,5 +1,7 @@
 import { Navbar } from "../../features/landing/components/layout/Navbar";
 import { Footer } from "../../features/landing/components/layout/Footer";
+import { CursorGlow } from "../../features/landing/components/ui/CursorGlow";
+import { NoiseOverlay } from "../../features/landing/components/ui/NoiseOverlay";
 import { HeroSection } from "../../features/landing/components/sections/HeroSection";
 import { LiveDemoSection } from "../../features/landing/components/sections/LiveDemoSection";
 import { HowItWorksSection } from "../../features/landing/components/sections/HowItWorksSection";
@@ -12,7 +14,9 @@ import { FinalCtaSection } from "../../features/landing/components/sections/Fina
 
 export const LandingPage = () => {
   return (
-    <div className="min-h-screen bg-surface text-content">
+    <div className="relative min-h-screen bg-surface text-content">
+      <CursorGlow />
+      <NoiseOverlay />
       <Navbar />
       <HeroSection />
       <LiveDemoSection />

@@ -1,41 +1,34 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
+import { ParticleCanvas } from "../ui/ParticleCanvas";
 import { GlowButton } from "../ui/GlowButton";
 import { GradientText } from "../ui/GradientText";
-import { HeroDashboard3D } from "./HeroDashboard3D";
+import { LeadNotificationCard } from "../ui/LeadNotificationCard";
+import { TiltCard } from "../ui/TiltCard";
+import { CounterStat } from "../ui/CounterStat";
+import { useLeadSimulation } from "../../hooks/useLeadSimulation";
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.12, delayChildren: 0.2 },
+    transition: { staggerChildren: 0.15, delayChildren: 0.3 },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, type: "spring" as const, stiffness: 100, damping: 20 },
-  },
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" as const } },
 };
 
 export const HeroSection = () => {
   const navigate = useNavigate();
-  const handleDemoClick = () => {
-    document.querySelector("#live-demo")?.scrollIntoView({ behavior: "smooth" });
-  };
+  const { leads } = useLeadSimulation(3500, 3);
 
   return (
     <section className="relative flex min-h-screen items-center overflow-hidden">
-      {/* Aurora background glows */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[20%] -left-[10%] w-[600px] h-[600px] bg-accent/8 blur-[140px] rounded-full" />
-        <div className="absolute top-[40%] -right-[10%] w-[500px] h-[500px] bg-accent-secondary/8 blur-[120px] rounded-full" />
-        <div className="absolute -bottom-[10%] left-[30%] w-[400px] h-[400px] bg-info/5 blur-[100px] rounded-full" />
-      </div>
+      <ParticleCanvas />
 
       <div className="relative z-10 mx-auto grid max-w-7xl gap-12 px-6 pt-24 lg:grid-cols-2 lg:gap-16">
         {/* Left — Headline + CTA */}
@@ -71,7 +64,7 @@ export const HeroSection = () => {
             <GlowButton onClick={() => navigate("/login")}>
               Start Free
             </GlowButton>
-            <GlowButton variant="secondary" onClick={handleDemoClick}>
+            <GlowButton variant="secondary" onClick={() => handleDemoClick()}>
               Watch Demo
             </GlowButton>
           </motion.div>
@@ -91,14 +84,55 @@ export const HeroSection = () => {
           </motion.div>
         </motion.div>
 
-        {/* Right — 3D Dashboard */}
+        {/* Right — Animated Dashboard Preview with Tilt */}
         <motion.div
           initial={{ opacity: 0, x: 60, scale: 0.95 }}
           animate={{ opacity: 1, x: 0, scale: 1 }}
-          transition={{ duration: 0.9, delay: 0.4, ease: "easeOut" }}
+          transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
           className="relative hidden lg:flex lg:items-center"
         >
-          <HeroDashboard3D />
+          <TiltCard className="w-full">
+            <div className="w-full rounded-2xl border border-content/10 bg-surface-tertiary/40 p-6 backdrop-blur-xl">
+              {/* Mock dashboard header */}
+              <div className="mb-6 flex items-center gap-3">
+                <div className="h-3 w-3 rounded-full bg-danger/60" />
+                <div className="h-3 w-3 rounded-full bg-warning/60" />
+                <div className="h-3 w-3 rounded-full bg-success/60" />
+                <span className="ml-3 text-xs text-content-secondary">LeadsGrid Dashboard</span>
+              </div>
+
+              {/* Live lead notifications */}
+              <div className="space-y-3">
+                {leads.map((lead, idx) => (
+                  <LeadNotificationCard key={lead.id} lead={lead} index={idx} />
+                ))}
+              </div>
+
+              {/* Bottom stats with CounterStat */}
+              <div className="mt-6 grid grid-cols-3 gap-3">
+                <CounterStat
+                  target={1248}
+                  className="text-lg font-bold text-content"
+                  label="Leads Found"
+                />
+                <CounterStat
+                  target={87}
+                  suffix=".4"
+                  className="text-lg font-bold text-content"
+                  label="Avg Score"
+                />
+                <CounterStat
+                  target={34}
+                  suffix="%"
+                  className="text-lg font-bold text-content"
+                  label="Conversion"
+                />
+              </div>
+            </div>
+          </TiltCard>
+
+          {/* Glow behind dashboard */}
+          <div className="absolute -inset-4 -z-10 rounded-3xl bg-gradient-to-br from-accent/20 via-transparent to-accent-secondary/20 blur-3xl" />
         </motion.div>
       </div>
 
@@ -121,3 +155,7 @@ export const HeroSection = () => {
   );
 };
 
+function handleDemoClick() {
+  const demoSection = document.querySelector("#live-demo");
+  demoSection?.scrollIntoView({ behavior: "smooth" });
+}

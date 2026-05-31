@@ -1,4 +1,6 @@
-import { motion } from "framer-motion";
+import sys
+
+hero_content = '''import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import { GlowButton } from "../ui/GlowButton";
@@ -18,12 +20,13 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, type: "spring" as const, stiffness: 100, damping: 20 },
+    transition: { duration: 0.6, type: "spring", stiffness: 100, damping: 20 },
   },
 };
 
 export const HeroSection = () => {
   const navigate = useNavigate();
+
   const handleDemoClick = () => {
     document.querySelector("#live-demo")?.scrollIntoView({ behavior: "smooth" });
   };
@@ -106,7 +109,7 @@ export const HeroSection = () => {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.5, duration: 0.8 }}
+        transition={{ delay: 1.8, duration: 0.8 }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2"
       >
         <button
@@ -120,4 +123,8 @@ export const HeroSection = () => {
     </section>
   );
 };
+'''
 
+with open(r'd:\c\leadsGrid\frontend\src\features\landing\components\sections\HeroSection.tsx', 'w', encoding='utf-8') as f:
+    f.write(hero_content)
+print('HeroSection written successfully')

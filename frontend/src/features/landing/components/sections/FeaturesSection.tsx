@@ -1,42 +1,7 @@
-import React from "react";
-import { motion } from "framer-motion";
 import { Zap, Search, Bot, BarChart3 } from "lucide-react";
 import { SectionWrapper } from "../ui/SectionWrapper";
-import { GlassCard } from "../ui/GlassCard";
 import { GradientText } from "../ui/GradientText";
-import type { FeatureItem } from "../../types/landing";
-
-const FEATURES: FeatureItem[] = [
-  {
-    icon: Zap,
-    title: "AI Lead Scoring",
-    description: "Know which leads will convert before messaging.",
-  },
-  {
-    icon: Search,
-    title: "Multi-Source Discovery",
-    description: "Reddit, Google, LinkedIn — all in one.",
-  },
-  {
-    icon: Bot,
-    title: "Agent Mode",
-    description: "Let AI find, analyze, and prepare outreach.",
-  },
-  {
-    icon: BarChart3,
-    title: "Smart CRM",
-    description: "Track leads in a clean pipeline.",
-  },
-];
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, delay: i * 0.12, ease: "easeOut" as const },
-  }),
-};
+import { BentoGridCard } from "../ui/BentoGridCard";
 
 export const FeaturesSection = () => {
   return (
@@ -50,25 +15,36 @@ export const FeaturesSection = () => {
         </p>
       </div>
 
-      <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-2">
-        {FEATURES.map((feature, idx) => (
-          <motion.div
-            key={feature.title}
-            custom={idx}
-            variants={cardVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-60px" }}
-          >
-            <GlassCard hoverTilt className="group h-full">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-content/10 bg-surface-tertiary/30 text-2xl transition-shadow group-hover:shadow-[0_0_20px_rgba(167,139,250,0.3)]">
-                <feature.icon className="w-5 h-5 text-accent" />
-              </div>
-              <h3 className="mb-2 text-lg font-bold text-content">{feature.title}</h3>
-              <p className="text-sm leading-relaxed text-content-secondary">{feature.description}</p>
-            </GlassCard>
-          </motion.div>
-        ))}
+      {/* Asymmetrical Bento Grid */}
+      <div className="mx-auto grid max-w-5xl gap-5 md:grid-cols-3">
+        {/* Row 1: Large + Small */}
+        <BentoGridCard
+          title="AI Lead Scoring"
+          description="Know which leads will convert before you ever send a message. Our AI analyzes intent signals, engagement history, and source quality to surface only the hottest prospects."
+          icon={Zap}
+          scoreAnimation
+          className="md:col-span-2 md:row-span-1 min-h-[260px]"
+        />
+        <BentoGridCard
+          title="Multi-Source Discovery"
+          description="Reddit, Google, LinkedIn — all in one unified pipeline."
+          icon={Search}
+          className="min-h-[260px]"
+        />
+
+        {/* Row 2: Small + Large */}
+        <BentoGridCard
+          title="Agent Mode"
+          description="Let AI find, analyze, and prepare outreach sequences on autopilot."
+          icon={Bot}
+          className="min-h-[260px]"
+        />
+        <BentoGridCard
+          title="Smart CRM"
+          description="Track every lead through a clean, Kanban-style pipeline with automated follow-up reminders, stage transitions, and conversion analytics built right in."
+          icon={BarChart3}
+          className="md:col-span-2 md:row-span-1 min-h-[260px]"
+        />
       </div>
     </SectionWrapper>
   );

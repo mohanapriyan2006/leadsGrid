@@ -53,7 +53,7 @@ export const ConfirmDialog = ({
                 type="button"
                 className={`rounded-glass-sm px-3 py-1.5 text-xs font-semibold transition ${
                   danger
-                    ? "border border-danger/30 bg-danger-soft hover:shadow-[0_0_16px_rgba(239,68,68,0.3)]"
+                    ? "border border-danger/30 bg-danger-soft text-danger hover:shadow-[0_0_16px_rgba(239,68,68,0.3)]"
                     : "accent-btn"
                 }`}
                 onClick={onConfirm}

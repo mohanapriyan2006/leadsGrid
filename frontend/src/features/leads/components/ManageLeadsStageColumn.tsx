@@ -37,7 +37,7 @@ export const ManageLeadsStageColumn = ({
           <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-content flex items-center gap-1.5">
             <stage.icon className="w-3.5 h-3.5" /> {stage.label}
           </h3>
-          <span className="badge-accent px-2 py-0.5 text-[11px]  text-white ">{leads.length}</span>
+          <span className="badge-accent px-2 py-0.5 text-[11px]">{leads.length}</span>
         </div>
       </div>
 

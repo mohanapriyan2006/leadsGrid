@@ -15,7 +15,7 @@ export const SettingsSectionCard = ({ title, description, badge, children }: Set
             <h3 className="text-sm font-semibold tracking-[0.08em] text-content uppercase">{title}</h3>
             {description ? <p className="mt-1 text-xs text-content-secondary">{description}</p> : null}
           </div>
-          {badge ? <span className="badge-accent  text-white ">{badge}</span> : null}
+          {badge ? <span className="badge-accent">{badge}</span> : null}
         </div>
       </div>
       <div className="space-y-3 p-4">{children}</div>

@@ -314,7 +314,7 @@ export const SettingsPage = () => {
             </div>
 
             {saveMessage ? (
-              <div className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-2 text-sm text-white">
+              <div className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-2 text-sm text-success">
                 {saveMessage}
               </div>
             ) : null}

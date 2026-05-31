@@ -322,7 +322,7 @@ export const MessageComposerPanel = ({
                 <button
                   type="button"
                   onClick={onCopy}
-                  className="rounded-glass-sm border border-success/30 bg-success-soft px-4 py-1.5 text-xs font-semibold tracking-[0.08em]  transition hover:border-success/50 hover:shadow-[0_0_16px_rgba(16,185,129,0.2)]"
+                  className="rounded-glass-sm border border-success/30 bg-success-soft px-4 py-1.5 text-xs font-semibold tracking-[0.08em] text-success transition hover:border-success/50 hover:shadow-[0_0_16px_rgba(16,185,129,0.2)]"
                 >
                   {copied ? "COPIED" : "COPY"}
                 </button>

@@ -14,7 +14,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useAuth } from "../../features/auth/AuthContext";
-import logo from "../../assets/logo1.png";
+import logo from "../../assets/logo.png";
 
 import { navigationItems } from "../../constants/navigation";
 import { useFirebaseOnline } from "../../hooks/useFirebaseOnline";
@@ -217,8 +217,8 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
               className="flex items-center gap-3 mb-4 cursor-pointer"
               onClick={() => navigate(homePath)}
             >
-              <div className="relative flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-700 to-purple-900 shadow-glow animate-float">
-                <img src={logo} alt="leadsGrid" className="h-6 w-6" />
+              <div className="relative flex items-center justify-center w-10 h-10 rounded-2xl ">
+                <img src={logo} alt="leadsGrid" className="h-6 w-6 logo-image" />
               </div>
               <div>
                 <span className="text-xl uppercase tracking-[0.10em]  text-content-tertiaryy">

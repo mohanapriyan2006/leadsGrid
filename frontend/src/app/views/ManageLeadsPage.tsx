@@ -483,7 +483,7 @@ export const ManageLeadsPage = () => {
         />
 
         {feedback ? (
-          <div className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-2 text-sm text-success">
+          <div className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-2 text-sm ">
             {feedback}
           </div>
         ) : null}

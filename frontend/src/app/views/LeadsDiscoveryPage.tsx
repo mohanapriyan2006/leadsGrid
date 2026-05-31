@@ -601,7 +601,7 @@ export const LeadsDiscoveryPage = () => {
               <p className="mt-1 text-2xl font-semibold text-content">{analyzedVisibleCount}</p>
             </div>
             <div className="rounded-xl border border-success/25 bg-success/10 px-4 py-3">
-              <p className="text-[11px] uppercase tracking-[0.1em] text-success">Qualified Rate</p>
+              <p className="text-[11px] uppercase tracking-[0.1em]">Qualified Rate</p>
               <p className="mt-1 text-2xl font-semibold text-content">{qualificationRate}%</p>
             </div>
           </div>
@@ -683,9 +683,9 @@ export const LeadsDiscoveryPage = () => {
             {saveFeedback ? (
               <div
                 className={`rounded-xl p-3 text-sm ${saveFeedback.startsWith("Saved")
-                    ? "border border-success/25 bg-success/10 text-success"
+                    ? "border border-success/25 bg-success/10 "
                     : saveFeedback.startsWith("Not saved")
-                      ? "border border-warning/25 bg-warning/10 text-warning"
+                      ? "border border-warning/25 bg-warning/10 "
                       : "border border-accent/20 bg-accent/10 text-content-secondary"
                   }`}
               >

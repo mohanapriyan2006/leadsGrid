@@ -86,7 +86,7 @@ export const CRMAnalysisPage = ({ deals }: CRMAnalysisPageProps) => {
             {prediction.atRiskDeals.slice(0, 5).map((deal) => (
               <li key={deal.id} className="flex items-center justify-between gap-2 rounded-glass-sm border border-danger/20 bg-danger-soft px-3 py-2">
                 <span>{deal.name}</span>
-                <span className="text-xs text-danger">{deal.daysInStage}d in stage</span>
+                <span className="text-xs ">{deal.daysInStage}d in stage</span>
               </li>
             ))}
           </ul>

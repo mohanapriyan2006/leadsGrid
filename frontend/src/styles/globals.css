@@ -505,6 +505,10 @@
     letter-spacing: 0.03em;
   }
 
+  .logo-image{
+    box-shadow: 0 0 10px rgba(154, 121, 255, 0.4)
+  }
+
   /* Light mode component overrides */
   [data-theme="light"] .glass-card {
     background: rgba(212, 214, 224, 0.55);

@@ -651,3 +651,28 @@
 .animate-bounce-chevron {
   animation: bounce-chevron 2s ease-in-out infinite;
 }
+
+@layer utilities {
+  .perspective-1200 {
+    perspective: 1200px;
+  }
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .preserve-3d {
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+  }
+  .transform-gpu {
+    transform: translateZ(0);
+  }
+}
+
+@keyframes noise-pulse {
+  0%, 100% { opacity: 0.02; }
+  50% { opacity: 0.035; }
+}

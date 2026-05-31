@@ -9,23 +9,36 @@ export const FinalCtaSection = () => {
 
   return (
     <section className="relative overflow-hidden py-32">
-      {/* Background glow - expands on scroll */}
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0.5 }}
-        whileInView={{ scale: 1, opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 1.2, ease: "easeOut" }}
-        className="absolute inset-0"
-      >
-        <div className="absolute left-1/2 top-1/2 h-[500px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/10 blur-[150px]" />
-        <div className="absolute left-1/3 top-1/2 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent-secondary/10 blur-[120px]" />
-      </motion.div>
+      {/* Aurora background orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          whileInView={{ scale: 1, opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          className="absolute left-1/2 top-1/2 h-[600px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/8 blur-[160px]"
+        />
+        <motion.div
+          initial={{ scale: 0.6, opacity: 0 }}
+          whileInView={{ scale: 1, opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.5, delay: 0.2, ease: "easeOut" }}
+          className="absolute left-[30%] top-[60%] h-[400px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent-secondary/8 blur-[140px]"
+        />
+        <motion.div
+          initial={{ scale: 0.6, opacity: 0 }}
+          whileInView={{ scale: 1, opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.5, delay: 0.4, ease: "easeOut" }}
+          className="absolute right-[20%] top-[30%] h-[350px] w-[450px] rounded-full bg-info/5 blur-[120px]"
+        />
+      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.7 }}
+        transition={{ duration: 0.7, type: "spring" as const, stiffness: 100, damping: 20 }}
         className="relative z-10 mx-auto max-w-3xl px-6 text-center"
       >
         <h2 className="mb-6 font-display text-5xl font-bold leading-tight md:text-6xl">
@@ -46,6 +59,7 @@ export const FinalCtaSection = () => {
 
         <motion.div
           whileHover={{ scale: 1.05 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
           className="inline-block"
         >
           <GlowButton

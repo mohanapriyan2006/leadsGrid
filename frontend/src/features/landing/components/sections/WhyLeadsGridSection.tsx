@@ -1,3 +1,4 @@
+import { useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { X, Check } from "lucide-react";
 import { SectionWrapper } from "../ui/SectionWrapper";
@@ -17,14 +18,91 @@ const WITH = [
   "Close deals 5x faster",
 ];
 
-const listItemVariants = {
-  hidden: { opacity: 0, x: -20 },
-  visible: (i: number) => ({
-    opacity: 1,
-    x: 0,
-    transition: { duration: 0.4, delay: i * 0.1 },
-  }),
-};
+function ComparisonCard({
+  title,
+  items,
+  icon: Icon,
+  iconBg,
+  iconColor,
+  borderColor,
+  glowColor,
+  direction,
+}: {
+  title: string;
+  items: string[];
+  icon: typeof X;
+  iconBg: string;
+  iconColor: string;
+  borderColor: string;
+  glowColor: string;
+  direction: number;
+}) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    setCoords({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  }, []);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: direction * 60 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.7, type: "spring" as const, stiffness: 100, damping: 20 }}
+      whileHover={{ scale: 1.01 }}
+    >
+      <div
+        ref={cardRef}
+        onMouseMove={handleMouseMove}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className={`relative overflow-hidden rounded-2xl border ${borderColor} p-8 shadow-[0_0_40px_${glowColor}] transition-shadow duration-300`}
+        style={{ background: `rgba(${borderColor.includes('danger') ? '239,68,68' : '16,185,129'},0.03)` }}
+      >
+        {/* Inner spotlight */}
+        {isHovered && (
+          <div
+            className="pointer-events-none absolute inset-0 z-0 mix-blend-screen"
+            style={{
+              background: `radial-gradient(350px circle at ${coords.x}px ${coords.y}px, rgba(${borderColor.includes('danger') ? '239,68,68' : '16,185,129'},0.08), transparent 80%)`,
+            }}
+          />
+        )}
+
+        <div className="relative z-10">
+          <h3 className={`mb-6 font-display text-xl font-bold ${iconColor}`}>{title}</h3>
+          <ul className="space-y-4">
+            {items.map((item, idx) => (
+              <motion.li
+                key={item}
+                initial={{ opacity: 0, x: direction * -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{
+                  duration: 0.4,
+                  delay: idx * 0.1,
+                  type: "spring" as const,
+                  stiffness: 100,
+                  damping: 20,
+                }}
+                className="flex items-center gap-3 text-sm text-content-secondary transition-colors hover:text-content"
+              >
+                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${iconBg} text-xs ${iconColor}`}>
+                  <Icon className="w-3 h-3" />
+                </span>
+                {item}
+              </motion.li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
 export const WhyLeadsGridSection = () => {
   return (
@@ -36,67 +114,26 @@ export const WhyLeadsGridSection = () => {
       </div>
 
       <div className="mx-auto grid max-w-4xl gap-8 md:grid-cols-2">
-        {/* Without */}
-        <motion.div
-          initial={{ opacity: 0, x: -60 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-          className="rounded-2xl border border-danger/10 bg-danger/[0.03] p-8 shadow-[0_0_40px_rgba(239,68,68,0.06)]"
-        >
-          <h3 className="mb-6 font-display text-xl font-bold text-danger">
-            Without LeadsGrid
-          </h3>
-          <ul className="space-y-4">
-            {WITHOUT.map((item, idx) => (
-              <motion.li
-                key={item}
-                custom={idx}
-                variants={listItemVariants}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                className="flex items-center gap-3 text-sm text-content-secondary"
-              >
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-danger/20 text-xs text-danger">
-                  <X className="w-3 h-3" />
-                </span>
-                {item}
-              </motion.li>
-            ))}
-          </ul>
-        </motion.div>
-
-        {/* With */}
-        <motion.div
-          initial={{ opacity: 0, x: 60 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-          className="rounded-2xl border border-success/10 bg-success/[0.03] p-8 shadow-[0_0_40px_rgba(16,185,129,0.06)]"
-        >
-          <h3 className="mb-6 font-display text-xl font-bold text-success">
-            With LeadsGrid
-          </h3>
-          <ul className="space-y-4">
-            {WITH.map((item, idx) => (
-              <motion.li
-                key={item}
-                custom={idx}
-                variants={listItemVariants}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                className="flex items-center gap-3 text-sm text-content-secondary"
-              >
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success/20 text-xs text-success">
-                  <Check className="w-3 h-3" />
-                </span>
-                {item}
-              </motion.li>
-            ))}
-          </ul>
-        </motion.div>
+        <ComparisonCard
+          title="Without LeadsGrid"
+          items={WITHOUT}
+          icon={X}
+          iconBg="bg-danger/20"
+          iconColor="text-danger"
+          borderColor="border-danger/10"
+          glowColor="rgba(239,68,68,0.06)"
+          direction={-1}
+        />
+        <ComparisonCard
+          title="With LeadsGrid"
+          items={WITH}
+          icon={Check}
+          iconBg="bg-success/20"
+          iconColor="text-success"
+          borderColor="border-success/10"
+          glowColor="rgba(16,185,129,0.06)"
+          direction={1}
+        />
       </div>
     </SectionWrapper>
   );

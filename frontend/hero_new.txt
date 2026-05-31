@@ -24,6 +24,7 @@ const itemVariants = {
 
 export const HeroSection = () => {
   const navigate = useNavigate();
+
   const handleDemoClick = () => {
     document.querySelector("#live-demo")?.scrollIntoView({ behavior: "smooth" });
   };
@@ -106,7 +107,7 @@ export const HeroSection = () => {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.5, duration: 0.8 }}
+        transition={{ delay: 1.8, duration: 0.8 }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2"
       >
         <button
@@ -120,4 +121,3 @@ export const HeroSection = () => {
     </section>
   );
 };
-

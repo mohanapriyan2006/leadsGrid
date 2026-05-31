@@ -170,7 +170,7 @@ export const RecyclicBinPage = () => {
                 handleBulkRestore();
               }}
               disabled={selectedCount === 0}
-              className="badge-success  text-white  cursor-pointer transition disabled:cursor-not-allowed disabled:opacity-50"
+              className="badge-success cursor-pointer transition disabled:cursor-not-allowed disabled:opacity-50"
             >
               Restore Selected
             </button>
@@ -180,7 +180,7 @@ export const RecyclicBinPage = () => {
                 handleBulkDelete();
               }}
               disabled={selectedCount === 0}
-              className="badge-danger text-white  cursor-pointer transition disabled:cursor-not-allowed disabled:opacity-50"
+              className="badge-danger cursor-pointer transition disabled:cursor-not-allowed disabled:opacity-50"
             >
               Delete Selected
             </button>

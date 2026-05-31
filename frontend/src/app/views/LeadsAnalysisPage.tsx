@@ -72,9 +72,9 @@ export const LeadsAnalysisPage = ({ leads }: LeadsAnalysisPageProps) => {
           <p className="text-xs uppercase tracking-[0.16em]  ">Best Leads To Contact Today</p>
           <ul className="mt-3 space-y-2 text-sm ">
             {prediction.highPotentialLeads.slice(0, 5).map((lead) => (
-              <li key={lead.id} className="flex items-center justify-between gap-2 rounded-glass-sm border border-success/20 bg-success-soft px-3 py-2">
+              <li key={lead.id} className="flex items-center justify-between gap-2 rounded-glass-sm border border-success/20 bg-success-soft px-3 py-2 text-success">
                 <span>{lead.name}</span>
-                <span className="text-xs ">Score {lead.score}</span>
+                <span className="text-xs">Score {lead.score}</span>
               </li>
             ))}
           </ul>
@@ -84,9 +84,9 @@ export const LeadsAnalysisPage = ({ leads }: LeadsAnalysisPageProps) => {
           <p className="text-xs uppercase tracking-[0.16em]  ">Auto Discard Suggestions</p>
           <ul className="mt-3 space-y-2 text-sm text-content-secondary">
             {prediction.discardCandidates.slice(0, 5).map((lead) => (
-              <li key={lead.id} className="flex items-center justify-between gap-2 rounded-glass-sm border border-danger/20 bg-danger-soft px-3 py-2">
+              <li key={lead.id} className="flex items-center justify-between gap-2 rounded-glass-sm border border-danger/20 bg-danger-soft px-3 py-2 text-danger">
                 <span>{lead.name}</span>
-                <span className="text-xs text-danger">Score {lead.score}</span>
+                <span className="text-xs">Score {lead.score}</span>
               </li>
             ))}
           </ul>

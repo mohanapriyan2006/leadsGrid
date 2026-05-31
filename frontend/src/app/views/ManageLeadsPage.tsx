@@ -494,7 +494,7 @@ export const ManageLeadsPage = () => {
         />
 
         {feedback ? (
-          <div className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-2 text-sm ">
+          <div className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-2 text-sm text-success">
             {feedback}
           </div>
         ) : null}
@@ -575,7 +575,7 @@ export const ManageLeadsPage = () => {
                   setConfirmBulkDeleteOpen(true);
                 }}
                 disabled={selectedLeadIds.length === 0}
-                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2.5 py-1 text-[11px] text-danger  text-white  disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2.5 py-1 text-[11px] text-danger disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Delete Selected
               </button>

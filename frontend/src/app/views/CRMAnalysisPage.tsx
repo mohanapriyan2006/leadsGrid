@@ -72,9 +72,9 @@ export const CRMAnalysisPage = ({ deals }: CRMAnalysisPageProps) => {
           <p className="text-xs uppercase tracking-[0.16em]  ">Top Close Candidates</p>
           <ul className="mt-3 space-y-2 text-sm  ">
             {prediction.closingDeals.slice(0, 5).map((deal) => (
-              <li key={deal.id} className="flex items-center justify-between gap-2 rounded-glass-sm border border-success/20 bg-success-soft px-3 py-2">
+              <li key={deal.id} className="flex items-center justify-between gap-2 rounded-glass-sm border border-success/20 bg-success-soft px-3 py-2 text-success">
                 <span>{deal.name}</span>
-                <span className="text-xs text-success">Score {deal.score}</span>
+                <span className="text-xs">Score {deal.score}</span>
               </li>
             ))}
           </ul>
@@ -84,9 +84,9 @@ export const CRMAnalysisPage = ({ deals }: CRMAnalysisPageProps) => {
           <p className="text-xs uppercase tracking-[0.16em]  ">Needs Intervention</p>
           <ul className="mt-3 space-y-2 text-sm  ">
             {prediction.atRiskDeals.slice(0, 5).map((deal) => (
-              <li key={deal.id} className="flex items-center justify-between gap-2 rounded-glass-sm border border-danger/20 bg-danger-soft px-3 py-2">
+              <li key={deal.id} className="flex items-center justify-between gap-2 rounded-glass-sm border border-danger/20 bg-danger-soft px-3 py-2 text-danger">
                 <span>{deal.name}</span>
-                <span className="text-xs ">{deal.daysInStage}d in stage</span>
+                <span className="text-xs">{deal.daysInStage}d in stage</span>
               </li>
             ))}
           </ul>

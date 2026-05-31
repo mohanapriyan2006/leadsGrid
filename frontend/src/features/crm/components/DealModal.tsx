@@ -180,13 +180,13 @@ export const DealModal = ({
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
-              <span className="badge-info  text-white ">Score {deal.score}</span>
-              <span className={`badge-success  text-white  ${getStatusColor(deal.status)}`}>
+              <span className="badge-info">Score {deal.score}</span>
+              <span className={`badge-success ${getStatusColor(deal.status)}`}>
                 Status {deal.status}
               </span>
-              <span className="badge-accent  text-white ">Value {deal.value}</span>
-              <span className="badge-warning  text-white ">Health {health}</span>
-              <span className="badge-danger text-white ">Risk {risk}</span>
+              <span className="badge-accent">Value {deal.value}</span>
+              <span className="badge-warning">Health {health}</span>
+              <span className="badge-danger">Risk {risk}</span>
             </div>
 
             <div className="glass-card-sm mt-4 p-3 text-xs">
@@ -226,7 +226,7 @@ export const DealModal = ({
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
                 {playbook.map((item) => (
-                  <span key={item} className="badge-accent  text-white ">
+                  <span key={item} className="badge-accent">
                     {item}
                   </span>
                 ))}
@@ -305,7 +305,7 @@ export const DealModal = ({
               <button
                 type="button"
                 onClick={onDelete}
-                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-3 py-1.5 text-xs transition hover:shadow-[0_0_16px_rgba(239,68,68,0.3)]"
+                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-3 py-1.5 text-xs text-danger transition hover:shadow-[0_0_16px_rgba(239,68,68,0.3)]"
               >
                 <Trash2 className="w-3.5 h-3.5 inline mr-1" /> Delete
               </button>

@@ -32,9 +32,9 @@
   --accent-secondary-rgb: 139 92 246;
   --accent-tertiary: #6366f1;
   --accent-tertiary-rgb: 99 102 241;
-  --accent-soft: rgba(153, 119, 252, 0.15);
+  --accent-soft: rgba(153, 119, 252, 0.35);
   --accent-soft-rgb: 139 92 246;;
-  --accent-glow: rgba(64, 62, 69, 0.4);
+  --accent-glow: rgba(64, 62, 69, 0.25);
   --accent-glow-rgb: 153 119 252;
 
   /* === SEMANTIC COLORS === */
@@ -105,9 +105,9 @@
   --accent-secondary-rgb: 124 58 237;
   --accent-tertiary: #6366f1;
   --accent-tertiary-rgb: 99 102 241;
-  --accent-soft: rgba(167, 132, 249, 0.12);
+  --accent-soft: rgba(167, 132, 249, 0.35);
   --accent-soft-rgb: 167 132 249;
-  --accent-glow: rgba(139, 92, 246, 0.35);
+  --accent-glow: rgba(139, 92, 246, 0.25);
   --accent-glow-rgb: 139 92 246;
 
   /* === SEMANTIC COLORS === */

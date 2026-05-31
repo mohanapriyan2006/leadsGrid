@@ -15,27 +15,27 @@ export const AIInsightsPanel = ({ insights }: AIInsightsPanelProps) => {
       </header>
 
       <div className="grid gap-3 lg:grid-cols-3">
-        <article className="rounded-glass-sm border border-info/25 bg-info-soft p-3">
+        <article className="rounded-glass-sm border border-info/25 bg-info-soft p-3 text-info">
           <p className="text-xs uppercase tracking-[0.16em]">Insights</p>
-          <ul className="mt-2 space-y-2 text-sm  ">
+          <ul className="mt-2 space-y-2 text-sm">
             {insights.insights.map((item) => (
               <li key={item}>- {item}</li>
             ))}
           </ul>
         </article>
 
-        <article className="rounded-glass-sm border border-success/25 bg-success-soft p-3">
-          <p className="text-xs uppercase tracking-[0.16em] ">Recommended Actions</p>
-          <ul className="mt-2 space-y-2 text-sm  ">
+        <article className="rounded-glass-sm border border-success/25 bg-success-soft p-3 text-success">
+          <p className="text-xs uppercase tracking-[0.16em]">Recommended Actions</p>
+          <ul className="mt-2 space-y-2 text-sm">
             {insights.actions.map((item) => (
               <li key={item}>- {item}</li>
             ))}
           </ul>
         </article>
 
-        <article className="rounded-glass-sm border border-danger/25 bg-danger-soft p-3">
-          <p className="text-xs uppercase tracking-[0.16em] ">Risk Alerts</p>
-          <ul className="mt-2 space-y-2 text-sm  ">
+        <article className="rounded-glass-sm border border-danger/25 bg-danger-soft p-3 text-danger">
+          <p className="text-xs uppercase tracking-[0.16em]">Risk Alerts</p>
+          <ul className="mt-2 space-y-2 text-sm">
             {insights.risks.map((item) => (
               <li key={item}>- {item}</li>
             ))}

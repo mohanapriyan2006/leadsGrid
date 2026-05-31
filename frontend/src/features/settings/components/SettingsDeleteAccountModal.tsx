@@ -38,7 +38,7 @@ export const SettingsDeleteAccountModal = ({
           <>
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-danger-soft">
-                <span className="text-sm font-bold ">1/3</span>
+                <span className="text-sm font-bold text-danger">1/3</span>
               </div>
               <h3 className="text-lg font-semibold text-content">Re-authenticate</h3>
             </div>
@@ -69,7 +69,7 @@ export const SettingsDeleteAccountModal = ({
           <>
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-danger-soft">
-                <span className="text-sm font-bold ">2/3</span>
+                <span className="text-sm font-bold text-danger">2/3</span>
               </div>
               <h3 className="text-lg font-semibold text-content">Type to Confirm</h3>
             </div>
@@ -89,7 +89,7 @@ export const SettingsDeleteAccountModal = ({
               <button
                 type="button"
                 onClick={onStepTwoConfirm}
-                className="rounded-glass-sm flex-1 border border-danger/30 bg-danger-soft py-2 text-sm font-semibold "
+                className="rounded-glass-sm flex-1 border border-danger/30 bg-danger-soft py-2 text-sm font-semibold text-danger"
               >
                 Continue
               </button>
@@ -101,7 +101,7 @@ export const SettingsDeleteAccountModal = ({
           <>
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-danger-soft">
-                <span className="text-sm font-bold ">3/3</span>
+                <span className="text-sm font-bold text-danger">3/3</span>
               </div>
               <h3 className="text-lg font-semibold text-content">Final Confirmation</h3>
             </div>
@@ -119,7 +119,7 @@ export const SettingsDeleteAccountModal = ({
                 type="button"
                 onClick={onFinalDelete}
                 disabled={deleting}
-                className="rounded-glass-sm flex-1 border border-danger/30 bg-danger-soft py-2 text-sm font-semibold  disabled:opacity-50"
+                className="rounded-glass-sm flex-1 border border-danger/30 bg-danger-soft py-2 text-sm font-semibold text-danger disabled:opacity-50"
               >
                 {deleting ? "Deleting..." : "Permanently Delete"}
               </button>

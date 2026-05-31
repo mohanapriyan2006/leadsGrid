@@ -63,7 +63,7 @@ export const ManageLeadsAddRowForm = ({
       <div className="flex gap-2">
         <button
           type="button"
-          className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-1 text-xs"
+          className="rounded-glass-sm border border-success/30 bg-success-soft px-3 py-1 text-xs text-success"
           onClick={onSave}
         >
           Save

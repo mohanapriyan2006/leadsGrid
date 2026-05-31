@@ -103,7 +103,7 @@ export const CRMTableView = ({
               </button>
               <button
                 type="button"
-                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2 py-1 text-[11px] "
+                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2 py-1 text-[11px] text-danger"
                 onClick={() => onDeleteRequest(deal.id)}
               >
                 Delete
@@ -166,7 +166,7 @@ export const CRMTableView = ({
               </button>
               <button
                 type="button"
-                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2 py-1 text-[11px] "
+                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-2 py-1 text-[11px] text-danger"
                 onClick={() => onDeleteRequest(deal.id)}
               >
                 Delete

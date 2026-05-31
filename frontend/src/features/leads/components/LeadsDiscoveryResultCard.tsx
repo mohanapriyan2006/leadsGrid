@@ -60,7 +60,7 @@ export const LeadsDiscoveryResultCard = ({
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-content">{displayName}</p>
             <p className="truncate text-xs text-content-secondary">{lead.title ?? "Opportunity"}</p>
-            <div className="mt-1 inline-flex items-center gap-1 rounded-full border border-accent/15 bg-surface/50 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em]  text-content-tertiaryy">
+            <div className="mt-1 inline-flex items-center gap-1 rounded-full border border-accent/15 bg-surface/50 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em]  ">
               <SourceIcon source={lead.source} />
               {sourceLabel(lead.source)}
             </div>
@@ -122,7 +122,7 @@ export const LeadsDiscoveryResultCard = ({
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-3 border-t border-accent/10 pt-3">
-        <div className="flex flex-wrap items-center gap-2 text-xs  text-content-tertiaryy">
+        <div className="flex flex-wrap items-center gap-2 text-xs  ">
           <span>{lead.timeAgo ?? "just now"}</span>
           <span>•</span>
           <span className="capitalize">{lead.intent_label}</span>

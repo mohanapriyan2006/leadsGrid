@@ -170,7 +170,7 @@ export const PricingSection = () => {
                       ))}
                     </ul>
 
-                    <div className="mt-5 rounded-glass-sm border border-accent/15 bg-surface/30 px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.1em]  text-content-tertiaryy">
+                    <div className="mt-5 rounded-glass-sm border border-accent/15 bg-surface/30 px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.1em]  ">
                       Hover to spin for full details
                     </div>
 
@@ -184,7 +184,7 @@ export const PricingSection = () => {
                   </div>
 
                   <div className="absolute inset-0 rounded-2xl border border-accent/30 bg-surface-secondary/90 p-6 shadow-[0_0_36px_rgba(99,102,241,0.25)] [backface-visibility:hidden] [transform:rotateY(180deg)]">
-                    <p className="mb-2 text-[11px] uppercase tracking-[0.12em]  text-content-tertiaryy">Full plan details</p>
+                    <p className="mb-2 text-[11px] uppercase tracking-[0.12em]  ">Full plan details</p>
                     <h4 className="font-display text-2xl font-bold text-content">{plan.name}</h4>
                     <p className="mb-4 text-sm text-content-secondary">{priceBlock.headline} · {priceBlock.subline}</p>
 
@@ -207,7 +207,7 @@ export const PricingSection = () => {
                     </GlowButton>
 
                     {plan.fairUsage ? (
-                      <p className="mt-2 text-center text-[11px]  text-content-tertiaryy">Fair usage policy applies.</p>
+                      <p className="mt-2 text-center text-[11px]  ">Fair usage policy applies.</p>
                     ) : null}
 
                     <button

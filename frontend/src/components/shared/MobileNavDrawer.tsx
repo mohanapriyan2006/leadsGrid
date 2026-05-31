@@ -72,7 +72,7 @@ const renderIcon = (label: string, isActive: boolean) => {
     case "Dashboard":
       return (
         <div
-          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  "}`}
         >
           <LayoutDashboard className="w-4 h-4" />
         </div>
@@ -80,7 +80,7 @@ const renderIcon = (label: string, isActive: boolean) => {
     case "Manage Leads":
       return (
         <div
-          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  "}`}
         >
           <Users className="w-4 h-4" />
         </div>
@@ -88,7 +88,7 @@ const renderIcon = (label: string, isActive: boolean) => {
     case "Messages":
       return (
         <div
-          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  "}`}
         >
           <Inbox className="w-4 h-4" />
         </div>
@@ -96,7 +96,7 @@ const renderIcon = (label: string, isActive: boolean) => {
     case "CRM":
       return (
         <div
-          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  "}`}
         >
           <Zap className="w-4 h-4" />
         </div>
@@ -104,7 +104,7 @@ const renderIcon = (label: string, isActive: boolean) => {
     case "Settings":
       return (
         <div
-          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  "}`}
         >
           <Settings className="w-4 h-4" />
         </div>
@@ -112,7 +112,7 @@ const renderIcon = (label: string, isActive: boolean) => {
     case "Recycle Bin":
       return (
         <div
-          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  "}`}
         >
           <Trash2 className="w-4 h-4" />
         </div>
@@ -120,7 +120,7 @@ const renderIcon = (label: string, isActive: boolean) => {
     default:
       return (
         <div
-          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  text-content-tertiaryy"}`}
+          className={`${baseClasses} ${isActive ? "bg-accent/20 text-accent" : "bg-surface-tertiary/50  "}`}
         >
           <LayoutDashboard className="w-4 h-4" />
         </div>
@@ -206,7 +206,7 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
             {/* Close Button */}
             <button
               type="button"
-              className="absolute top-4 right-4 p-2 rounded-xl bg-surface-tertiary/50 border border-accent/10  text-content-tertiaryy hover:text-content hover:border-accent/30 hover:scale-110 transition-all duration-200"
+              className="absolute top-4 right-4 p-2 rounded-xl bg-surface-tertiary/50 border border-accent/10   hover:text-content hover:border-accent/30 hover:scale-110 transition-all duration-200"
               onClick={handleClose}
             >
               <X className="w-4 h-4" />
@@ -221,10 +221,10 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
                 <img src={logo} alt="leadsGrid" className="h-6 w-6 logo-image" />
               </div>
               <div>
-                <span className="text-xl uppercase tracking-[0.10em]  text-content-tertiaryy">
+                <span className="text-xl uppercase tracking-[0.10em]  ">
                   LeadsGrid
                 </span>
-                <p className="text-[10px]  text-content-tertiaryy uppercase tracking-widest">
+                <p className="text-[10px]   uppercase tracking-widest">
                   Lead Intelligence
                 </p>
               </div>
@@ -260,7 +260,7 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
                     Offline
                   </p>
                 )}
-                <p className="text-xs  text-content-tertiaryy truncate">
+                <p className="text-xs   truncate">
                   {user?.email || "Sign in to continue"}
                 </p>
               </div>
@@ -270,7 +270,7 @@ export const MobileNavDrawer = ({ open, onClose }: MobileNavDrawerProps) => {
 
         {/* Navigation with staggered animations */}
         <nav className="p-4 space-y-1">
-          <p className="text-[10px] uppercase tracking-[0.2em]  text-content-tertiaryy mb-3 px-2">
+          <p className="text-[10px] uppercase tracking-[0.2em]   mb-3 px-2">
             Navigation
           </p>
           {navigationItems.map((item, index) => {

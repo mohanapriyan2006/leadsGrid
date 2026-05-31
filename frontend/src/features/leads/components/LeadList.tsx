@@ -65,7 +65,7 @@ export const LeadList = ({
             placeholder="Search intent signals..."
             className="glass-input md:max-w-lg"
           />
-          <p className="text-xs uppercase tracking-[0.2em]  text-content-tertiaryy">
+          <p className="text-xs uppercase tracking-[0.2em]  ">
             {isFetching ? "refreshing" : "live intent stream"}
           </p>
         </div>

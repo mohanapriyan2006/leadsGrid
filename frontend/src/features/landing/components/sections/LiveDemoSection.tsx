@@ -37,7 +37,7 @@ export const LiveDemoSection = () => {
           >
             {(1248 + totalDiscovered).toLocaleString()}
           </motion.span>
-          <p className="text-sm  text-content-tertiaryy">leads discovered today</p>
+          <p className="text-sm  ">leads discovered today</p>
         </div>
 
         {/* Streaming lead cards */}

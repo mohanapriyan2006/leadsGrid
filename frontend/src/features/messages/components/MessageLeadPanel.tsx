@@ -65,7 +65,7 @@ export const MessageLeadPanel = ({
 
   return (
     <aside className="glass-card overflow-auto space-y-3 p-4">
-      <label className="text-xs tracking-[0.1em]  text-content-tertiaryy">
+      <label className="text-xs tracking-[0.1em]  ">
         SELECT LEAD
       </label>
       <div ref={dropdownRef} className="relative">
@@ -120,7 +120,7 @@ export const MessageLeadPanel = ({
       {selectedLead ? (
         <div className="glass-card-sm p-3">
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-xs tracking-[0.1em]  text-content-tertiaryy">CLIENT CONTEXT</p>
+            <p className="text-xs tracking-[0.1em]  ">CLIENT CONTEXT</p>
             <button
               type="button"
               onClick={onOpenDetails}
@@ -133,7 +133,7 @@ export const MessageLeadPanel = ({
             <Avatar initials={selectedLead.name.slice(0, 2).toUpperCase()} size={40} />
             <div>
               <p className="text-sm font-semibold text-content">{selectedLead.name}</p>
-              <p className="text-xs  text-content-tertiaryy">{selectedLead.company}</p>
+              <p className="text-xs  ">{selectedLead.company}</p>
             </div>
           </div>
           <p className="mt-2 text-sm text-content-secondary overflow-auto">

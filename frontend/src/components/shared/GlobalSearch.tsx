@@ -234,7 +234,7 @@ export const GlobalSearch = () => {
     <div ref={containerRef} className="relative w-full">
       {/* Input */}
       <div className="relative group">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-content-tertiary transition-colors group-focus-within:text-accent" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4  transition-colors group-focus-within:text-accent" />
         <input
           ref={inputRef}
           type="text"
@@ -245,7 +245,7 @@ export const GlobalSearch = () => {
           placeholder="Search leads, deals, features, settings..."
           className="w-full glass-input h-9 pl-9 pr-4 py-2 text-xs rounded-full border-accent/10 focus:border-accent/40 focus:shadow-glow transition-all duration-300 sm:h-10 sm:text-sm"
         />
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 text-[10px] text-content-tertiary bg-surface-tertiary/50 px-1.5 py-0.5 rounded">
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 text-[10px]  bg-surface-tertiary/50 px-1.5 py-0.5 rounded">
           <Command className="w-3 h-3" />
           <span>K</span>
         </div>
@@ -283,7 +283,7 @@ export const GlobalSearch = () => {
                     <Search className="w-5 h-5 text-accent" />
                   </div>
                   <p className="text-sm text-content-secondary font-medium">Type to search anything</p>
-                  <p className="text-xs text-content-tertiary mt-1">
+                  <p className="text-xs  mt-1">
                     Leads, deals, pages, and settings — all in one place.
                   </p>
                   <div className="mt-4 flex flex-wrap justify-center gap-2">
@@ -306,10 +306,10 @@ export const GlobalSearch = () => {
               {showDropdown && flatResults.length === 0 && !loadingDeals && (
                 <div className="text-center py-8 px-4">
                   <div className="mx-auto w-10 h-10 rounded-full bg-surface-tertiary flex items-center justify-center mb-3">
-                    <X className="w-5 h-5 text-content-tertiary" />
+                    <X className="w-5 h-5 " />
                   </div>
                   <p className="text-sm text-content-secondary font-medium">No results found</p>
-                  <p className="text-xs text-content-tertiary mt-1">
+                  <p className="text-xs  mt-1">
                     Try a different keyword or check spelling.
                   </p>
                 </div>
@@ -384,7 +384,7 @@ export const GlobalSearch = () => {
 
               {showDropdown && flatResults.length > 0 && (
                 <div className="pt-2 pb-1 text-center">
-                  <p className="text-[10px] text-content-tertiary">
+                  <p className="text-[10px] ">
                     Press <kbd className="px-1 py-0.5 rounded bg-surface-tertiary text-content-secondary text-[10px]">↑</kbd>{" "}
                     <kbd className="px-1 py-0.5 rounded bg-surface-tertiary text-content-secondary text-[10px]">↓</kbd> to navigate,{" "}
                     <kbd className="px-1 py-0.5 rounded bg-surface-tertiary text-content-secondary text-[10px]">Enter</kbd> to select

@@ -54,7 +54,7 @@ export const CRMStatsGrid = ({
           <div className="pointer-events-none absolute inset-0 opacity-0 blur-3xl transition group-hover:opacity-100">
             <div className="h-full w-full bg-[radial-gradient(circle_at_top,_rgba(167,139,250,0.4),transparent_60%)]" />
           </div>
-          <p className="text-[11px] tracking-[0.18em]  text-content-tertiaryy">
+          <p className="text-[11px] tracking-[0.18em]  ">
             {item.label}
           </p>
           <p

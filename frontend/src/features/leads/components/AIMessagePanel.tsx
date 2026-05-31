@@ -53,7 +53,7 @@ export const AIMessagePanel = ({
             className={`rounded border px-3 py-1 text-xs uppercase tracking-[0.15em] ${
               tone === option
                 ? "border-accent/50 bg-accent-soft text-accent shadow-glow"
-                : "border-accent/10  text-content-tertiaryy hover:border-accent/30"
+                : "border-accent/10   hover:border-accent/30"
             }`}
           >
             {option}
@@ -63,7 +63,7 @@ export const AIMessagePanel = ({
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <section className="glass-card-sm p-3">
-          <p className="text-xs uppercase tracking-[0.2em]  text-content-tertiaryy">Client Context</p>
+          <p className="text-xs uppercase tracking-[0.2em]  ">Client Context</p>
           {selectedLead ? (
             <div className="mt-2 space-y-2 text-sm">
               <p className="text-content">{selectedLead.summary}</p>
@@ -76,7 +76,7 @@ export const AIMessagePanel = ({
         </section>
 
         <section className="glass-card-sm p-3">
-          <p className="text-xs uppercase tracking-[0.2em]  text-content-tertiaryy">Generated Draft</p>
+          <p className="text-xs uppercase tracking-[0.2em]  ">Generated Draft</p>
           {generatedMessage ? (
             <div className="mt-2 space-y-3 text-sm">
               <p className="text-content">{generatedMessage.message}</p>

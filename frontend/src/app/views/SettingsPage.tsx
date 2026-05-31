@@ -272,7 +272,7 @@ export const SettingsPage = () => {
           <div className="space-y-4">
             <SettingsTabNav activeTab={activeTab} onChange={setActiveTab} />
             <div className="glass-card-sm p-4">
-              <p className="text-xs uppercase tracking-[0.1em]  text-content-tertiaryy">AI Optimization Score</p>
+              <p className="text-xs uppercase tracking-[0.1em]  ">AI Optimization Score</p>
               <p className="mt-1 text-2xl font-semibold text-content">{optimizationScore}%</p>
               <p className="mt-2 text-xs text-content-secondary">
                 Improve your setup by connecting email, adding skills, and increasing personalization.
@@ -282,7 +282,7 @@ export const SettingsPage = () => {
 
           <div className="space-y-4">
             <div className="glass-card-sm border border-accent/15 p-4">
-              <p className="text-xs uppercase tracking-[0.1em]  text-content-tertiaryy">Active Section</p>
+              <p className="text-xs uppercase tracking-[0.1em]  ">Active Section</p>
               <h3 className="mt-1 text-lg font-semibold text-content">{activeTabConfig?.label}</h3>
               <p className="text-sm text-content-secondary">{activeTabConfig?.description}</p>
             </div>
@@ -326,7 +326,7 @@ export const SettingsPage = () => {
             ) : null}
 
             <div>
-              <p className="text-xs  text-content-tertiaryy">
+              <p className="text-xs  ">
                 Signed in as {user?.email || "unknown user"}. Configuration is persisted to Firebase when signed in, with local fallback.
               </p>
             </div>

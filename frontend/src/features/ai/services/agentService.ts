@@ -3,6 +3,8 @@ import type { AgentActionType, AgentStep } from "../types/agent";
 import { AGENT_ACTIONS } from "../constants/agentActions";
 import { createId } from "../constants/aiPage";
 import { agentApiService } from "./agentApiService";
+import { usageTracker } from "../../billing/services/usageTracker";
+import { showLimitModal } from "../../billing/hooks/useLimitModal";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -158,6 +160,14 @@ const executeFollowUpSchedule = async (leads: Lead[]): Promise<AgentActionResult
   };
 };
 
+const actionTypeToLimit: Record<AgentActionType, { action: Parameters<typeof usageTracker.checkLimit>[0]; count: number }> = {
+  lead_discovery: { action: "leads_discovery_per_day", count: 1 },
+  lead_scoring: { action: "crm_ai_analysis_per_day", count: 1 },
+  crm_update: { action: "crm_ai_analysis_per_day", count: 1 },
+  message_draft: { action: "agent_ai_per_month", count: 1 },
+  follow_up_schedule: { action: "other_ai_per_day", count: 1 },
+};
+
 export const agentService = {
   executeAction: async (
     actionType: AgentActionType,
@@ -165,8 +175,19 @@ export const agentService = {
     prompt: string,
     tone: string,
   ): Promise<AgentActionResult> => {
+    const limitConfig = actionTypeToLimit[actionType];
+    if (limitConfig) {
+      const limitCheck = await usageTracker.checkLimit(limitConfig.action, limitConfig.count);
+      if (!limitCheck.allowed) {
+        showLimitModal({ action: limitConfig.action, current: limitCheck.current, limit: limitCheck.limit });
+        throw new Error(`Plan limit reached: ${limitConfig.action}`);
+      }
+    }
+
+    let result: AgentActionResult;
+
     try {
-      return await agentApiService.executeStep(actionType === "lead_discovery"
+      result = await agentApiService.executeStep(actionType === "lead_discovery"
         ? {
             id: createId(),
             label: AGENT_ACTIONS.lead_discovery.label,
@@ -184,23 +205,32 @@ export const agentService = {
             riskLevel: AGENT_ACTIONS[actionType].riskLevel,
           }, prompt, leads, tone);
     } catch {
-      // Fallback keeps Agent mode usable while backend is unavailable.
+      switch (actionType) {
+        case "lead_discovery":
+          result = await executeLeadDiscovery(leads, prompt);
+          break;
+        case "lead_scoring":
+          result = await executeLeadScoring(leads);
+          break;
+        case "crm_update":
+          result = await executeCRMUpdate(leads, prompt);
+          break;
+        case "message_draft":
+          result = await executeMessageDraft(leads, tone);
+          break;
+        case "follow_up_schedule":
+          result = await executeFollowUpSchedule(leads);
+          break;
+        default:
+          result = { success: false, message: "Unknown action type." };
+      }
     }
 
-    switch (actionType) {
-      case "lead_discovery":
-        return executeLeadDiscovery(leads, prompt);
-      case "lead_scoring":
-        return executeLeadScoring(leads);
-      case "crm_update":
-        return executeCRMUpdate(leads, prompt);
-      case "message_draft":
-        return executeMessageDraft(leads, tone);
-      case "follow_up_schedule":
-        return executeFollowUpSchedule(leads);
-      default:
-        return { success: false, message: "Unknown action type." };
+    if (limitConfig && result.success) {
+      await usageTracker.incrementUsage(limitConfig.action, limitConfig.count);
     }
+
+    return result;
   },
 
   buildPlanFromApi: async (prompt: string, leads: Lead[]): Promise<AgentStep[]> => {

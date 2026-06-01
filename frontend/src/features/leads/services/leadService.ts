@@ -43,6 +43,8 @@ import { mapDiscoveryLeadToManageInputWithAI, type DiscoveryLeadAIIntent } from 
 import type { DiscoveryLeadDto, DiscoveryParams } from "../types/discovery";
 import { adaptDiscoveryLead } from "./discoveryAdapter";
 import { buildManageLeadAnalytics, buildManageLeadInsights } from "./leadMetrics";
+import { usageTracker } from "../../billing/services/usageTracker";
+import { showLimitModal } from "../../billing/hooks/useLimitModal";
 
 const BATCH_WRITE_SIZE = 250;
 const DEFAULT_PAGE_SIZE = 100;
@@ -95,6 +97,12 @@ export const leadService = {
       return [];
     }
 
+    const limitCheck = await usageTracker.checkLimit("leads_discovery_per_day", params.limit ?? 12);
+    if (!limitCheck.allowed) {
+      showLimitModal({ action: "leads_discovery_per_day", current: limitCheck.current, limit: limitCheck.limit });
+      throw new Error("Plan limit reached: Lead Discovery");
+    }
+
     const auth = getFirebaseAuth();
     const user = auth?.currentUser;
     const token = user ? await user.getIdToken() : null;
@@ -111,6 +119,8 @@ export const leadService = {
     });
 
     const mapped = (response.data || []).map(adaptDiscoveryLead);
+    await usageTracker.incrementUsage("leads_discovery_per_day", mapped.length);
+
     if (!params.selectedSources || params.selectedSources.length === 0) {
       return mapped;
     }
@@ -306,6 +316,12 @@ export const leadService = {
     score?: number;
     urgency?: ManageLeadUrgency;
   }): Promise<ManageLead> => {
+    const storageCheck = await usageTracker.checkLimit("storage_limit", 1);
+    if (!storageCheck.allowed) {
+      showLimitModal({ action: "storage_limit", current: storageCheck.current, limit: storageCheck.limit });
+      throw new Error("Plan limit reached: Lead Storage");
+    }
+
     const user = getCurrentUser();
 
     const newLead = createFirestoreLead(payload);
@@ -342,6 +358,12 @@ export const leadService = {
     if (!existingSnap.empty) {
       const existing = existingSnap.docs[0];
       return toManageLead(existing.id, existing.data());
+    }
+
+    const storageCheck = await usageTracker.checkLimit("storage_limit", 1);
+    if (!storageCheck.allowed) {
+      showLimitModal({ action: "storage_limit", current: storageCheck.current, limit: storageCheck.limit });
+      throw new Error("Plan limit reached: Lead Storage");
     }
 
     const newLead = createFirestoreLead(candidate);
@@ -492,6 +514,16 @@ export const leadService = {
         skipEmptyLines: true,
         complete: async (parseResult: any) => {
           const rows = parseResult.data as Record<string, string>[];
+
+          const storageCheck = await usageTracker.checkLimit("storage_limit", rows.length);
+          if (!storageCheck.allowed && storageCheck.remaining <= 0) {
+            showLimitModal({ action: "storage_limit", current: storageCheck.current, limit: storageCheck.limit });
+            results.errors.push("Plan limit reached: Lead Storage. No leads can be imported.");
+            resolve(results);
+            return;
+          }
+
+          const maxRows = storageCheck.remaining;
           let batch = writeBatch(db);
           let pendingWrites = 0;
 
@@ -502,7 +534,7 @@ export const leadService = {
             pendingWrites = 0;
           };
 
-          for (let i = 0; i < rows.length; i++) {
+          for (let i = 0; i < rows.length && results.accepted < maxRows; i++) {
             const row = rows[i];
 
             // Map CSV fields to lead fields based on fieldMapping

@@ -603,6 +603,7 @@ export const ManageLeadsPage = () => {
                   onHoverEnd={handleHoverEnd}
                   onAddLead={() => setShowAddRow(true)}
                   uploadControl={uploadButton}
+                  onEdit={openEdit}
                 />
               ))}
             </div>
@@ -745,7 +746,7 @@ export const ManageLeadsPage = () => {
             if (!activeLead) return;
             setConfirmDeleteId(activeLead.id);
           }}
-          onEdit={manageLeadView === "table" ? () => setEditOpen(true) : undefined}
+          onEdit={() => setEditOpen(true)}
         />
 
         <EditLeadModal

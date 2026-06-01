@@ -805,7 +805,7 @@ export const CRMPage = () => {
                       items={columnDeals.map((d) => d.id)}
                       strategy={verticalListSortingStrategy}
                     >
-                      <div className="flex-1 space-y-2 overflow-hidden">
+                      <div className="flex-1 space-y-2 max-h-[calc(100vh-280px)] overflow-y-auto">
                         {columnDeals.length === 0 && (
                           <div className="flex h-28 items-center justify-center rounded-glass-sm border border-dashed border-accent/15 bg-surface-secondary/50 text-[11px] text-content-secondary">
                             Drop deals here to move into{" "}
@@ -821,6 +821,7 @@ export const CRMPage = () => {
                             index={index}
                             onHoverStart={handleHoverStart}
                             onHoverEnd={handleHoverEnd}
+                            onEdit={() => openEdit(deal.id)}
                           />
                         ))}
                       </div>
@@ -871,7 +872,7 @@ export const CRMPage = () => {
           onNotesUpdate={(notes) => {
             void handleDealNotesUpdate(notes);
           }}
-          onEdit={view === "table" ? () => setEditOpen(true) : undefined}
+          onEdit={() => setEditOpen(true)}
         />
 
         {/* Edit Modal */}

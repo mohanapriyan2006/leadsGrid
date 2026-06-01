@@ -12,16 +12,17 @@ type Props = {
 };
 
 const defaultVariants: Variants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (custom: { delay: number; duration: number; y: number }) => ({
+  hidden: (custom: { y: number }) => ({ opacity: 0, y: custom.y }),
+  visible: (custom: { delay: number; duration: number }) => ({
     opacity: 1,
     y: 0,
     transition: {
       duration: custom.duration,
       delay: custom.delay,
       type: "spring",
-      stiffness: 100,
-      damping: 20,
+      stiffness: 95,
+      damping: 18,
+      mass: 0.7,
     },
   }),
 };

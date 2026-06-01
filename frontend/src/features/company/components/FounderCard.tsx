@@ -1,6 +1,7 @@
 import { GlassCard } from "../../landing/components/ui/GlassCard";
 import { SectionWrapper } from "../../landing/components/ui/SectionWrapper";
 import { GradientText } from "../../landing/components/ui/GradientText";
+import { Mail, Globe } from "lucide-react";
 
 type Props = {
   name: string;
@@ -11,6 +12,12 @@ type Props = {
 };
 
 export const FounderCard = ({ name, title, location, role, links }: Props) => {
+  const getLinkIcon = (label: string) => {
+    const key = label.toLowerCase();
+    if (key.includes("email")) return Mail;
+    return Globe;
+  };
+
   return (
     <SectionWrapper className="py-16">
       <GlassCard className="mx-auto max-w-4xl">
@@ -27,17 +34,23 @@ export const FounderCard = ({ name, title, location, role, links }: Props) => {
           LeadsGrid is an independently built SaaS product with a focus on practical, outcome-driven
           automation for sales teams.
         </p>
-        <div className="mt-6 flex flex-wrap gap-4 text-sm">
+        <div className="mt-6 flex flex-wrap gap-3 text-sm">
           {links.map((link) => (
+            (() => {
+              const Icon = getLinkIcon(link.label);
+              return (
             <a
               key={link.href}
               href={link.href}
-              className="text-content-secondary transition-colors hover:text-accent"
+              className="inline-flex items-center gap-2 rounded-full border border-content/10 bg-surface-secondary/50 px-3 py-1.5 text-content-secondary transition-colors hover:text-accent"
               target="_blank"
               rel="noreferrer"
             >
+              <Icon className="h-4 w-4"  />
               {link.label}
             </a>
+              );
+            })()
           ))}
         </div>
       </GlassCard>

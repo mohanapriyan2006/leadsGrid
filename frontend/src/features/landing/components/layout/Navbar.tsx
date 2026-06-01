@@ -81,9 +81,9 @@ export const Navbar = ({ links = DEFAULT_LINKS, showProgress = true }: Props) =>
     navigate(href);
   };
 
-  const backdropIntensity = scrolled
-    ? "border-b border-content/5 bg-surface/85 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.15)]"
-    : "bg-transparent";
+  // const backdropIntensity = scrolled
+  //   ? "bg-surface/70 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.25)]"
+  //   : "bg-transparent";
 
   return (
     <motion.nav
@@ -91,11 +91,11 @@ export const Navbar = ({ links = DEFAULT_LINKS, showProgress = true }: Props) =>
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${backdropIntensity}`}
+      className={`fixed left-0 right-0 top-1 z-50 transition-all duration-300 bg-transparent`}
     >
       {/* Scroll progress bar */}
       {showProgress ? (
-        <div className="absolute bottom-0 left-0 h-[2px] w-full bg-transparent">
+        <div className="absolute -bottom-1 left-0 h-[2px] w-full bg-transparent">
           <div
             className="h-full bg-gradient-to-r from-accent to-accent-secondary transition-all duration-150"
             style={{ width: `${progress}%` }}
@@ -103,55 +103,63 @@ export const Navbar = ({ links = DEFAULT_LINKS, showProgress = true }: Props) =>
         </div>
       ) : null}
 
-      <div className={`mx-auto flex max-w-7xl items-center justify-between px-6 transition-all duration-300 ${scrolled ? "py-2.5" : "py-4"}`}>
-        <button
-          onClick={() => {
-            if (location.pathname !== "/") {
-              navigate("/");
-              return;
-            }
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          }}
-          className={`text-xl font-bold tracking-tight transition-transform duration-300 ${scrolled ? "scale-95" : "scale-100"}`}
-        >
-          <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="LeadsGrid" className="h-8 w-8" />
-            <GradientText className="text-xl font-bold">LeadsGrid</GradientText>
-          </div>
-        </button>
-
-        <div className="hidden items-center gap-8 md:flex">
-          {links.map((link) => {
-            const isActive = activeSection === link.href;
-            return (
-              <button
-                key={link.label}
-                onClick={() => handleNavClick(link.href)}
-                className={`relative text-sm transition-colors ${isActive ? "text-accent" : "text-content-secondary hover:text-content"}`}
-              >
-                {link.label}
-                <motion.span
-                  className="absolute -bottom-0.5 left-0 h-[2px] bg-accent shadow-[0_0_8px_rgba(167,139,250,0.6)]"
-                  initial={false}
-                  animate={{ width: isActive ? "100%" : "0%" }}
-                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                />
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="flex items-center gap-3">
-          <ThemeToggle />
+      <div className={`mx-auto max-w-7xl px-6 transition-all duration-300`}>
+        <div className="flex items-center justify-between rounded-full border border-content/5 bg-surface/30 px-4 py-2 shadow-[0_6px_22px_rgba(0,0,0,0.22)] backdrop-blur-xl">
           <button
-            onClick={() => navigate("/login")}
-            className="text-sm text-content-secondary transition-colors hover:text-content"
+            onClick={() => {
+              if (location.pathname !== "/") {
+                navigate("/");
+                return;
+              }
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className={`flex items-center gap-2 text-xl font-bold tracking-tight transition-transform duration-300 ${scrolled ? "scale-[0.98]" : "scale-100"}`}
           >
-            Log in
+            <span className="relative flex h-9 w-9 items-center justify-center rounded-full border border-content/10 bg-surface-tertiary/60">
+              <img src="/logo.png" alt="LeadsGrid" className="h-5 w-5" />
+            </span>
+            <GradientText className="text-lg font-bold sm:text-xl">LeadsGrid</GradientText>
           </button>
-          <GlowButton onClick={() => navigate("/login")} className="text-xs">
-            Start Free
-          </GlowButton>
+
+          <div className="hidden items-center gap-2 rounded-full border border-content/10 bg-surface-secondary/50 px-2 py-1 md:flex">
+            {links.map((link) => {
+              const isActive = activeSection === link.href;
+              return (
+                <button
+                  key={link.label}
+                  onClick={() => handleNavClick(link.href)}
+                  className={`relative rounded-full px-4 py-2 text-sm transition-colors ${
+                    isActive
+                      ? "bg-accent/15 text-accent"
+                      : "text-content-secondary hover:text-content"
+                  }`}
+                >
+                  {link.label}
+                  <motion.span
+                    className="absolute inset-x-4 -bottom-0.5 h-[2px] bg-accent/80"
+                    initial={false}
+                    animate={{ opacity: isActive ? 1 : 0, scaleX: isActive ? 1 : 0.4 }}
+                    transition={{ type: "spring", stiffness: 260, damping: 22 }}
+                  />
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="hidden items-center gap-2 sm:flex">
+              <ThemeToggle />
+              <button
+                onClick={() => navigate("/login")}
+                className="rounded-full px-4 py-2 text-sm text-content-secondary transition-colors hover:text-content"
+              >
+                Log in
+              </button>
+            </div>
+            <GlowButton onClick={() => navigate("/login")} className="text-xs !px-5 !py-2.5">
+              Start Free
+            </GlowButton>
+          </div>
         </div>
       </div>
     </motion.nav>

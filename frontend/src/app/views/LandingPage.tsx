@@ -19,9 +19,9 @@ export const LandingPage = () => {
       <NoiseOverlay />
       <Navbar />
       <HeroSection />
-      <LiveDemoSection />
-      <HowItWorksSection />
       <FeaturesSection />
+      <HowItWorksSection />
+      <LiveDemoSection />
       <WhyLeadsGridSection />
       <TryAiSection />
       <SocialProofSection />

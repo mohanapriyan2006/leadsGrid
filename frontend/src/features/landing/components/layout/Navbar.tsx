@@ -1,61 +1,84 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { GradientText } from "../ui/GradientText";
 import { GlowButton } from "../ui/GlowButton";
 import { ThemeToggle } from "../../../../components/ui/ThemeToggle";
 
-const NAV_LINKS = [
+type NavLink = {
+  label: string;
+  href: string;
+};
+
+type Props = {
+  links?: NavLink[];
+  showProgress?: boolean;
+};
+
+const DEFAULT_LINKS: NavLink[] = [
   { label: "Features", href: "#features" },
   { label: "How It Works", href: "#how-it-works" },
   { label: "Pricing", href: "#pricing" },
 ];
 
-export const Navbar = () => {
+export const Navbar = ({ links = DEFAULT_LINKS, showProgress = true }: Props) => {
   const [scrolled, setScrolled] = useState(false);
   const [progress, setProgress] = useState(0);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const navRef = useRef<HTMLElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const hasScrollLinks = links.some((link) => link.href.startsWith("#"));
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const pct = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
-      setProgress(pct);
+      if (showProgress) {
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const pct = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
+        setProgress(pct);
+      }
 
-      // Scrollspy: find which section is closest to viewport top + offset
-      const offset = window.innerHeight * 0.35;
-      let closest: string | null = null;
-      let closestDist = Infinity;
+      if (hasScrollLinks) {
+        const offset = window.innerHeight * 0.35;
+        let closest: string | null = null;
+        let closestDist = Infinity;
 
-      NAV_LINKS.forEach((link) => {
-        const el = document.querySelector(link.href);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          const dist = Math.abs(rect.top - offset);
-          if (dist < closestDist) {
-            closestDist = dist;
-            closest = link.href;
+        links.forEach((link) => {
+          if (!link.href.startsWith("#")) {
+            return;
           }
-        }
-      });
-      setActiveSection(closest);
+          const el = document.querySelector(link.href);
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            const dist = Math.abs(rect.top - offset);
+            if (dist < closestDist) {
+              closestDist = dist;
+              closest = link.href;
+            }
+          }
+        });
+        setActiveSection(closest);
+      }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll(); // initial check
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [hasScrollLinks, links, showProgress]);
 
   const handleNavClick = (href: string) => {
-    const element = document.querySelector(href);
-    if (element) {
-      const navHeight = navRef.current?.offsetHeight || 64;
-      const targetY = element.getBoundingClientRect().top + window.scrollY - navHeight;
-      window.scrollTo({ top: targetY, behavior: "smooth" });
+    if (href.startsWith("#")) {
+      const element = document.querySelector(href);
+      if (element) {
+        const navHeight = navRef.current?.offsetHeight || 64;
+        const targetY = element.getBoundingClientRect().top + window.scrollY - navHeight;
+        window.scrollTo({ top: targetY, behavior: "smooth" });
+      }
+      return;
     }
+
+    navigate(href);
   };
 
   const backdropIntensity = scrolled
@@ -71,16 +94,24 @@ export const Navbar = () => {
       className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${backdropIntensity}`}
     >
       {/* Scroll progress bar */}
-      <div className="absolute bottom-0 left-0 h-[2px] w-full bg-transparent">
-        <div
-          className="h-full bg-gradient-to-r from-accent to-accent-secondary transition-all duration-150"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
+      {showProgress ? (
+        <div className="absolute bottom-0 left-0 h-[2px] w-full bg-transparent">
+          <div
+            className="h-full bg-gradient-to-r from-accent to-accent-secondary transition-all duration-150"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      ) : null}
 
       <div className={`mx-auto flex max-w-7xl items-center justify-between px-6 transition-all duration-300 ${scrolled ? "py-2.5" : "py-4"}`}>
         <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          onClick={() => {
+            if (location.pathname !== "/") {
+              navigate("/");
+              return;
+            }
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
           className={`text-xl font-bold tracking-tight transition-transform duration-300 ${scrolled ? "scale-95" : "scale-100"}`}
         >
           <div className="flex items-center gap-2">
@@ -90,7 +121,7 @@ export const Navbar = () => {
         </button>
 
         <div className="hidden items-center gap-8 md:flex">
-          {NAV_LINKS.map((link) => {
+          {links.map((link) => {
             const isActive = activeSection === link.href;
             return (
               <button

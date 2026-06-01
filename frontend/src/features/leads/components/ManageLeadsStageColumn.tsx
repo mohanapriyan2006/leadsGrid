@@ -13,6 +13,7 @@ type ManageLeadsStageColumnProps = {
   onHoverEnd: (leadId: string) => void;
   onAddLead: () => void;
   uploadControl: ReactNode;
+  onEdit?: (leadId: string) => void;
 };
 
 export const ManageLeadsStageColumn = ({
@@ -22,6 +23,7 @@ export const ManageLeadsStageColumn = ({
   onHoverEnd,
   onAddLead,
   uploadControl,
+  onEdit,
 }: ManageLeadsStageColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
 
@@ -45,7 +47,7 @@ export const ManageLeadsStageColumn = ({
         items={leads.map((lead) => lead.id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="space-y-2">
+        <div className="space-y-2 max-h-[calc(100vh-280px)] overflow-y-auto">
           {leads.length === 0 ? (
             <div className="rounded-glass-sm border border-dashed border-accent/15 bg-surface-secondary/50 p-5 text-center text-xs text-content-secondary">
               <p>No leads here yet</p>
@@ -68,6 +70,7 @@ export const ManageLeadsStageColumn = ({
               lead={lead}
               onHoverStart={onHoverStart}
               onHoverEnd={onHoverEnd}
+              onEdit={onEdit ? () => onEdit(lead.id) : undefined}
             />
           ))}
         </div>

@@ -36,6 +36,7 @@ import {
   buildLeadDedupeKey,
   createFirestoreLead,
   mapDiscoveryLeadToManageInput,
+  STAGE_TO_STATUS,
   toFirestoreLeadPatch,
   toManageLead,
 } from "./leadModel";
@@ -43,6 +44,9 @@ import { mapDiscoveryLeadToManageInputWithAI, type DiscoveryLeadAIIntent } from 
 import type { DiscoveryLeadDto, DiscoveryParams } from "../types/discovery";
 import { adaptDiscoveryLead } from "./discoveryAdapter";
 import { buildManageLeadAnalytics, buildManageLeadInsights } from "./leadMetrics";
+import { usageTracker } from "../../billing/services/usageTracker";
+import { showLimitModal } from "../../billing/hooks/useLimitModal";
+import { showBinLimitModal } from "../../billing/hooks/useBinLimitModal";
 
 const BATCH_WRITE_SIZE = 250;
 const DEFAULT_PAGE_SIZE = 100;
@@ -95,6 +99,12 @@ export const leadService = {
       return [];
     }
 
+    const limitCheck = await usageTracker.checkLimit("leads_discovery_per_day", params.limit ?? 12);
+    if (!limitCheck.allowed) {
+      showLimitModal({ action: "leads_discovery_per_day", current: limitCheck.current, limit: limitCheck.limit });
+      throw new Error("Plan limit reached: Lead Discovery");
+    }
+
     const auth = getFirebaseAuth();
     const user = auth?.currentUser;
     const token = user ? await user.getIdToken() : null;
@@ -111,6 +121,8 @@ export const leadService = {
     });
 
     const mapped = (response.data || []).map(adaptDiscoveryLead);
+    await usageTracker.incrementUsage("leads_discovery_per_day", mapped.length);
+
     if (!params.selectedSources || params.selectedSources.length === 0) {
       return mapped;
     }
@@ -306,6 +318,12 @@ export const leadService = {
     score?: number;
     urgency?: ManageLeadUrgency;
   }): Promise<ManageLead> => {
+    const storageCheck = await usageTracker.checkLimit("storage_limit", 1);
+    if (!storageCheck.allowed) {
+      showLimitModal({ action: "storage_limit", current: storageCheck.current, limit: storageCheck.limit });
+      throw new Error("Plan limit reached: Lead Storage");
+    }
+
     const user = getCurrentUser();
 
     const newLead = createFirestoreLead(payload);
@@ -344,6 +362,12 @@ export const leadService = {
       return toManageLead(existing.id, existing.data());
     }
 
+    const storageCheck = await usageTracker.checkLimit("storage_limit", 1);
+    if (!storageCheck.allowed) {
+      showLimitModal({ action: "storage_limit", current: storageCheck.current, limit: storageCheck.limit });
+      throw new Error("Plan limit reached: Lead Storage");
+    }
+
     const newLead = createFirestoreLead(candidate);
     const docRef = await addDoc(getUserLeadsCollection(user.uid), newLead);
     return toManageLead(docRef.id, newLead);
@@ -354,6 +378,13 @@ export const leadService = {
     action: BulkLeadAction;
     target_stage?: ManageLeadStage;
   }): Promise<{ updated: number }> => {
+    if (payload.action === "SOFT_DELETE") {
+      const binCheck = await usageTracker.checkBinLimit(payload.lead_ids.length);
+      if (!binCheck.allowed) {
+        showBinLimitModal({ current: binCheck.current, limit: binCheck.limit });
+        throw new Error("Recycle bin limit reached (100). Please clear some leads from the recycle bin to continue.");
+      }
+    }
     const user = getCurrentUser();
     let updated = 0;
     const chunks = splitIntoChunks(payload.lead_ids, BATCH_WRITE_SIZE);
@@ -414,6 +445,11 @@ export const leadService = {
   },
 
   softDeleteManageLead: async (leadId: string): Promise<void> => {
+    const binCheck = await usageTracker.checkBinLimit(1);
+    if (!binCheck.allowed) {
+      showBinLimitModal({ current: binCheck.current, limit: binCheck.limit });
+      throw new Error("Recycle bin limit reached (100). Please clear some leads from the recycle bin to continue.");
+    }
     const user = getCurrentUser();
     const ref = getUserLeadDocument(user.uid, leadId);
     await updateDoc(ref, { isDeleted: true, deletedAt: Timestamp.now(), updatedAt: Timestamp.now() });
@@ -473,6 +509,7 @@ export const leadService = {
   importManageLeadCSV: async (
     file: File,
     fieldMapping: Record<string, string>,
+    defaultStage: ManageLeadStage = "NEW",
   ): Promise<CSVImportResult> => {
     const user = getCurrentUser();
     const results: CSVImportResult = {
@@ -483,15 +520,26 @@ export const leadService = {
       errors: [],
     };
 
-    // Dynamically import papaparse
-    const Papa = (await import("papaparse" as any)).default;
+    // Dynamically import papaparse with fallback for different module formats
+    const papaModule = await import("papaparse");
+    const Papa = papaModule.default ?? (papaModule as unknown as { parse: unknown }).parse;
 
     return new Promise((resolve) => {
-      Papa.parse(file, {
+      (Papa as { parse: (file: File, config: Record<string, unknown>) => void }).parse(file, {
         header: true,
         skipEmptyLines: true,
         complete: async (parseResult: any) => {
           const rows = parseResult.data as Record<string, string>[];
+
+          const storageCheck = await usageTracker.checkLimit("storage_limit", rows.length);
+          if (!storageCheck.allowed && storageCheck.remaining <= 0) {
+            showLimitModal({ action: "storage_limit", current: storageCheck.current, limit: storageCheck.limit });
+            results.errors.push("Plan limit reached: Lead Storage. No leads can be imported.");
+            resolve(results);
+            return;
+          }
+
+          const maxRows = storageCheck.remaining;
           let batch = writeBatch(db);
           let pendingWrites = 0;
 
@@ -502,16 +550,16 @@ export const leadService = {
             pendingWrites = 0;
           };
 
-          for (let i = 0; i < rows.length; i++) {
+          for (let i = 0; i < rows.length && results.accepted < maxRows; i++) {
             const row = rows[i];
 
             // Map CSV fields to lead fields based on fieldMapping
             const mappedData: Record<string, string | number | boolean | null> = {};
-            
+
             for (const [csvField, appField] of Object.entries(fieldMapping)) {
               if (appField && row[csvField] !== undefined) {
                 let value: string | number | boolean | null = row[csvField].trim();
-                
+
                 // Convert types based on field
                 if (appField === "rating" || appField === "review_count" || appField === "score") {
                   const num = parseFloat(value as string);
@@ -522,7 +570,7 @@ export const leadService = {
                 } else if (value === "" || value === null) {
                   value = null;
                 }
-                
+
                 mappedData[appField] = value;
               }
             }
@@ -536,21 +584,27 @@ export const leadService = {
             }
 
             try {
+              const resolvedStage = (mappedData["stage"] as string)?.toUpperCase() as ManageLeadStage | undefined;
+              const stage: ManageLeadStage =
+                resolvedStage && ["NEW", "QUALIFIED", "CONTACTED", "RESPONDED", "NEGOTIATION", "CONTRACTED", "IN_PROGRESS", "CLOSED"].includes(resolvedStage)
+                  ? resolvedStage
+                  : defaultStage;
+
               // Create lead data matching Firestore schema
               const leadData = {
                 name: businessName,
                 company: (mappedData["company"] as string) || businessName,
                 email: (mappedData["email"] as string) || null,
                 phone: (mappedData["phone"] as string) || null,
-                status: "new",
-                pipelineStage: "NEW",
+                status: STAGE_TO_STATUS[stage],
+                pipelineStage: stage,
                 isDeleted: false,
                 deletedAt: null,
                 source: "csv" as const,
                 notes: null,
                 tags: [],
                 budgetEstimate: (mappedData["budget_estimate"] as number) || 0,
-                score: (mappedData["score"] as number) || 50,
+                score: (mappedData["score"] as number) || 60,
                 urgency: "medium" as const,
                 createdAt: Timestamp.now(),
                 updatedAt: Timestamp.now(),

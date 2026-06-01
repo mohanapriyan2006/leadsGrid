@@ -6,13 +6,15 @@ import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import bgRemotely from "../../assets/bg-images/remotely.svg";
 import { useMessageGenerator } from "../../features/leads/hooks/useMessageGenerator";
 import { messageService } from "../../features/leads/services/messageService";
+import { leadService } from "../../features/leads/services/leadService";
 import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLeads";
+import { LeadModal } from "../../features/leads/components/LeadModal";
 import { MessageComposerPanel } from "../../features/messages/components/MessageComposerPanel";
-import { MessageLeadDetailsModal } from "../../features/messages/components/MessageLeadDetailsModal";
 import { MessageLeadPanel } from "../../features/messages/components/MessageLeadPanel";
 import { EmailTemplatePreviewPanel } from "../../features/messages/components/EmailTemplatePreviewPanel";
 import { CONTEXT_PREVIEW_LIMIT } from "../../features/messages/constants/messages";
 import type { ToneType } from "../../features/common/types/ui";
+import type { ManageLeadStage } from "../../features/leads/types/manageLead";
 import { useAuth } from "../../features/auth/AuthContext";
 import { useSettingsState } from "../../features/settings/hooks/useSettingsState";
 import { renderEmailTemplate } from "../../features/messages/utils/emailTemplateRenderer";
@@ -158,7 +160,7 @@ export const MessagesPage = () => {
   const { user } = useAuth();
   const { settings } = useSettingsState(user?.email);
   // Use centralized leads for message generation
-  const { leads: manageLeads, loading } = useCentralizedLeads();
+  const { leads: manageLeads, loading, refresh } = useCentralizedLeads();
 
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [tone, setTone] = useState<ToneType>("professional");
@@ -181,6 +183,7 @@ export const MessagesPage = () => {
   const [sendError, setSendError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [feedback, setFeedback] = useState("");
   const [contextExpanded, setContextExpanded] = useState(false);
   const [prefillApplied, setPrefillApplied] = useState(false);
 
@@ -249,6 +252,36 @@ export const MessagesPage = () => {
     () => manageLeads.find((lead) => lead.id === selectedLeadId) ?? null,
     [manageLeads, selectedLeadId],
   );
+
+  const handleDeleteLead = async () => {
+    if (!selectedLead) return;
+    await leadService.softDeleteManageLead(selectedLead.id);
+    await refresh();
+    setDetailsOpen(false);
+    setFeedback("Lead moved to recycle bin");
+    setTimeout(() => setFeedback(""), 3000);
+  };
+
+  const handleMoveNext = async () => {
+    if (!selectedLead) return;
+    const nextMap: Record<string, string> = {
+      NEW: "QUALIFIED",
+      QUALIFIED: "CONTACTED",
+      CONTACTED: "RESPONDED",
+    };
+    const next = nextMap[selectedLead.stage];
+    if (!next) return;
+    await leadService.updateManageLead(selectedLead.id, { stage: next as ManageLeadStage });
+    await refresh();
+    setFeedback(`Moved to ${next}`);
+    setTimeout(() => setFeedback(""), 3000);
+  };
+
+  const handleNotesUpdate = async (notes: string) => {
+    if (!selectedLead) return;
+    await leadService.updateManageLead(selectedLead.id, { notes });
+    await refresh();
+  };
 
   const selectedTemplate = useMemo(
     () =>
@@ -604,9 +637,16 @@ export const MessagesPage = () => {
           />
         </div>
 
-        <MessageLeadDetailsModal
-          open={detailsOpen}
+        {feedback ? (
+          <div className="fixed bottom-4 right-4 z-[120] glass-card-sm px-4 py-2 text-xs text-content">
+            {feedback}
+          </div>
+        ) : null}
+
+        <LeadModal
           lead={selectedLead}
+          open={detailsOpen}
+          variant="dialog"
           onClose={() => setDetailsOpen(false)}
         />
       </ResponsivePageLayout>

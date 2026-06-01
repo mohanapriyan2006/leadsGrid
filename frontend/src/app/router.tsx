@@ -51,6 +51,26 @@ const SettingsPage = lazy(() =>
     default: module.SettingsPage,
   })),
 );
+const AboutPage = lazy(() =>
+  import("./views/AboutPage").then((module) => ({
+    default: module.AboutPage,
+  })),
+);
+const ContactPage = lazy(() =>
+  import("./views/ContactPage").then((module) => ({
+    default: module.ContactPage,
+  })),
+);
+const PrivacyPage = lazy(() =>
+  import("./views/PrivacyPage").then((module) => ({
+    default: module.PrivacyPage,
+  })),
+);
+const TermsPage = lazy(() =>
+  import("./views/TermsPage").then((module) => ({
+    default: module.TermsPage,
+  })),
+);
 
 const withSuspense = (element: ReactNode) => (
   <Suspense fallback={<RouteSkeleton />}>{element}</Suspense>
@@ -94,6 +114,26 @@ export const router = createBrowserRouter([
     path: "/login",
     element: <LoginRoute />,
     errorElement: <RouteErrorPage title="Unable to open login" />,
+  },
+  {
+    path: "/about",
+    element: withSuspense(<AboutPage />),
+    errorElement: <RouteErrorPage title="Unable to open about" />,
+  },
+  {
+    path: "/contact",
+    element: withSuspense(<ContactPage />),
+    errorElement: <RouteErrorPage title="Unable to open contact" />,
+  },
+  {
+    path: "/privacy",
+    element: withSuspense(<PrivacyPage />),
+    errorElement: <RouteErrorPage title="Unable to open privacy" />,
+  },
+  {
+    path: "/terms",
+    element: withSuspense(<TermsPage />),
+    errorElement: <RouteErrorPage title="Unable to open terms" />,
   },
   {
     element: (

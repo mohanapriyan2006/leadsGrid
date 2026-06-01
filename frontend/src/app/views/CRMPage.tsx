@@ -14,6 +14,8 @@ import { usePipelineViewPreferences } from "../../features/settings/hooks/usePip
 import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButton";
 import { PageBackground } from "../../components/ui/PageBackground";
 import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
+import { PaginatedTableToolbar } from "../../components/ui/PaginatedTableToolbar";
+import { usePaginatedFilterSort } from "../../hooks/usePaginatedFilterSort";
 import { CRMAnalysisPage } from "./CRMAnalysisPage";
 import bgConnecting from "../../assets/bg-images/connecting-teams.svg";
 import type { DealStatus } from "../../features/common/types/ui";
@@ -31,6 +33,9 @@ import {
   formatCurrency,
   parseCurrency,
 } from "../../features/crm/constants/crm";
+import { ManageLeadsCsvMappingPanel } from "../../features/leads/components/ManageLeadsCsvMappingPanel";
+import { guessMapping } from "../../features/leads/constants/manageLeads";
+import type { CSVImportResult } from "../../features/leads/types/manageLead";
 import type {
   CRMStage,
   Deal,
@@ -84,6 +89,55 @@ export const CRMPage = () => {
   const [isDragging, setIsDragging] = useState(false);
 
   const [newDeal, setNewDeal] = useState<NewDealDraft>({ ...INITIAL_NEW_DEAL });
+  const [kanbanSearch, setKanbanSearch] = useState("");
+
+  // CSV upload state
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [csvMapping, setCsvMapping] = useState<Record<string, string>>({});
+  const [csvResult, setCsvResult] = useState<CSVImportResult | null>(null);
+
+  const {
+    query: tableQuery,
+    setQuery: setTableQuery,
+    sort: tableSort,
+    setSort: setTableSort,
+    currentPage: tablePage,
+    setCurrentPage: setTablePage,
+    totalPages: tableTotalPages,
+    totalItems: tableTotalItems,
+    paginatedItems: paginatedDeals,
+    hasNextPage: tableHasNextPage,
+    hasPrevPage: tableHasPrevPage,
+    goToNextPage: goToTableNextPage,
+    goToPrevPage: goToTablePrevPage,
+    goToPage: goToTablePage,
+  } = usePaginatedFilterSort<Deal>({
+    items: deals,
+    pageSize: 20,
+    defaultSort: "time_desc",
+    searchFn: (deal, q) =>
+      deal.name.toLowerCase().includes(q) ||
+      deal.company.toLowerCase().includes(q) ||
+      (deal.email?.toLowerCase().includes(q) ?? false) ||
+      (deal.phone?.toLowerCase().includes(q) ?? false),
+    getTime: (deal) =>
+      new Date(deal.lastAction && deal.lastAction !== "No recent activity"
+        ? deal.lastAction
+        : 0
+      ).getTime() || 0,
+    getAlphabet: (deal) => deal.name.toLowerCase(),
+  });
+
+  const kanbanFilteredDeals = useMemo(() => {
+    const q = kanbanSearch.trim().toLowerCase();
+    if (!q) return deals;
+    return deals.filter(
+      (deal) =>
+        deal.name.toLowerCase().includes(q) ||
+        deal.company.toLowerCase().includes(q),
+    );
+  }, [deals, kanbanSearch]);
 
   const NEXT_DEAL_STATUS: Record<DealStatus, DealStatus | null> = {
     negotiation: "contracted",
@@ -472,10 +526,39 @@ export const CRMPage = () => {
       phone: undefined,
       stage: STATUS_TO_STAGE[newDeal.status],
       budget_estimate: parseCurrency(newDeal.value),
+      score: newDeal.score,
     });
 
+    await refresh();
     setNewDeal({ ...INITIAL_NEW_DEAL });
     setIsAdding(false);
+  };
+
+  const handleFilePick = async (file: File) => {
+    setCsvFile(file);
+    const text = await file.text();
+    const [headerLine = ""] = text.split(/\r?\n/);
+    const headers = headerLine.split(",").map((item) => item.trim()).filter(Boolean);
+    setCsvHeaders(headers);
+    const initial: Record<string, string> = {};
+    headers.forEach((header) => {
+      initial[header] = guessMapping(header);
+    });
+    setCsvMapping(initial);
+    setCsvResult(null);
+  };
+
+  const importCsv = async () => {
+    if (!csvFile) return;
+    const result = await leadService.importManageLeadCSV(csvFile, csvMapping, "NEGOTIATION");
+    setCsvResult(result);
+    await refresh();
+    if (result.accepted > 0) {
+      setFeedback(`Imported ${result.accepted} deal(s) from CSV into NEGOTIATION stage`);
+      setCsvFile(null);
+      setCsvHeaders([]);
+      setCsvMapping({});
+    }
   };
 
   const handleNewDealChange = (
@@ -507,10 +590,10 @@ export const CRMPage = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-2 rounded-full border border-accent/10 bg-surface-secondary/80 px-3 py-1.5 text-[11px]   backdrop-blur-glass md:flex">
+            {/* <div className="hidden items-center gap-2 rounded-full border border-accent/10 bg-surface-secondary/80 px-3 py-1.5 text-[11px]   backdrop-blur-glass md:flex">
               <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-success" />
-              Realtime scoring enabled
-            </div>
+              Realtime scoring
+            </div> */}
             <FullscreenToggleButton />
             <button
               onClick={() => setDisableDetailsPopup((v) => !v)}
@@ -523,6 +606,22 @@ export const CRMPage = () => {
             >
               {disableDetailsPopup ? "🚫 Popups Off" : "✓ Popups On"}
             </button>
+            <label className="glass-btn cursor-pointer group inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium">
+
+              Upload CSV
+              <input
+                type="file"
+                accept=".csv,text/csv"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) {
+                    void handleFilePick(file);
+                  }
+                  event.target.value = "";
+                }}
+              />
+            </label>
             <button
               onClick={() => setIsAdding((s) => !s)}
               className="accent-btn group inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium"
@@ -545,6 +644,27 @@ export const CRMPage = () => {
             onCancel={() => setIsAdding(false)}
           />
         )}
+
+        {csvFile && csvHeaders.length > 0 ? (
+          <ManageLeadsCsvMappingPanel
+            fileName={csvFile.name}
+            csvHeaders={csvHeaders}
+            csvMapping={csvMapping}
+            csvResult={csvResult}
+            onMappingChange={(header, field) => {
+              setCsvMapping((previous) => ({ ...previous, [header]: field }));
+            }}
+            onImport={() => {
+              void importCsv();
+            }}
+            onCancel={() => {
+              setCsvFile(null);
+              setCsvHeaders([]);
+              setCsvMapping({});
+              setCsvResult(null);
+            }}
+          />
+        ) : null}
 
         <CRMStatsGrid
           deals={deals}
@@ -615,8 +735,26 @@ export const CRMPage = () => {
               </button>
             </div>
 
+            <PaginatedTableToolbar
+              query={tableQuery}
+              onQueryChange={(value) => {
+                setTableQuery(value);
+                setTablePage(1);
+              }}
+              sort={tableSort}
+              onSortChange={setTableSort}
+              currentPage={tablePage}
+              totalPages={tableTotalPages}
+              totalItems={tableTotalItems}
+              onPrevPage={goToTablePrevPage}
+              onNextPage={goToTableNextPage}
+              onPageChange={goToTablePage}
+              placeholder="Search deals by name, company, email or phone..."
+              className="px-1"
+            />
+
             <CRMTableView
-              deals={deals}
+              deals={paginatedDeals}
               selectedDealIds={selectedDealIds}
               statusLabels={crmStatusLabelMap}
               onToggleSelectDeal={toggleSelectDeal}
@@ -630,18 +768,31 @@ export const CRMPage = () => {
             />
           </>
         ) : (
-          <DndContext
-            onDragStart={() => setIsDragging(true)}
-            onDragCancel={() => setIsDragging(false)}
-            onDragEnd={(event) => {
-              void handleDragEnd(event);
-            }}
-          >
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {STATUS_COLUMNS.map((status) => {
-                const columnDeals = deals.filter(
-                  (deal) => deal.status === status,
-                );
+          <>
+            <div className="glass-card-sm flex items-center gap-3 px-3 py-2">
+              <input
+                type="text"
+                value={kanbanSearch}
+                onChange={(e) => setKanbanSearch(e.target.value)}
+                placeholder="Search deals in kanban..."
+                className="glass-input flex-1 min-w-[200px] text-sm"
+              />
+              <span className="text-xs text-content-secondary">
+                {kanbanFilteredDeals.length} deals
+              </span>
+            </div>
+            <DndContext
+              onDragStart={() => setIsDragging(true)}
+              onDragCancel={() => setIsDragging(false)}
+              onDragEnd={(event) => {
+                void handleDragEnd(event);
+              }}
+            >
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {STATUS_COLUMNS.map((status) => {
+                  const columnDeals = kanbanFilteredDeals.filter(
+                    (deal) => deal.status === status,
+                  );
 
                 return (
                   <DroppableStatusColumn
@@ -654,7 +805,7 @@ export const CRMPage = () => {
                       items={columnDeals.map((d) => d.id)}
                       strategy={verticalListSortingStrategy}
                     >
-                      <div className="flex-1 space-y-2 overflow-hidden">
+                      <div className="flex-1 space-y-2 max-h-[calc(100vh-280px)] overflow-y-auto">
                         {columnDeals.length === 0 && (
                           <div className="flex h-28 items-center justify-center rounded-glass-sm border border-dashed border-accent/15 bg-surface-secondary/50 text-[11px] text-content-secondary">
                             Drop deals here to move into{" "}
@@ -670,6 +821,7 @@ export const CRMPage = () => {
                             index={index}
                             onHoverStart={handleHoverStart}
                             onHoverEnd={handleHoverEnd}
+                            onEdit={() => openEdit(deal.id)}
                           />
                         ))}
                       </div>
@@ -679,6 +831,7 @@ export const CRMPage = () => {
               })}
             </div>
           </DndContext>
+        </>
         )}
 
         <DealModal
@@ -719,7 +872,7 @@ export const CRMPage = () => {
           onNotesUpdate={(notes) => {
             void handleDealNotesUpdate(notes);
           }}
-          onEdit={view === "table" ? () => setEditOpen(true) : undefined}
+          onEdit={() => setEditOpen(true)}
         />
 
         {/* Edit Modal */}

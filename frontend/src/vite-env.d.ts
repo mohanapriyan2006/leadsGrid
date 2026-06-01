@@ -13,3 +13,18 @@ interface ImportMetaEnv {
 interface ImportMeta {
 	readonly env: ImportMetaEnv;
 }
+
+declare module "papaparse" {
+	const Papa: {
+		parse: (
+			file: File,
+			config: {
+				header?: boolean;
+				skipEmptyLines?: boolean;
+				complete?: (results: { data: Record<string, string>[] }) => void;
+				error?: (error: { message: string }) => void;
+			},
+		) => void;
+	};
+	export default Papa;
+}

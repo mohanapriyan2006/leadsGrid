@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Avatar } from "../../../components/ui/Avatar";
 import type { ManageLead } from "../../leads/types/manageLead";
 
@@ -46,7 +47,10 @@ export const MessageLeadPanel = ({
   onGenerate,
 }: MessageLeadPanelProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const PAGE_SIZE = 20;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -57,6 +61,32 @@ export const MessageLeadPanel = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSearch("");
+      setPage(1);
+    }
+  }, [isOpen]);
+
+  const filteredLeads = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return leads;
+    return leads.filter(
+      (lead) =>
+        lead.name.toLowerCase().includes(q) ||
+        lead.company.toLowerCase().includes(q) ||
+        Boolean(lead.email?.toLowerCase().includes(q)) ||
+        Boolean(lead.phone?.toLowerCase().includes(q)),
+    );
+  }, [leads, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredLeads.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginatedLeads = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE;
+    return filteredLeads.slice(start, start + PAGE_SIZE);
+  }, [filteredLeads, safePage]);
 
   const handleSelect = (leadId: string) => {
     onLeadChange(leadId);
@@ -95,23 +125,72 @@ export const MessageLeadPanel = ({
         </button>
 
         {isOpen && (
-          <div className="absolute z-10 mt-1 w-full rounded-xl border border-accent/20 bg-surface-secondary shadow-lg max-h-48 overflow-auto">
-            {leads.length === 0 ? (
-              <div className="px-3 py-2 text-sm text-content-secondary">No leads available</div>
+          <div className="absolute z-10 mt-1 w-full rounded-xl border border-accent/20 bg-surface-secondary shadow-lg max-h-64 overflow-auto">
+            {/* Search */}
+            <div className="sticky top-0 z-10 border-b border-accent/10 bg-surface-secondary p-2">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-content-tertiary" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                  }}
+                  placeholder="Search leads..."
+                  className="glass-input w-full pl-8 pr-2 py-1.5 text-xs"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            {filteredLeads.length === 0 ? (
+              <div className="px-3 py-3 text-sm text-content-secondary">No leads found.</div>
             ) : (
-              leads.map((lead) => (
-                <button
-                  key={lead.id}
-                  type="button"
-                  onClick={() => handleSelect(lead.id)}
-                  className={`w-full px-3 py-2 text-left text-sm transition hover:bg-accent/10 ${
-                    lead.id === selectedLeadId ? "bg-accent/20 text-content" : "text-content-secondary"
-                  }`}
-                  title={`${lead.name} - ${lead.company}`}
-                >
-                  {trimOptionText(lead.name, lead.company)}
-                </button>
-              ))
+              <>
+                {paginatedLeads.map((lead) => (
+                  <button
+                    key={lead.id}
+                    type="button"
+                    onClick={() => handleSelect(lead.id)}
+                    className={`w-full px-3 py-2 text-left text-sm transition hover:bg-accent/10 ${
+                      lead.id === selectedLeadId ? "bg-accent/20 text-content" : "text-content-secondary"
+                    }`}
+                    title={`${lead.name} - ${lead.company}`}
+                  >
+                    {trimOptionText(lead.name, lead.company)}
+                  </button>
+                ))}
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="sticky bottom-0 z-10 flex items-center justify-between border-t border-accent/10 bg-surface-secondary px-2 py-1.5">
+                    <span className="text-[10px] text-content-secondary">
+                      {filteredLeads.length} total
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={safePage <= 1}
+                        className="rounded-md p-1 text-content-secondary transition hover:bg-accent/10 disabled:opacity-40"
+                      >
+                        <ChevronLeft className="h-3.5 w-3.5" />
+                      </button>
+                      <span className="min-w-[40px] text-center text-[10px] text-content-secondary">
+                        {safePage} / {totalPages}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={safePage >= totalPages}
+                        className="rounded-md p-1 text-content-secondary transition hover:bg-accent/10 disabled:opacity-40"
+                      >
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}

@@ -1,9 +1,8 @@
 import type { AppSettings } from "../../types/settings";
 import { SettingsSectionCard } from "../SettingsSectionCard";
+import { PricingPlansDisplay } from "../../../landing/components/sections/PricingSection";
 import {
-  PLAN_ORDER,
   PRICING_PLANS,
-  type PlanFamily,
 } from "../../../common/constants/pricingPlans";
 
 type BillingSettingsSectionProps = {
@@ -12,7 +11,7 @@ type BillingSettingsSectionProps = {
 };
 
 export const BillingSettingsSection = ({ billing, onChange }: BillingSettingsSectionProps) => {
-  const families: PlanFamily[] = ["single", "organisation"];
+  const currentPlan = PRICING_PLANS[billing.currentPlan];
 
   return (
     <SettingsSectionCard
@@ -20,37 +19,22 @@ export const BillingSettingsSection = ({ billing, onChange }: BillingSettingsSec
       description="Track plan, credits, and usage snapshots."
       badge="Core Scaffold"
     >
-      <div className="space-y-3">
-        {families.map((family) => (
-          <div key={family} className="space-y-2">
-            <p className="text-[11px] uppercase tracking-[0.12em]  ">
-              {family === "single" ? "Single User" : "Organisation"}
-            </p>
-            <div className="grid gap-2 md:grid-cols-3">
-              {PLAN_ORDER[family].map((planKey) => {
-                const plan = PRICING_PLANS[planKey];
-                const active = billing.currentPlan === planKey;
-
-                return (
-                  <button
-                    key={planKey}
-                    type="button"
-                    onClick={() => onChange({ ...billing, currentPlan: planKey })}
-                    className={`rounded-glass-sm border px-3 py-3 text-left transition-all duration-200 ${
-                      active
-                        ? "border-accent/50 bg-accent-soft text-content shadow-glow"
-                        : "border-accent/10 bg-surface-secondary/70 text-content-secondary hover:border-accent/30"
-                    }`}
-                  >
-                    <p className="text-sm font-semibold uppercase">{plan.name}</p>
-                    <p className="mt-0.5 text-xs text-content-secondary">{plan.tagline}</p>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+      <div className="rounded-glass-sm border border-accent/10 bg-surface/30 px-3 py-2">
+        <p className="text-[11px] uppercase tracking-[0.12em] text-content-secondary">Current Plan</p>
+        <div className="mt-1 flex items-center gap-2">
+          <span className="text-sm font-semibold text-content">{currentPlan.name}</span>
+          <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-semibold text-accent">
+            {currentPlan.family === "single" ? "Single User" : "Organisation"}
+          </span>
+        </div>
+        <p className="mt-0.5 text-xs text-content-secondary">{currentPlan.tagline}</p>
       </div>
+
+      <PricingPlansDisplay
+        compact
+        activePlanKey={billing.currentPlan}
+        onPlanSelect={(planKey) => onChange({ ...billing, currentPlan: planKey })}
+      />
 
       <div className="grid gap-2 sm:grid-cols-3">
         <div className="glass-card-sm px-3 py-2">
@@ -67,9 +51,21 @@ export const BillingSettingsSection = ({ billing, onChange }: BillingSettingsSec
         </div>
       </div>
 
-      <button type="button" className="accent-btn w-full py-2.5 text-xs font-semibold tracking-[0.08em]">
-        UPGRADE PLAN
-      </button>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <button type="button" className="accent-btn flex-1 py-2.5 text-xs font-semibold tracking-[0.08em]">
+          UPGRADE PLAN
+        </button>
+        <button type="button" className="glass-btn flex-1 py-2.5 text-xs font-semibold tracking-[0.08em] text-content-secondary hover:text-content">
+          MANAGE PAYMENT
+        </button>
+      </div>
+
+      <div className="flex items-center justify-between rounded-glass-sm border border-accent/10 bg-surface/20 px-3 py-2">
+        <p className="text-xs text-content-secondary">Need to change your plan or cancel?</p>
+        <button type="button" className="text-xs font-semibold text-accent hover:underline">
+          View Invoices
+        </button>
+      </div>
     </SettingsSectionCard>
   );
 };

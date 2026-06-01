@@ -5,6 +5,8 @@ import { db, getFirebaseAuth } from "../../../lib/firebase";
 import { askAiService } from "../../ai/services/askAiService";
 import type { AIContextPayload } from "../../ai/types/context";
 import type { HyperPersonalizedOutreachRequest, HyperPersonalizedOutreachResult } from "../types/lead";
+import { usageTracker } from "../../billing/services/usageTracker";
+import { showLimitModal } from "../../billing/hooks/useLimitModal";
 
 export type MessageGenerationPayload = {
   prompt?: string;
@@ -95,6 +97,12 @@ export const messageService = {
   },
 
   sendEmail: async (payload: SendEmailPayload): Promise<SendEmailResult> => {
+    const limitCheck = await usageTracker.checkLimit("email_sending_per_day", 1);
+    if (!limitCheck.allowed) {
+      showLimitModal({ action: "email_sending_per_day", current: limitCheck.current, limit: limitCheck.limit });
+      throw new Error("Plan limit reached: Email Sending");
+    }
+
     const auth = getFirebaseAuth();
     const uid = auth?.currentUser?.uid;
     if (!uid) {
@@ -133,6 +141,8 @@ export const messageService = {
       messageId: sendResult.message_id,
       createdAt: Timestamp.now(),
     });
+
+    await usageTracker.incrementUsage("email_sending_per_day", 1);
 
     return {
       status: sendResult.status,

@@ -1,6 +1,8 @@
 const REQUEST_TIMEOUT_MS = 14000;
 
 import type { AIContextPayload } from "../types/context";
+import { usageTracker } from "../../billing/services/usageTracker";
+import { showLimitModal } from "../../billing/hooks/useLimitModal";
 
 type AskProvider = "gemini" | "groq" | "openrouter";
 type AskStrategy = "outreach_generator" | "lead_analyzer" | "follow_up_planner" | "general";
@@ -237,6 +239,12 @@ const callOpenRouter = async (prompt: string): Promise<string> => {
 
 export const askAiService = {
   generateText: async (input: { prompt: string; tone: string; maxWords: number; context?: AIContextPayload }): Promise<AskAiResult> => {
+    const limitCheck = await usageTracker.checkLimit("ask_ai_per_month", 1);
+    if (!limitCheck.allowed) {
+      showLimitModal({ action: "ask_ai_per_month", current: limitCheck.current, limit: limitCheck.limit });
+      throw new Error("Plan limit reached: Ask AI Credits");
+    }
+
     const prompt = buildAskPrompt(input);
     const strategy = routePrompt(input.prompt, input.context);
     const providers: Array<{ name: AskProvider; run: () => Promise<string> }> = [];
@@ -261,6 +269,7 @@ export const askAiService = {
     for (const provider of providers) {
       try {
         const text = await provider.run();
+        await usageTracker.incrementUsage("ask_ai_per_month", 1);
         return {
           text,
           provider: provider.name,

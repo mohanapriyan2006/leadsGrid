@@ -10,11 +10,11 @@ type LeadModalProps = {
   variant?: "dialog" | "hover";
   position?: { x: number; y: number } | null;
   onClose: () => void;
-  onDelete: () => void;
-  onMoveNext: () => void;
+  onDelete?: () => void;
+  onMoveNext?: () => void;
   onMoveToContacted?: () => void;
-  onSendMessage: () => void;
-  onScheduleCall: () => void;
+  onSendMessage?: () => void;
+  onScheduleCall?: () => void;
   onEdit?: () => void;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
@@ -182,35 +182,37 @@ export const LeadModal = ({
             <div className="glass-card-sm mt-3 p-3">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold   uppercase tracking-[0.08em]">Notes</span>
-                {!isEditingNotes ? (
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingNotes(true)}
-                    className="text-[10px] text-accent hover:text-accent-secondary"
-                  >
-                    <Pencil className="w-3.5 h-3.5 inline mr-1" /> Edit
-                  </button>
-                ) : (
-                  <div className="flex gap-1">
+                {onNotesUpdate ? (
+                  !isEditingNotes ? (
                     <button
                       type="button"
-                      onClick={handleSaveNotes}
-                      className="text-[10px] text-success hover:text-success"
+                      onClick={() => setIsEditingNotes(true)}
+                      className="text-[10px] text-accent hover:text-accent-secondary"
                     >
-                      <Check className="w-3.5 h-3.5 inline mr-1" /> Save
+                      <Pencil className="w-3.5 h-3.5 inline mr-1" /> Edit
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setNotes(lead.notes || "");
-                        setIsEditingNotes(false);
-                      }}
-                      className="text-[10px] text-danger hover:text-danger"
-                    >
-                      <span className="inline-flex items-center gap-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancel</span>
-                    </button>
-                  </div>
-                )}
+                  ) : (
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        onClick={handleSaveNotes}
+                        className="text-[10px] text-success hover:text-success"
+                      >
+                        <Check className="w-3.5 h-3.5 inline mr-1" /> Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNotes(lead.notes || "");
+                          setIsEditingNotes(false);
+                        }}
+                        className="text-[10px] text-danger hover:text-danger"
+                      >
+                        <span className="inline-flex items-center gap-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancel</span>
+                      </button>
+                    </div>
+                  )
+                ) : null}
               </div>
               {isEditingNotes ? (
                 <textarea
@@ -227,32 +229,38 @@ export const LeadModal = ({
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={onSendMessage}
-                className="glass-btn px-3 py-1.5 text-xs"
-              >
-                <Zap className="w-3.5 h-3.5 inline mr-1" /> Send Message
-              </button>
-              <button
-                type="button"
-                onClick={onScheduleCall}
-                className="glass-btn px-3 py-1.5 text-xs"
-              >
-                <Phone className="w-3.5 h-3.5 inline mr-1" /> Call
-              </button>
-              <button
-                type="button"
-                onClick={onMoveNext}
-                disabled={!nextStage}
-                className={`rounded-glass-sm px-3 py-1.5 text-xs font-semibold transition ${
-                  nextStage
-                    ? "accent-btn"
-                    : "cursor-not-allowed border border-accent/10 bg-surface-secondary/80  "
-                }`}
-              >
-                <ArrowRight className="w-3.5 h-3.5 inline mr-1" /> Move Next{nextStage ? ` (${nextStage})` : " (Final Stage)"}
-              </button>
+              {onSendMessage ? (
+                <button
+                  type="button"
+                  onClick={onSendMessage}
+                  className="glass-btn px-3 py-1.5 text-xs"
+                >
+                  <Zap className="w-3.5 h-3.5 inline mr-1" /> Send Message
+                </button>
+              ) : null}
+              {onScheduleCall ? (
+                <button
+                  type="button"
+                  onClick={onScheduleCall}
+                  className="glass-btn px-3 py-1.5 text-xs"
+                >
+                  <Phone className="w-3.5 h-3.5 inline mr-1" /> Call
+                </button>
+              ) : null}
+              {onMoveNext ? (
+                <button
+                  type="button"
+                  onClick={onMoveNext}
+                  disabled={!nextStage}
+                  className={`rounded-glass-sm px-3 py-1.5 text-xs font-semibold transition ${
+                    nextStage
+                      ? "accent-btn"
+                      : "cursor-not-allowed border border-accent/10 bg-surface-secondary/80  "
+                  }`}
+                >
+                  <ArrowRight className="w-3.5 h-3.5 inline mr-1" /> Move Next{nextStage ? ` (${nextStage})` : " (Final Stage)"}
+                </button>
+              ) : null}
               {isLastStage && onMoveToContacted ? (
                 <button
                   type="button"
@@ -271,13 +279,15 @@ export const LeadModal = ({
                   Edit
                 </button>
               ) : null}
-              <button
-                type="button"
-                onClick={onDelete}
-                className="rounded-glass-sm border border-danger/30 bg-danger-soft px-3 py-1.5 text-xs text-danger transition hover:shadow-[0_0_16px_rgba(239,68,68,0.3)]"
-              >
-                Delete
-              </button>
+              {onDelete ? (
+                <button
+                  type="button"
+                  onClick={onDelete}
+                  className="rounded-glass-sm border border-danger/30 bg-danger-soft px-3 py-1.5 text-xs text-danger transition hover:shadow-[0_0_16px_rgba(239,68,68,0.3)]"
+                >
+                  Delete
+                </button>
+              ) : null}
             </div>
           </motion.section>
         </motion.div>

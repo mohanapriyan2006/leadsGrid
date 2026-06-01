@@ -1,6 +1,6 @@
 import { PublicPageShell } from "../../components/shared/PublicPageShell";
 import { ContactHero } from "../../features/company/components/ContactHero";
-import { ContactOptions } from "../../features/company/components/ContactOptions";
+import { ContactSection } from "../../features/company/components/ContactSection";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
@@ -12,7 +12,7 @@ export const ContactPage = () => {
   return (
     <PublicPageShell navLinks={NAV_LINKS}>
       <ContactHero />
-      <ContactOptions />
+      <ContactSection />
     </PublicPageShell>
   );
 };

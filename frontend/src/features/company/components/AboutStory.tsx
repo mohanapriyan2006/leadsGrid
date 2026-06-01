@@ -16,6 +16,20 @@ export const AboutStory = () => {
             The platform blends deterministic scoring with AI guidance, keeping humans in control while
             automation handles the heavy lifting.
           </p>
+          <div className="mt-6 grid gap-3 text-sm text-content-secondary sm:grid-cols-2">
+            <div className="rounded-xl border border-content/10 bg-surface-secondary/60 px-4 py-3">
+              Multi-source discovery pipeline
+            </div>
+            <div className="rounded-xl border border-content/10 bg-surface-secondary/60 px-4 py-3">
+              Explainable scoring and insights
+            </div>
+            <div className="rounded-xl border border-content/10 bg-surface-secondary/60 px-4 py-3">
+              Workflow-ready outreach drafts
+            </div>
+            <div className="rounded-xl border border-content/10 bg-surface-secondary/60 px-4 py-3">
+              CRM handoff with visibility
+            </div>
+          </div>
         </GlassCard>
         <div className="grid gap-6">
           <GlassCard>
@@ -26,10 +40,10 @@ export const AboutStory = () => {
             </p>
           </GlassCard>
           <GlassCard>
-            <h3 className="text-lg font-semibold text-content">Who it is for</h3>
+            <h3 className="text-lg font-semibold text-content">How teams use it</h3>
             <p className="mt-3 text-sm text-content-secondary">
-              Founders, SDRs, and growth teams who want a repeatable system to discover, qualify, and
-              convert leads across multiple channels.
+              Sales and growth teams run discovery, qualify intent, draft outreach, and push the best
+              leads into CRM without switching tools.
             </p>
           </GlassCard>
         </div>

@@ -11,8 +11,20 @@ const VALUES = [
     description: "Automation supports decision-making while humans stay in control.",
   },
   {
+    title: "Workflow alignment",
+    description: "LeadsGrid maps to the way SDRs and founders already work, not a forced process.",
+  },
+  {
     title: "Execution ready",
     description: "Every insight connects to a next step so teams can move instantly.",
+  },
+  {
+    title: "Quality by design",
+    description: "Scoring and enrichment are transparent so teams can trust every recommendation.",
+  },
+  {
+    title: "Responsible AI",
+    description: "Automation runs with guardrails, approvals, and clear accountability.",
   },
 ];
 

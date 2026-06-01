@@ -6,6 +6,8 @@ import { Sidebar } from "../../components/shared/Sidebar";
 import { Topbar } from "../../components/shared/Topbar";
 import { LimitReachedModal } from "../../features/billing/components/LimitReachedModal";
 import { useLimitModal } from "../../features/billing/hooks/useLimitModal";
+import { BinLimitReachedModal } from "../../features/billing/components/BinLimitReachedModal";
+import { useBinLimitModal } from "../../features/billing/hooks/useBinLimitModal";
 
 export const AppShell = () => {
   const [searchParams] = useSearchParams();
@@ -13,6 +15,7 @@ export const AppShell = () => {
   const isPageFocused = searchParams.get("focus") === "1";
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const { open: limitModalOpen, modalData, close: closeLimitModal } = useLimitModal();
+  const { open: binLimitModalOpen, modalData: binModalData, close: closeBinLimitModal } = useBinLimitModal();
 
   useEffect(() => {
     setIsMobileNavOpen(false);
@@ -29,6 +32,7 @@ export const AppShell = () => {
       </div>
       {isPageFocused ? null : <MobileNavDrawer open={isMobileNavOpen} onClose={() => setIsMobileNavOpen(false)} />}
       <LimitReachedModal open={limitModalOpen} data={modalData} onClose={closeLimitModal} />
+      <BinLimitReachedModal open={binLimitModalOpen} data={binModalData} onClose={closeBinLimitModal} />
     </div>
   );
 };

@@ -46,6 +46,7 @@ import { adaptDiscoveryLead } from "./discoveryAdapter";
 import { buildManageLeadAnalytics, buildManageLeadInsights } from "./leadMetrics";
 import { usageTracker } from "../../billing/services/usageTracker";
 import { showLimitModal } from "../../billing/hooks/useLimitModal";
+import { showBinLimitModal } from "../../billing/hooks/useBinLimitModal";
 
 const BATCH_WRITE_SIZE = 250;
 const DEFAULT_PAGE_SIZE = 100;
@@ -377,6 +378,13 @@ export const leadService = {
     action: BulkLeadAction;
     target_stage?: ManageLeadStage;
   }): Promise<{ updated: number }> => {
+    if (payload.action === "SOFT_DELETE") {
+      const binCheck = await usageTracker.checkBinLimit(payload.lead_ids.length);
+      if (!binCheck.allowed) {
+        showBinLimitModal({ current: binCheck.current, limit: binCheck.limit });
+        throw new Error("Recycle bin limit reached (100). Please clear some leads from the recycle bin to continue.");
+      }
+    }
     const user = getCurrentUser();
     let updated = 0;
     const chunks = splitIntoChunks(payload.lead_ids, BATCH_WRITE_SIZE);
@@ -437,6 +445,11 @@ export const leadService = {
   },
 
   softDeleteManageLead: async (leadId: string): Promise<void> => {
+    const binCheck = await usageTracker.checkBinLimit(1);
+    if (!binCheck.allowed) {
+      showBinLimitModal({ current: binCheck.current, limit: binCheck.limit });
+      throw new Error("Recycle bin limit reached (100). Please clear some leads from the recycle bin to continue.");
+    }
     const user = getCurrentUser();
     const ref = getUserLeadDocument(user.uid, leadId);
     await updateDoc(ref, { isDeleted: true, deletedAt: Timestamp.now(), updatedAt: Timestamp.now() });

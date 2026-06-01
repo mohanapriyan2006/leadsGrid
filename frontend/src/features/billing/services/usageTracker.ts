@@ -4,6 +4,8 @@ import {
   setDoc,
   collection,
   getDocs,
+  query,
+  where,
 } from "firebase/firestore";
 import { db, getFirebaseAuth, isFirebaseConfigured } from "../../../lib/firebase";
 import {
@@ -202,7 +204,24 @@ const getStorageCount = async (): Promise<number> => {
 
   try {
     const coll = collection(db, "users", userId, "leads");
-    const snap = await getDocs(coll);
+    const q = query(coll, where("isDeleted", "==", false));
+    const snap = await getDocs(q);
+    return snap.size;
+  } catch {
+    return 0;
+  }
+};
+
+const getBinCount = async (): Promise<number> => {
+  const userId = getUserId();
+  if (!userId || !isFirebaseConfigured) {
+    return 0;
+  }
+
+  try {
+    const coll = collection(db, "users", userId, "leads");
+    const q = query(coll, where("isDeleted", "==", true));
+    const snap = await getDocs(q);
     return snap.size;
   } catch {
     return 0;
@@ -258,6 +277,18 @@ export const usageTracker = {
       limit,
       remaining: limit,
       action,
+    };
+  },
+
+  async checkBinLimit(count = 1): Promise<LimitCheckResult> {
+    const BIN_LIMIT = 100;
+    const current = await getBinCount();
+    return {
+      allowed: current + count <= BIN_LIMIT,
+      current,
+      limit: BIN_LIMIT,
+      remaining: Math.max(0, BIN_LIMIT - current),
+      action: "storage_limit",
     };
   },
 

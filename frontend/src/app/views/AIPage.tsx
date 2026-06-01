@@ -61,7 +61,43 @@ export const AIPage = () => {
   } = useMode();
 
   const endRef = useRef<HTMLDivElement | null>(null);
-  const leadPool = leads.length ? leads : MOCK_LEADS;
+
+  // Use real managed leads from Firestore as the primary lead pool.
+  // Fallback to discovery leads, then mock data only if both are empty.
+  const managedLeadPool = useMemo<Lead[]>(
+    () =>
+      manageLeads.map((lead) => ({
+        id: lead.id,
+        source: lead.source === "website" ? "search" : (lead.source as Lead["source"]),
+        author: lead.name,
+        company: lead.company,
+        title: lead.company,
+        content: lead.notes || `Lead from ${lead.company}`,
+        summary: lead.notes || `Lead from ${lead.company}`,
+        score: lead.score,
+        tags: lead.notes ? [lead.source] : ["saved"],
+        intent_label: "prospect",
+        created_at: lead.created_at,
+        email: lead.email || undefined,
+        phone: lead.phone || undefined,
+        website: lead.website_url || undefined,
+        address: lead.address || undefined,
+        pain_point: lead.ai_analysis?.pain_points?.[0],
+        category:
+          lead.category === "hiring" ||
+          lead.category === "problem" ||
+          lead.category === "switching" ||
+          lead.category === "learning" ||
+          lead.category === "discussion"
+            ? lead.category
+            : undefined,
+        urgency: lead.urgency === "high",
+        budget: lead.budget_estimate > 0,
+      })),
+    [manageLeads]
+  );
+
+  const leadPool = managedLeadPool.length ? managedLeadPool : leads.length ? leads : MOCK_LEADS;
 
   const aiWordLimit = useMemo(() => {
     if (settings.ai.messageStyle === "short") return 90;

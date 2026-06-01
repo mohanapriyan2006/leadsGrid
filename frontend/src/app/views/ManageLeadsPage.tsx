@@ -41,6 +41,8 @@ import { useLeadStore } from "../../store/useLeadStore";
 import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButton";
 import { PageBackground } from "../../components/ui/PageBackground";
 import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
+import { PaginatedTableToolbar } from "../../components/ui/PaginatedTableToolbar";
+import { usePaginatedFilterSort } from "../../hooks/usePaginatedFilterSort";
 import bgTeamCollab from "../../assets/bg-images/team-collaboration.svg";
 import { LeadsAnalysisPage } from "./LeadsAnalysisPage";
 import { useSettingsState } from "../../features/settings/hooks/useSettingsState";
@@ -199,6 +201,43 @@ export const ManageLeadsPage = () => {
     return filtered;
   }, [manageLeads, debouncedSearch, onlyHot, settings.leadsScoring.minimumLeadScore]);
 
+  const {
+    query: tableQuery,
+    setQuery: setTableQuery,
+    sort: tableSort,
+    setSort: setTableSort,
+    currentPage: tablePage,
+    setCurrentPage: setTablePage,
+    totalPages: tableTotalPages,
+    totalItems: tableTotalItems,
+    paginatedItems: paginatedTableLeads,
+    goToNextPage: goToTableNextPage,
+    goToPrevPage: goToTablePrevPage,
+    goToPage: goToTablePage,
+  } = usePaginatedFilterSort<ManageLead>({
+    items: filteredLeads,
+    pageSize: 20,
+    defaultSort: "time_desc",
+    searchFn: (lead, q) =>
+      lead.name.toLowerCase().includes(q) ||
+      lead.company.toLowerCase().includes(q) ||
+      Boolean(lead.email?.toLowerCase().includes(q)) ||
+      Boolean(lead.phone?.toLowerCase().includes(q)),
+    getTime: (lead) => new Date(lead.updated_at || lead.created_at || 0).getTime(),
+    getAlphabet: (lead) => lead.name.toLowerCase(),
+  });
+
+  const [kanbanSearch, setKanbanSearch] = useState("");
+  const kanbanFilteredLeads = useMemo(() => {
+    const q = kanbanSearch.trim().toLowerCase();
+    if (!q) return filteredLeads;
+    return filteredLeads.filter(
+      (lead) =>
+        lead.name.toLowerCase().includes(q) ||
+        lead.company.toLowerCase().includes(q),
+    );
+  }, [filteredLeads, kanbanSearch]);
+
   useEffect(() => {
     setSelectedLeadIds((prev) => prev.filter((id) => filteredLeads.some((lead) => lead.id === id)));
   }, [filteredLeads]);
@@ -210,9 +249,9 @@ export const ManageLeadsPage = () => {
         label:
           (manageStageLabelMap as Partial<Record<ManageLeadStage, string>>)[stage.id] ??
           stage.label,
-        leads: filteredLeads.filter((lead) => lead.stage === stage.id),
+        leads: kanbanFilteredLeads.filter((lead) => lead.stage === stage.id),
       })),
-    [filteredLeads, manageStageLabelMap],
+    [kanbanFilteredLeads, manageStageLabelMap],
   );
 
   const activeLead = useMemo(() => {
@@ -527,15 +566,28 @@ export const ManageLeadsPage = () => {
         ) : null}
 
         {manageLeadView === "kanban" ? (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragEnd={(event) => {
-              void handleDragEnd(event);
-            }}
-          >
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <>
+            <div className="glass-card-sm flex items-center gap-3 px-3 py-2">
+              <input
+                type="text"
+                value={kanbanSearch}
+                onChange={(e) => setKanbanSearch(e.target.value)}
+                placeholder="Search leads in kanban..."
+                className="glass-input flex-1 min-w-[200px] text-sm"
+              />
+              <span className="text-xs text-content-secondary">
+                {kanbanFilteredLeads.length} leads
+              </span>
+            </div>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={(event) => {
+                void handleDragEnd(event);
+              }}
+            >
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {grouped.map((column) => (
                 <ManageLeadsStageColumn
                   key={column.id}
@@ -563,6 +615,7 @@ export const ManageLeadsPage = () => {
               ) : null}
             </DragOverlay>
           </DndContext>
+        </>
         ) : null}
 
         {manageLeadView === "table" ? (
@@ -589,8 +642,26 @@ export const ManageLeadsPage = () => {
               </button>
             </div>
 
+            <PaginatedTableToolbar
+              query={tableQuery}
+              onQueryChange={(value) => {
+                setTableQuery(value);
+                setTablePage(1);
+              }}
+              sort={tableSort}
+              onSortChange={setTableSort}
+              currentPage={tablePage}
+              totalPages={tableTotalPages}
+              totalItems={tableTotalItems}
+              onPrevPage={goToTablePrevPage}
+              onNextPage={goToTableNextPage}
+              onPageChange={goToTablePage}
+              placeholder="Search leads by name, company, email or phone..."
+              className="px-1"
+            />
+
             <ManageLeadsTableView
-              leads={filteredLeads}
+              leads={paginatedTableLeads}
               selectedLeadIds={selectedLeadIds}
               stageLabels={manageStageLabelMap}
               onToggleSelectLead={toggleSelectLead}

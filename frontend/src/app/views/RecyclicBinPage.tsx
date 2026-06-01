@@ -7,6 +7,8 @@ import { RecycleBinDetailsModal } from "../../features/recycle-bin/components/Re
 import { RecycleBinTable } from "../../features/recycle-bin/components/RecycleBinTable";
 import { PageBackground } from "../../components/ui/PageBackground";
 import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
+import { PaginatedTableToolbar } from "../../components/ui/PaginatedTableToolbar";
+import { usePaginatedFilterSort } from "../../hooks/usePaginatedFilterSort";
 import bgBusinessPlan from "../../assets/bg-images/business-plan.svg";
 
 export const RecyclicBinPage = () => {
@@ -32,6 +34,31 @@ export const RecyclicBinPage = () => {
   const [pendingLeadIds, setPendingLeadIds] = useState<string[]>([]);
 
   const selectedCount = selectedLeadIds.length;
+
+  const {
+    query: binQuery,
+    setQuery: setBinQuery,
+    sort: binSort,
+    setSort: setBinSort,
+    currentPage: binPage,
+    setCurrentPage: setBinPage,
+    totalPages: binTotalPages,
+    totalItems: binTotalItems,
+    paginatedItems: paginatedBinLeads,
+    goToNextPage: goToBinNextPage,
+    goToPrevPage: goToBinPrevPage,
+    goToPage: goToBinPage,
+  } = usePaginatedFilterSort<BinLead>({
+    items: binLeads,
+    pageSize: 20,
+    defaultSort: "time_desc",
+    searchFn: (lead, q) =>
+      lead.name.toLowerCase().includes(q) ||
+      lead.company.toLowerCase().includes(q) ||
+      Boolean(lead.email?.toLowerCase().includes(q)),
+    getTime: (lead) => new Date(lead.deleted_at || 0).getTime(),
+    getAlphabet: (lead) => lead.name.toLowerCase(),
+  });
 
   const toggleLeadSelection = (leadId: string) => {
     setSelectedLeadIds((current) =>
@@ -187,8 +214,26 @@ export const RecyclicBinPage = () => {
           </div>
         </header>
 
+        <PaginatedTableToolbar
+          query={binQuery}
+          onQueryChange={(value) => {
+            setBinQuery(value);
+            setBinPage(1);
+          }}
+          sort={binSort}
+          onSortChange={setBinSort}
+          currentPage={binPage}
+          totalPages={binTotalPages}
+          totalItems={binTotalItems}
+          onPrevPage={goToBinPrevPage}
+          onNextPage={goToBinNextPage}
+          onPageChange={goToBinPage}
+          placeholder="Search leads by name, company or email..."
+          className="px-1"
+        />
+
         <RecycleBinTable
-          leads={binLeads}
+          leads={paginatedBinLeads}
           selectedLeadIds={selectedLeadIds}
           onToggleLeadSelection={toggleLeadSelection}
           onToggleSelectAll={toggleSelectAll}

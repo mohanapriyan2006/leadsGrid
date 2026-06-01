@@ -14,6 +14,8 @@ import { usePipelineViewPreferences } from "../../features/settings/hooks/usePip
 import { FullscreenToggleButton } from "../../components/ui/FullscreenToggleButton";
 import { PageBackground } from "../../components/ui/PageBackground";
 import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
+import { PaginatedTableToolbar } from "../../components/ui/PaginatedTableToolbar";
+import { usePaginatedFilterSort } from "../../hooks/usePaginatedFilterSort";
 import { CRMAnalysisPage } from "./CRMAnalysisPage";
 import bgConnecting from "../../assets/bg-images/connecting-teams.svg";
 import type { DealStatus } from "../../features/common/types/ui";
@@ -84,6 +86,49 @@ export const CRMPage = () => {
   const [isDragging, setIsDragging] = useState(false);
 
   const [newDeal, setNewDeal] = useState<NewDealDraft>({ ...INITIAL_NEW_DEAL });
+  const [kanbanSearch, setKanbanSearch] = useState("");
+
+  const {
+    query: tableQuery,
+    setQuery: setTableQuery,
+    sort: tableSort,
+    setSort: setTableSort,
+    currentPage: tablePage,
+    setCurrentPage: setTablePage,
+    totalPages: tableTotalPages,
+    totalItems: tableTotalItems,
+    paginatedItems: paginatedDeals,
+    hasNextPage: tableHasNextPage,
+    hasPrevPage: tableHasPrevPage,
+    goToNextPage: goToTableNextPage,
+    goToPrevPage: goToTablePrevPage,
+    goToPage: goToTablePage,
+  } = usePaginatedFilterSort<Deal>({
+    items: deals,
+    pageSize: 20,
+    defaultSort: "time_desc",
+    searchFn: (deal, q) =>
+      deal.name.toLowerCase().includes(q) ||
+      deal.company.toLowerCase().includes(q) ||
+      (deal.email?.toLowerCase().includes(q) ?? false) ||
+      (deal.phone?.toLowerCase().includes(q) ?? false),
+    getTime: (deal) =>
+      new Date(deal.lastAction && deal.lastAction !== "No recent activity"
+        ? deal.lastAction
+        : 0
+      ).getTime() || 0,
+    getAlphabet: (deal) => deal.name.toLowerCase(),
+  });
+
+  const kanbanFilteredDeals = useMemo(() => {
+    const q = kanbanSearch.trim().toLowerCase();
+    if (!q) return deals;
+    return deals.filter(
+      (deal) =>
+        deal.name.toLowerCase().includes(q) ||
+        deal.company.toLowerCase().includes(q),
+    );
+  }, [deals, kanbanSearch]);
 
   const NEXT_DEAL_STATUS: Record<DealStatus, DealStatus | null> = {
     negotiation: "contracted",
@@ -615,8 +660,26 @@ export const CRMPage = () => {
               </button>
             </div>
 
+            <PaginatedTableToolbar
+              query={tableQuery}
+              onQueryChange={(value) => {
+                setTableQuery(value);
+                setTablePage(1);
+              }}
+              sort={tableSort}
+              onSortChange={setTableSort}
+              currentPage={tablePage}
+              totalPages={tableTotalPages}
+              totalItems={tableTotalItems}
+              onPrevPage={goToTablePrevPage}
+              onNextPage={goToTableNextPage}
+              onPageChange={goToTablePage}
+              placeholder="Search deals by name, company, email or phone..."
+              className="px-1"
+            />
+
             <CRMTableView
-              deals={deals}
+              deals={paginatedDeals}
               selectedDealIds={selectedDealIds}
               statusLabels={crmStatusLabelMap}
               onToggleSelectDeal={toggleSelectDeal}
@@ -630,18 +693,31 @@ export const CRMPage = () => {
             />
           </>
         ) : (
-          <DndContext
-            onDragStart={() => setIsDragging(true)}
-            onDragCancel={() => setIsDragging(false)}
-            onDragEnd={(event) => {
-              void handleDragEnd(event);
-            }}
-          >
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {STATUS_COLUMNS.map((status) => {
-                const columnDeals = deals.filter(
-                  (deal) => deal.status === status,
-                );
+          <>
+            <div className="glass-card-sm flex items-center gap-3 px-3 py-2">
+              <input
+                type="text"
+                value={kanbanSearch}
+                onChange={(e) => setKanbanSearch(e.target.value)}
+                placeholder="Search deals in kanban..."
+                className="glass-input flex-1 min-w-[200px] text-sm"
+              />
+              <span className="text-xs text-content-secondary">
+                {kanbanFilteredDeals.length} deals
+              </span>
+            </div>
+            <DndContext
+              onDragStart={() => setIsDragging(true)}
+              onDragCancel={() => setIsDragging(false)}
+              onDragEnd={(event) => {
+                void handleDragEnd(event);
+              }}
+            >
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {STATUS_COLUMNS.map((status) => {
+                  const columnDeals = kanbanFilteredDeals.filter(
+                    (deal) => deal.status === status,
+                  );
 
                 return (
                   <DroppableStatusColumn
@@ -679,6 +755,7 @@ export const CRMPage = () => {
               })}
             </div>
           </DndContext>
+        </>
         )}
 
         <DealModal

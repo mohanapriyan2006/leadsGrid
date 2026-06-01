@@ -82,7 +82,7 @@ const STATUS_TO_STAGE: Record<LeadStatus, ManageLeadStage> = {
   lost: "NEGOTIATION",
 };
 
-const STAGE_TO_STATUS: Record<ManageLeadStage, LeadStatus> = {
+export const STAGE_TO_STATUS: Record<ManageLeadStage, LeadStatus> = {
   NEW: "new",
   QUALIFIED: "new",
   CONTACTED: "contacted",
@@ -249,7 +249,7 @@ export const createFirestoreLead = (
     notes: payload.notes ?? null,
     tags: [],
     budgetEstimate: payload.budget_estimate ?? 0,
-    score: payload.score ?? 50,
+    score: payload.score ?? 60,
     urgency: payload.urgency ?? "medium",
     createdAt: now,
     updatedAt: now,

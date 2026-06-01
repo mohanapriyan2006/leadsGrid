@@ -288,8 +288,14 @@ export const ManageLeadsPage = () => {
 
   const importCsv = async () => {
     if (!csvFile) return;
-    const result = await leadService.importManageLeadCSV(csvFile, csvMapping);
+    const result = await leadService.importManageLeadCSV(csvFile, csvMapping, "NEW");
     setCsvResult(result);
+    if (result.accepted > 0) {
+      setFeedback(`Imported ${result.accepted} lead(s) from CSV into NEW stage`);
+      setCsvFile(null);
+      setCsvHeaders([]);
+      setCsvMapping({});
+    }
     await refresh();
   };
 

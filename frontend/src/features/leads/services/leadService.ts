@@ -36,6 +36,7 @@ import {
   buildLeadDedupeKey,
   createFirestoreLead,
   mapDiscoveryLeadToManageInput,
+  STAGE_TO_STATUS,
   toFirestoreLeadPatch,
   toManageLead,
 } from "./leadModel";
@@ -495,6 +496,7 @@ export const leadService = {
   importManageLeadCSV: async (
     file: File,
     fieldMapping: Record<string, string>,
+    defaultStage: ManageLeadStage = "NEW",
   ): Promise<CSVImportResult> => {
     const user = getCurrentUser();
     const results: CSVImportResult = {
@@ -505,11 +507,12 @@ export const leadService = {
       errors: [],
     };
 
-    // Dynamically import papaparse
-    const Papa = (await import("papaparse" as any)).default;
+    // Dynamically import papaparse with fallback for different module formats
+    const papaModule = await import("papaparse");
+    const Papa = papaModule.default ?? (papaModule as unknown as { parse: unknown }).parse;
 
     return new Promise((resolve) => {
-      Papa.parse(file, {
+      (Papa as { parse: (file: File, config: Record<string, unknown>) => void }).parse(file, {
         header: true,
         skipEmptyLines: true,
         complete: async (parseResult: any) => {
@@ -539,11 +542,11 @@ export const leadService = {
 
             // Map CSV fields to lead fields based on fieldMapping
             const mappedData: Record<string, string | number | boolean | null> = {};
-            
+
             for (const [csvField, appField] of Object.entries(fieldMapping)) {
               if (appField && row[csvField] !== undefined) {
                 let value: string | number | boolean | null = row[csvField].trim();
-                
+
                 // Convert types based on field
                 if (appField === "rating" || appField === "review_count" || appField === "score") {
                   const num = parseFloat(value as string);
@@ -554,7 +557,7 @@ export const leadService = {
                 } else if (value === "" || value === null) {
                   value = null;
                 }
-                
+
                 mappedData[appField] = value;
               }
             }
@@ -568,21 +571,27 @@ export const leadService = {
             }
 
             try {
+              const resolvedStage = (mappedData["stage"] as string)?.toUpperCase() as ManageLeadStage | undefined;
+              const stage: ManageLeadStage =
+                resolvedStage && ["NEW", "QUALIFIED", "CONTACTED", "RESPONDED", "NEGOTIATION", "CONTRACTED", "IN_PROGRESS", "CLOSED"].includes(resolvedStage)
+                  ? resolvedStage
+                  : defaultStage;
+
               // Create lead data matching Firestore schema
               const leadData = {
                 name: businessName,
                 company: (mappedData["company"] as string) || businessName,
                 email: (mappedData["email"] as string) || null,
                 phone: (mappedData["phone"] as string) || null,
-                status: "new",
-                pipelineStage: "NEW",
+                status: STAGE_TO_STATUS[stage],
+                pipelineStage: stage,
                 isDeleted: false,
                 deletedAt: null,
                 source: "csv" as const,
                 notes: null,
                 tags: [],
                 budgetEstimate: (mappedData["budget_estimate"] as number) || 0,
-                score: (mappedData["score"] as number) || 50,
+                score: (mappedData["score"] as number) || 60,
                 urgency: "medium" as const,
                 createdAt: Timestamp.now(),
                 updatedAt: Timestamp.now(),

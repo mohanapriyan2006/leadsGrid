@@ -33,6 +33,9 @@ import {
   formatCurrency,
   parseCurrency,
 } from "../../features/crm/constants/crm";
+import { ManageLeadsCsvMappingPanel } from "../../features/leads/components/ManageLeadsCsvMappingPanel";
+import { guessMapping } from "../../features/leads/constants/manageLeads";
+import type { CSVImportResult } from "../../features/leads/types/manageLead";
 import type {
   CRMStage,
   Deal,
@@ -87,6 +90,12 @@ export const CRMPage = () => {
 
   const [newDeal, setNewDeal] = useState<NewDealDraft>({ ...INITIAL_NEW_DEAL });
   const [kanbanSearch, setKanbanSearch] = useState("");
+
+  // CSV upload state
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [csvMapping, setCsvMapping] = useState<Record<string, string>>({});
+  const [csvResult, setCsvResult] = useState<CSVImportResult | null>(null);
 
   const {
     query: tableQuery,
@@ -517,10 +526,39 @@ export const CRMPage = () => {
       phone: undefined,
       stage: STATUS_TO_STAGE[newDeal.status],
       budget_estimate: parseCurrency(newDeal.value),
+      score: newDeal.score,
     });
 
+    await refresh();
     setNewDeal({ ...INITIAL_NEW_DEAL });
     setIsAdding(false);
+  };
+
+  const handleFilePick = async (file: File) => {
+    setCsvFile(file);
+    const text = await file.text();
+    const [headerLine = ""] = text.split(/\r?\n/);
+    const headers = headerLine.split(",").map((item) => item.trim()).filter(Boolean);
+    setCsvHeaders(headers);
+    const initial: Record<string, string> = {};
+    headers.forEach((header) => {
+      initial[header] = guessMapping(header);
+    });
+    setCsvMapping(initial);
+    setCsvResult(null);
+  };
+
+  const importCsv = async () => {
+    if (!csvFile) return;
+    const result = await leadService.importManageLeadCSV(csvFile, csvMapping, "NEGOTIATION");
+    setCsvResult(result);
+    await refresh();
+    if (result.accepted > 0) {
+      setFeedback(`Imported ${result.accepted} deal(s) from CSV into NEGOTIATION stage`);
+      setCsvFile(null);
+      setCsvHeaders([]);
+      setCsvMapping({});
+    }
   };
 
   const handleNewDealChange = (
@@ -552,10 +590,10 @@ export const CRMPage = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-2 rounded-full border border-accent/10 bg-surface-secondary/80 px-3 py-1.5 text-[11px]   backdrop-blur-glass md:flex">
+            {/* <div className="hidden items-center gap-2 rounded-full border border-accent/10 bg-surface-secondary/80 px-3 py-1.5 text-[11px]   backdrop-blur-glass md:flex">
               <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-success" />
-              Realtime scoring enabled
-            </div>
+              Realtime scoring
+            </div> */}
             <FullscreenToggleButton />
             <button
               onClick={() => setDisableDetailsPopup((v) => !v)}
@@ -568,6 +606,22 @@ export const CRMPage = () => {
             >
               {disableDetailsPopup ? "🚫 Popups Off" : "✓ Popups On"}
             </button>
+            <label className="glass-btn cursor-pointer group inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium">
+
+              Upload CSV
+              <input
+                type="file"
+                accept=".csv,text/csv"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) {
+                    void handleFilePick(file);
+                  }
+                  event.target.value = "";
+                }}
+              />
+            </label>
             <button
               onClick={() => setIsAdding((s) => !s)}
               className="accent-btn group inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium"
@@ -590,6 +644,27 @@ export const CRMPage = () => {
             onCancel={() => setIsAdding(false)}
           />
         )}
+
+        {csvFile && csvHeaders.length > 0 ? (
+          <ManageLeadsCsvMappingPanel
+            fileName={csvFile.name}
+            csvHeaders={csvHeaders}
+            csvMapping={csvMapping}
+            csvResult={csvResult}
+            onMappingChange={(header, field) => {
+              setCsvMapping((previous) => ({ ...previous, [header]: field }));
+            }}
+            onImport={() => {
+              void importCsv();
+            }}
+            onCancel={() => {
+              setCsvFile(null);
+              setCsvHeaders([]);
+              setCsvMapping({});
+              setCsvResult(null);
+            }}
+          />
+        ) : null}
 
         <CRMStatsGrid
           deals={deals}

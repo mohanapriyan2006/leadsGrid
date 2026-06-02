@@ -13,20 +13,23 @@ async def fetch_google_like_search(
     timeout: int = 15,
     client: httpx.AsyncClient | None = None,
 ) -> list[dict]:
-    # Uses DuckDuckGo HTML results as a free search fallback to avoid paid APIs.
-    url = "https://duckduckgo.com/html/"
-    params = {"q": query}
+    # Uses DuckDuckGo Lite as a free search fallback.
+    url = "https://lite.duckduckgo.com/lite/"
+    data = {"q": query, "kl": "us-en"}
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Referer": "https://lite.duckduckgo.com/",
     }
 
     try:
         if client is None:
             async with httpx.AsyncClient(timeout=timeout, headers=headers, follow_redirects=True) as owned_client:
-                response = await owned_client.get(url, params=params)
+                response = await owned_client.post(url, data=data)
                 response.raise_for_status()
         else:
-            response = await client.get(url, params=params, headers=headers, timeout=timeout, follow_redirects=True)
+            response = await client.post(url, data=data, headers=headers, timeout=timeout, follow_redirects=True)
             response.raise_for_status()
     except Exception as exc:
         logger.warning("Search fetch failed: %s", exc)
@@ -34,26 +37,36 @@ async def fetch_google_like_search(
 
     soup = BeautifulSoup(response.text, "html.parser")
     records: list[dict] = []
-    anchors = soup.select("a.result__a")
 
-    for index, anchor in enumerate(anchors[: max(1, min(limit, 30))]):
-        title = anchor.get_text(strip=True)
-        link = anchor.get("href")
-        snippet_node = anchor.find_parent("div", class_="result").select_one("a.result__snippet") if anchor.find_parent("div", class_="result") else None
-        summary = snippet_node.get_text(" ", strip=True) if snippet_node else ""
+    # DuckDuckGo Lite uses .result-link anchors inside table rows.
+    results = soup.find_all("a", class_="result-link")
+
+    for index, link in enumerate(results[: max(1, min(limit, 30))]):
+        title = link.get_text(strip=True)
+        href = link.get("href")
 
         if not title:
             continue
+
+        snippet = ""
+        parent_tr = link.find_parent("tr")
+        if parent_tr:
+            snippet_td = parent_tr.find("td", class_="result-snippet")
+            if snippet_td:
+                snippet = snippet_td.get_text(" ", strip=True)
+            else:
+                row_text = parent_tr.get_text(" ", strip=True)
+                snippet = row_text.replace(title, "").strip()
 
         records.append(
             {
                 "id": f"search-{index}",
                 "title": title,
-                "summary": summary[:280],
-                "content": summary[:600],
+                "summary": snippet[:280],
+                "content": snippet[:600],
                 "platform": "search",
                 "upvotes": 0,
-                "url": link,
+                "url": href,
                 "author": None,
                 "created_at": datetime.now(timezone.utc).isoformat(),
             }

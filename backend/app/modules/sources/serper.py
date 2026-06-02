@@ -40,6 +40,13 @@ async def fetch_serper(
             response = await client.post(url, json=payload, headers=headers, timeout=timeout)
             response.raise_for_status()
             data = response.json()
+    except httpx.HTTPStatusError as exc:
+        try:
+            body = exc.response.text[:500]
+        except Exception:
+            body = "<no body>"
+        logger.warning("Serper fetch failed: %s — body: %s", exc, body)
+        return []
     except Exception as exc:
         logger.warning("Serper fetch failed: %s", exc)
         return []

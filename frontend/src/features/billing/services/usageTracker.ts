@@ -106,94 +106,112 @@ const getMonthlyDocRef = (userId: string) =>
 
 const getDailyUsage = async (): Promise<DailyUsageDoc> => {
   const userId = getUserId();
+  const today = getTodayKey();
   if (!userId || !isFirebaseConfigured) {
     return {
-      date: getTodayKey(),
-      leadsDiscovery: 0,
-      emailSending: 0,
-      crmAiAnalysis: 0,
-      otherAi: 0,
-    };
-  }
-
-  const ref = getDailyDocRef(userId);
-  const snap = await getDoc(ref);
-  const today = getTodayKey();
-
-  if (!snap.exists()) {
-    const empty: DailyUsageDoc = {
       date: today,
       leadsDiscovery: 0,
       emailSending: 0,
       crmAiAnalysis: 0,
       otherAi: 0,
     };
-    await setDoc(ref, empty);
-    return empty;
   }
 
-  const data = snap.data() as DailyUsageDoc;
-  if (data.date !== today) {
-    const reset: DailyUsageDoc = {
+  try {
+    const ref = getDailyDocRef(userId);
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) {
+      const empty: DailyUsageDoc = {
+        date: today,
+        leadsDiscovery: 0,
+        emailSending: 0,
+        crmAiAnalysis: 0,
+        otherAi: 0,
+      };
+      await setDoc(ref, empty);
+      return empty;
+    }
+
+    const data = snap.data() as DailyUsageDoc;
+    if (data.date !== today) {
+      const reset: DailyUsageDoc = {
+        date: today,
+        leadsDiscovery: 0,
+        emailSending: 0,
+        crmAiAnalysis: 0,
+        otherAi: 0,
+      };
+      await setDoc(ref, reset);
+      return reset;
+    }
+
+    return {
+      date: data.date ?? today,
+      leadsDiscovery: data.leadsDiscovery ?? 0,
+      emailSending: data.emailSending ?? 0,
+      crmAiAnalysis: data.crmAiAnalysis ?? 0,
+      otherAi: data.otherAi ?? 0,
+    };
+  } catch {
+    return {
       date: today,
       leadsDiscovery: 0,
       emailSending: 0,
       crmAiAnalysis: 0,
       otherAi: 0,
     };
-    await setDoc(ref, reset);
-    return reset;
   }
-
-  return {
-    date: data.date ?? today,
-    leadsDiscovery: data.leadsDiscovery ?? 0,
-    emailSending: data.emailSending ?? 0,
-    crmAiAnalysis: data.crmAiAnalysis ?? 0,
-    otherAi: data.otherAi ?? 0,
-  };
 };
 
 const getMonthlyUsage = async (): Promise<MonthlyUsageDoc> => {
   const userId = getUserId();
+  const thisMonth = getMonthKey();
   if (!userId || !isFirebaseConfigured) {
     return {
-      month: getMonthKey(),
-      askAi: 0,
-      agentAi: 0,
-    };
-  }
-
-  const ref = getMonthlyDocRef(userId);
-  const snap = await getDoc(ref);
-  const thisMonth = getMonthKey();
-
-  if (!snap.exists()) {
-    const empty: MonthlyUsageDoc = {
       month: thisMonth,
       askAi: 0,
       agentAi: 0,
     };
-    await setDoc(ref, empty);
-    return empty;
   }
 
-  const data = snap.data() as MonthlyUsageDoc;
-  if (data.month !== thisMonth) {
-    const reset: MonthlyUsageDoc = {
+  try {
+    const ref = getMonthlyDocRef(userId);
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) {
+      const empty: MonthlyUsageDoc = {
+        month: thisMonth,
+        askAi: 0,
+        agentAi: 0,
+      };
+      await setDoc(ref, empty);
+      return empty;
+    }
+
+    const data = snap.data() as MonthlyUsageDoc;
+    if (data.month !== thisMonth) {
+      const reset: MonthlyUsageDoc = {
+        month: thisMonth,
+        askAi: 0,
+        agentAi: 0,
+      };
+      await setDoc(ref, reset);
+      return reset;
+    }
+
+    return {
+      month: data.month ?? thisMonth,
+      askAi: data.askAi ?? 0,
+      agentAi: data.agentAi ?? 0,
+    };
+  } catch {
+    return {
       month: thisMonth,
       askAi: 0,
       agentAi: 0,
     };
-    await setDoc(ref, reset);
-    return reset;
   }
-
-  return {
-    month: data.month ?? thisMonth,
-    askAi: data.askAi ?? 0,
-    agentAi: data.agentAi ?? 0,
-  };
 };
 
 const getStorageCount = async (): Promise<number> => {
@@ -293,25 +311,29 @@ export const usageTracker = {
   },
 
   async incrementUsage(action: UsageAction, count = 1): Promise<void> {
-    const userId = getUserId();
-    if (!userId || !isFirebaseConfigured) {
-      return;
-    }
+    try {
+      const userId = getUserId();
+      if (!userId || !isFirebaseConfigured) {
+        return;
+      }
 
-    if (action in actionToDailyField) {
-      const usage = await getDailyUsage();
-      const field = actionToDailyField[action];
-      const next = { ...usage, [field]: ((usage as unknown) as Record<string, number>)[field] + count };
-      await setDoc(getDailyDocRef(userId), next);
-      return;
-    }
+      if (action in actionToDailyField) {
+        const usage = await getDailyUsage();
+        const field = actionToDailyField[action];
+        const next = { ...usage, [field]: ((usage as unknown) as Record<string, number>)[field] + count };
+        await setDoc(getDailyDocRef(userId), next);
+        return;
+      }
 
-    if (action in actionToMonthlyField) {
-      const usage = await getMonthlyUsage();
-      const field = actionToMonthlyField[action];
-      const next = { ...usage, [field]: ((usage as unknown) as Record<string, number>)[field] + count };
-      await setDoc(getMonthlyDocRef(userId), next);
-      return;
+      if (action in actionToMonthlyField) {
+        const usage = await getMonthlyUsage();
+        const field = actionToMonthlyField[action];
+        const next = { ...usage, [field]: ((usage as unknown) as Record<string, number>)[field] + count };
+        await setDoc(getMonthlyDocRef(userId), next);
+        return;
+      }
+    } catch {
+      // Silently fail on permission errors; the analysis gate should still open
     }
   },
 

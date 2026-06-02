@@ -1,4 +1,5 @@
 import { MetricWidget } from "../../components/ui/MetricWidget";
+import { RunAnalysisPrompt } from "../../components/ui/RunAnalysisPrompt";
 import type { ManageLead } from "../../features/leads/types/manageLead";
 import { AIInsightsPanel } from "../../features/leads/analysis/components/AIInsightsPanel";
 import { FiltersBar } from "../../features/leads/analysis/components/FiltersBar";
@@ -9,12 +10,13 @@ import { SourcePerformanceChart } from "../../features/leads/analysis/components
 import { StageConversionChart } from "../../features/leads/analysis/components/StageConversionChart";
 import { useLeadsAnalytics } from "../../features/leads/analysis/hooks/useLeadsAnalytics";
 import { useLeadPredictions } from "../../features/leads/analysis/hooks/useLeadPredictions";
+import { useAnalysisGate } from "../../features/billing/hooks/useAnalysisGate";
 
 type LeadsAnalysisPageProps = {
   leads: ManageLead[];
 };
 
-export const LeadsAnalysisPage = ({ leads }: LeadsAnalysisPageProps) => {
+const LeadsAnalysisContent = ({ leads }: { leads: ManageLead[] }) => {
   const {
     filters,
     filteredLeads,
@@ -69,8 +71,8 @@ export const LeadsAnalysisPage = ({ leads }: LeadsAnalysisPageProps) => {
 
       <section className="grid gap-3 lg:grid-cols-2">
         <article className="glass-card-sm p-4">
-          <p className="text-xs uppercase tracking-[0.16em]  ">Best Leads To Contact Today</p>
-          <ul className="mt-3 space-y-2 text-sm ">
+          <p className="text-xs uppercase tracking-[0.16em] text-content-secondary">Best Leads To Contact Today</p>
+          <ul className="mt-3 space-y-2 text-sm text-content">
             {prediction.highPotentialLeads.slice(0, 5).map((lead) => (
               <li key={lead.id} className="flex items-center justify-between gap-2 rounded-glass-sm border border-success/20 bg-success-soft px-3 py-2 text-success">
                 <span>{lead.name}</span>
@@ -81,7 +83,7 @@ export const LeadsAnalysisPage = ({ leads }: LeadsAnalysisPageProps) => {
         </article>
 
         <article className="glass-card-sm p-4">
-          <p className="text-xs uppercase tracking-[0.16em]  ">Auto Discard Suggestions</p>
+          <p className="text-xs uppercase tracking-[0.16em] text-content-secondary">Auto Discard Suggestions</p>
           <ul className="mt-3 space-y-2 text-sm text-content-secondary">
             {prediction.discardCandidates.slice(0, 5).map((lead) => (
               <li key={lead.id} className="flex items-center justify-between gap-2 rounded-glass-sm border border-danger/20 bg-danger-soft px-3 py-2 text-danger">
@@ -94,4 +96,14 @@ export const LeadsAnalysisPage = ({ leads }: LeadsAnalysisPageProps) => {
       </section>
     </section>
   );
+};
+
+export const LeadsAnalysisPage = ({ leads }: LeadsAnalysisPageProps) => {
+  const { analysisRun, runAnalysis, checking } = useAnalysisGate();
+
+  if (!analysisRun) {
+    return <RunAnalysisPrompt onRun={runAnalysis} checking={checking} />;
+  }
+
+  return <LeadsAnalysisContent leads={leads} />;
 };

@@ -105,7 +105,7 @@ export const MessageComposerPanel = ({
           onClick={() => onTabChange("compose")}
           className={`rounded-glass-sm border px-3 py-2 text-xs uppercase tracking-[0.1em] transition-all ${
             activeTab === "compose"
-              ? "border-accent/50 bg-accent-soft shadow-glow"
+              ? "border-accent/50 bg-accent-secondary shadow-glow"
               : "border-accent/10 bg-surface-secondary/70   hover:border-accent/30"
           }`}
         >
@@ -116,7 +116,7 @@ export const MessageComposerPanel = ({
           onClick={() => onTabChange("templates")}
           className={`rounded-glass-sm animate-pulseGlow border px-3 py-2 text-xs uppercase tracking-[0.1em] transition-all ${
             activeTab === "templates"
-              ? "border-accent/50 bg-accent-soft shadow-glow"
+              ? "border-accent/50 bg-accent-secondary shadow-glow"
               : "border-accent/10 bg-surface-secondary/70   hover:border-accent/30"
           }`}
         >
@@ -146,7 +146,7 @@ export const MessageComposerPanel = ({
                 onClick={() => onToneChange(option)}
                 className={`rounded-glass-sm border px-3 py-1 text-xs uppercase tracking-[0.1em] transition-all duration-200 ${
                   tone === option
-                    ? "border-accent/50 bg-accent-soft shadow-glow"
+                    ? "border-accent/50 bg-accent-soft"
                     : "border-accent/10   hover:border-accent/30 hover:text-content-secondary"
                 }`}
               >

@@ -1,10 +1,12 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from pydantic import BaseModel, ValidationError
 
 from app.schemas.lead_analysis import AdvancedLeadIntentScore
 from app.schemas.lead_analysis import HyperPersonalizedOutreachRequest
 from app.schemas.lead_analysis import HyperPersonalizedOutreachResponse
+from app.schemas.lead_discovery import DiscoverAsyncResponse, RawSignalInput
 from app.services.ai_prompts_service import ai_prompts_service
+from app.services.lead_discovery_pipeline import lead_discovery_pipeline
 
 router = APIRouter(prefix="/leads", tags=["leads"])
 
@@ -81,7 +83,28 @@ async def analyze_intent_only(body: AnalyzeLeadRequest) -> dict:
 async def analyze_advanced_intent(body: AnalyzeLeadRequest) -> AdvancedLeadIntentScore:
     lead_text = f"{body.lead_title} {body.lead_text}".strip()
     try:
-        return await ai_prompts_service.analyze_advanced_intent(lead_text)
+        enriched = await lead_discovery_pipeline.process_single_signal({
+            "source": "manual",
+            "title": body.lead_title,
+            "content": lead_text,
+            "author": body.lead_author or "Unknown",
+            "engagement_upvotes": 0,
+            "freshness_hours": 1.0,
+        })
+        return AdvancedLeadIntentScore(
+            score=enriched.lead_score,
+            urgency="high" if enriched.priority in {"HOT", "HIGH"} else ("medium" if enriched.priority == "MEDIUM" else "low"),
+            buying_signals=enriched.evidence[:6],
+            decision_maker="yes" if enriched.authority_level in {"Founder", "CEO", "CTO"} else "unknown",
+            pain_point=enriched.primary_problem or "",
+            details=enriched.recommended_action or "",
+            category="hiring" if enriched.lead_category in {"HIRING_NOW", "SERVICE_NEEDED"} else (
+                "switching" if enriched.lead_category == "TOOL_SWITCHING" else (
+                    "problem" if enriched.lead_category == "OPERATIONAL_PAIN" else "discussion"
+                )
+            ),
+            status="qualified" if enriched.priority in {"HOT", "HIGH"} and not enriched.ai_dropped else "unqualified",
+        )
     except (ValueError, ValidationError) as e:
         raise HTTPException(status_code=422, detail=f"Advanced intent analysis failed validation: {str(e)}")
     except Exception as e:
@@ -142,3 +165,19 @@ async def suggest_action(body: AnalyzeLeadRequest) -> dict:
         return action.model_dump()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Action suggestion failed: {str(e)}")
+
+
+@router.post("/discover-async", response_model=DiscoverAsyncResponse)
+async def discover_new_lead_signal(
+    payload: RawSignalInput,
+    background_tasks: BackgroundTasks,
+) -> DiscoverAsyncResponse:
+    """
+    Accepts raw scraped data from cron scripts/scrapers instantly,
+    offloads processing to background tasks to maintain rapid responses.
+    """
+    async def _process_signal():
+        await lead_discovery_pipeline.process_single_signal(payload.model_dump())
+
+    background_tasks.add_task(_process_signal)
+    return DiscoverAsyncResponse(status="queued", message="Signal pipeline processing started concurrently.")

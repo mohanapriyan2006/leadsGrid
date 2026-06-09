@@ -40,6 +40,14 @@ export const LeadsDiscoveryResultCard = ({
   const isQualified = advancedIntent?.status === "qualified";
   const disableSave = !!advancedIntent && !isQualified;
 
+  const priorityStyles: Record<string, string> = {
+    HOT: "bg-accent-secondary/20 text-accent-secondary border-accent-secondary/40",
+    HIGH: "bg-success/15 text-success border-success/30",
+    MEDIUM: "bg-warning/15 text-warning border-warning/30",
+    LOW: "bg-info/15 text-info border-info/30",
+  };
+  const priorityColor = priorityStyles[lead.priority ?? "LOW"] ?? priorityStyles.LOW;
+
   return (
     <article
       onClick={() => onSelect(lead.id)}
@@ -50,7 +58,7 @@ export const LeadsDiscoveryResultCard = ({
       }`}
       style={{ animationDelay: `${index * 55}ms` }}
     >
-      {isHot ? <span className="absolute inset-y-0 left-0 w-1 bg-accent-secondary/80" /> : null}
+      {isHot || lead.priority === "HOT" ? <span className="absolute inset-y-0 left-0 w-1 bg-accent-secondary/80" /> : null}
 
       <div className="mb-3 flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
@@ -68,8 +76,10 @@ export const LeadsDiscoveryResultCard = ({
         </div>
 
         <div className="text-right">
-          {isHot ? (
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-accent-secondary">High Intent</p>
+          {lead.priority && lead.priority !== "LOW" ? (
+            <span className={`mb-1 inline-block rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] ${priorityColor}`}>
+              {lead.priority}
+            </span>
           ) : null}
           <p className="text-xl font-bold text-content">{lead.score}</p>
           <div className="mt-1 h-1 w-20 rounded bg-surface/70">
@@ -95,7 +105,43 @@ export const LeadsDiscoveryResultCard = ({
           </p>
         </div>
 
-        {advancedIntent ? (
+        {lead.ai_enriched ? (
+          <div className="rounded-xl border border-accent-secondary/20 bg-accent-secondary/10 px-3 py-2">
+            <div className="mb-2 flex flex-wrap items-center gap-1.5">
+              {lead.lead_category ? (
+                <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                  {lead.lead_category}
+                </span>
+              ) : null}
+              {lead.buying_stage ? (
+                <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                  {lead.buying_stage}
+                </span>
+              ) : null}
+              {lead.authority_level ? (
+                <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                  Auth: {lead.authority_level}
+                </span>
+              ) : null}
+              {lead.verdict ? (
+                <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                  Verdict: {lead.verdict}
+                </span>
+              ) : null}
+              {lead.evidence && lead.evidence.length > 0 ? (
+                <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                  Evidence: {lead.evidence.length}
+                </span>
+              ) : null}
+            </div>
+            {lead.primary_problem ? (
+              <p className="text-xs text-content-secondary">Pain: {lead.primary_problem}</p>
+            ) : null}
+            {lead.recommended_action ? (
+              <p className="mt-1 text-xs text-content-secondary">Action: {lead.recommended_action}</p>
+            ) : null}
+          </div>
+        ) : advancedIntent ? (
           <div className="rounded-xl border border-accent-secondary/20 bg-accent-secondary/10 px-3 py-2">
             <div className="mb-2 flex flex-wrap items-center gap-1.5">
               <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">

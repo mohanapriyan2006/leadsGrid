@@ -63,7 +63,10 @@ export const adaptDiscoveryLead = (dto: DiscoveryLeadDto): Lead => {
   const author = dto.author?.trim() || "Unknown Author";
   const summary = dto.summary?.trim() || dto.title;
   const content = dto.content?.trim() || summary;
-  const score = Number.isFinite(dto.score) ? Math.max(1, Math.min(Math.round(dto.score), 100)) : 50;
+  // Use AI lead_score if enriched, otherwise legacy score
+  const effectiveScore = dto.ai_enriched && dto.lead_score !== undefined
+    ? dto.lead_score
+    : (Number.isFinite(dto.score) ? Math.max(1, Math.min(Math.round(dto.score), 100)) : 50);
   const combinedText = `${dto.title} ${summary} ${content}`;
 
   return {
@@ -76,14 +79,35 @@ export const adaptDiscoveryLead = (dto: DiscoveryLeadDto): Lead => {
     avatar: initials(author),
     location: undefined,
     timeAgo: toTimeAgo(createdAt),
-    budget: score >= 78,
-    urgency: score >= 88,
+    budget: effectiveScore >= 78,
+    urgency: effectiveScore >= 88,
     permalink: dto.url,
     content,
     summary,
-    score,
+    score: effectiveScore,
     tags: inferTags(combinedText),
-    intent_label: inferIntent(score),
+    intent_label: inferIntent(effectiveScore),
     created_at: createdAt,
+
+    // 3-stage AI enrichment
+    ai_enriched: dto.ai_enriched ?? false,
+    ai_dropped: dto.ai_dropped ?? false,
+    drop_reason: dto.drop_reason ?? null,
+    lead_category: dto.lead_category ?? null,
+    is_actionable_lead: dto.is_actionable_lead ?? null,
+    industry: dto.industry ?? null,
+    authority_level: dto.authority_level ?? null,
+    authority_confidence: dto.authority_confidence ?? null,
+    buying_stage: dto.buying_stage ?? null,
+    primary_problem: dto.primary_problem ?? null,
+    secondary_problems: dto.secondary_problems ?? [],
+    desired_outcome: dto.desired_outcome ?? null,
+    evidence: dto.evidence ?? [],
+    verdict: dto.verdict ?? null,
+    closing_confidence: dto.closing_confidence ?? null,
+    recommended_action: dto.recommended_action ?? null,
+    lead_score: dto.lead_score ?? effectiveScore,
+    priority: dto.priority ?? "LOW",
+    raw_score: dto.raw_score ?? null,
   };
 };

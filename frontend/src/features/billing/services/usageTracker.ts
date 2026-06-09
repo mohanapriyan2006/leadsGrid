@@ -21,6 +21,7 @@ import {
   type UsageAction,
   type LimitCheckResult,
   UNLIMITED_SOFT_CAP,
+  DISABLE_PLAN_LIMITS,
 } from "../constants/usage";
 
 const STORAGE_KEY = "leadsgrid.settings.v1";
@@ -258,6 +259,16 @@ const getBinCount = async (): Promise<number> => {
 
 export const usageTracker = {
   async checkLimit(action: UsageAction, count = 1): Promise<LimitCheckResult> {
+    if (DISABLE_PLAN_LIMITS) {
+      return {
+        allowed: true,
+        current: 0,
+        limit: UNLIMITED_SOFT_CAP,
+        remaining: UNLIMITED_SOFT_CAP,
+        action,
+      };
+    }
+
     const limits = getPlanLimits();
     const limitKey = actionToLimitKey[action];
     const limit = resolveLimit(limits[limitKey]);
@@ -309,6 +320,16 @@ export const usageTracker = {
   },
 
   async checkBinLimit(count = 1): Promise<LimitCheckResult> {
+    if (DISABLE_PLAN_LIMITS) {
+      return {
+        allowed: true,
+        current: 0,
+        limit: UNLIMITED_SOFT_CAP,
+        remaining: UNLIMITED_SOFT_CAP,
+        action: "storage_limit",
+      };
+    }
+
     const BIN_LIMIT = 100;
     const current = await getBinCount();
     return {

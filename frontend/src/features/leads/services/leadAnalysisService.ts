@@ -19,6 +19,22 @@ export type AdvancedLeadIntent = {
   details: string;
   category: "hiring" | "problem" | "switching" | "learning" | "discussion";
   status: "qualified" | "unqualified";
+
+  // 3-stage pipeline fields
+  lead_category?: string | null;
+  industry?: string | null;
+  authority_level?: string | null;
+  authority_confidence?: number | null;
+  buying_stage?: string | null;
+  primary_problem?: string | null;
+  secondary_problems?: string[];
+  desired_outcome?: string | null;
+  evidence?: string[];
+  verdict?: string | null;
+  closing_confidence?: number | null;
+  recommended_action?: string | null;
+  lead_score?: number;
+  priority?: "HOT" | "HIGH" | "MEDIUM" | "LOW";
 };
 
 export type LeadValidation = {

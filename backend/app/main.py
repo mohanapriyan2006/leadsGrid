@@ -16,6 +16,7 @@ from app.services.context_enhancer import ContextEnhancer
 from app.services.email_service import EmailService
 from app.services.agent_run_service import AgentRunService
 from app.services.ai_prompts_service import ai_prompts_service
+from app.services.lead_discovery_pipeline import lead_discovery_pipeline
 from app.services.step_evaluator import StepEvaluator
 
 
@@ -30,6 +31,7 @@ def create_app() -> FastAPI:
         finally:
             await lead_aggregator.aclose()
             await ai_prompts_service.aclose()
+            await lead_discovery_pipeline.aclose()
 
     app = FastAPI(
         title=settings.app_name,

@@ -15,6 +15,7 @@ from app.modules.sources.google_search import fetch_google_like_search
 from app.modules.sources.hackernews import fetch_hackernews
 from app.modules.sources.reddit import fetch_reddit
 from app.modules.sources.serper import fetch_serper
+from app.services.lead_discovery_pipeline import lead_discovery_pipeline
 
 
 class LeadAggregator:
@@ -112,13 +113,80 @@ class LeadAggregator:
         scored = score_records(deduped, query_plan["high_intent"])
         verified = verify_records(scored, max_age_days=self.settings.max_lead_age_days)
 
-        # Guardrail: strict verification can over-filter. Fall back to scored
-        # results so discovery remains usable in UI.
-        if verified:
-            result = sorted(verified, key=lambda item: float(item.get("score") or 0), reverse=True)
-            self._cache_set(cache_key, result)
-            return result
+        base_results = verified if verified else scored
+        base_results = sorted(base_results, key=lambda item: float(item.get("score") or 0), reverse=True)
 
-        result = sorted(scored, key=lambda item: float(item.get("score") or 0), reverse=True)
-        self._cache_set(cache_key, result)
-        return result
+        # Run 3-stage AI pipeline on top candidates (batched, max 10 to stay within timeout)
+        pipeline_candidates = base_results[:10]
+        enriched = await self._enrich_with_pipeline(pipeline_candidates)
+
+        # Merge enriched records back into the full result set
+        enriched_by_content: dict[str, dict] = {}
+        for r in enriched:
+            key = f"{r.get('title', '')}{r.get('content', '')}"[:200]
+            enriched_by_content[key] = r
+
+        final_results: list[dict] = []
+        for item in base_results:
+            key = f"{item.get('title', '')}{item.get('content', '')}"[:200]
+            if key in enriched_by_content:
+                final_results.append(enriched_by_content[key])
+            else:
+                final_results.append(item)
+
+        self._cache_set(cache_key, final_results)
+        return final_results
+
+    async def _enrich_with_pipeline(self, candidates: list[dict]) -> list[dict]:
+        """Run the 3-stage pipeline with a tight timeout. Fallback gracefully."""
+        if not candidates:
+            return []
+
+        # Add freshness_hours estimate from created_at
+        from datetime import datetime, timezone
+        pipeline_inputs: list[dict] = []
+        for item in candidates:
+            freshness_hours = 1.0
+            created = item.get("created_at")
+            if created:
+                try:
+                    dt = datetime.fromisoformat(created.replace("Z", "+00:00"))
+                    freshness_hours = max(0.0, (datetime.now(timezone.utc) - dt).total_seconds() / 3600)
+                except ValueError:
+                    pass
+            pipeline_inputs.append({
+                "source": item.get("platform", "unknown"),
+                "title": item.get("title", ""),
+                "content": item.get("content", ""),
+                "comments": "",
+                "author": item.get("author", "Unknown"),
+                "engagement_upvotes": item.get("upvotes", 0),
+                "freshness_hours": freshness_hours,
+                "permalink": item.get("url"),
+                "created_at": item.get("created_at"),
+                "score": item.get("score"),
+            })
+
+        try:
+            # Reserve ~8 seconds for pipeline; if exceeded return keyword-only results
+            enriched = await asyncio.wait_for(
+                lead_discovery_pipeline.run_pipeline_batch(pipeline_inputs),
+                timeout=8.0,
+            )
+        except Exception:
+            # Pipeline failed or timed out — return keyword-scored candidates
+            return candidates
+
+        # Convert EnrichedLeadRecord back to plain dict and merge legacy fields
+        results: list[dict] = []
+        for rec in enriched:
+            d = rec.model_dump()
+            # Map back to legacy field names expected by frontend
+            d["platform"] = d.get("source", "unknown")
+            d["url"] = d.get("permalink")
+            d["upvotes"] = d.get("engagement_upvotes", 0)
+            # Use lead_score as the primary score for UI sorting
+            d["score"] = d.get("lead_score", 0) if d.get("ai_enriched") else d.get("raw_score", 0)
+            results.append(d)
+
+        return results

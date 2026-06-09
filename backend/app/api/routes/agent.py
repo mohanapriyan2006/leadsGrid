@@ -169,4 +169,6 @@ async def discover(
     _ = user  # Reserved for per-user rate limiting and quota handling.
     aggregator = _aggregator_from_request(request)
     leads = await aggregator.discover(query)
-    return [LeadItem(**lead) for lead in leads[:limit]]
+    # Drop non-actionable leads at the API boundary
+    actionable = [lead for lead in leads if not lead.get("ai_dropped")]
+    return [LeadItem(**lead) for lead in actionable[:limit]]

@@ -52,6 +52,11 @@ const buildLeadSignals = (lead: Lead) => {
     signals.push(`Decision maker: ${lead.decision_maker}`);
   if (lead.status) signals.push(`Qualification: ${lead.status}`);
   if (lead.category) signals.push(`Category: ${lead.category}`);
+  if (lead.priority && lead.priority !== "LOW") signals.push(`Priority: ${lead.priority}`);
+  if (lead.buying_stage) signals.push(`Buying stage: ${lead.buying_stage}`);
+  if (lead.authority_level) signals.push(`Authority: ${lead.authority_level}`);
+  if (lead.industry) signals.push(`Industry: ${lead.industry}`);
+  if (lead.verdict) signals.push(`90-day verdict: ${lead.verdict}`);
   return signals.length > 0 ? signals : ["Needs deeper qualification"];
 };
 
@@ -77,8 +82,20 @@ const toAnalyzedInsightBullets = (intent: AdvancedLeadIntent | null) => {
   if (intent.buying_signals.length > 0) {
     bullets.push(`Buying signals: ${intent.buying_signals.join(", ")}`);
   }
+  if (intent.buying_stage) {
+    bullets.push(`Buying stage: ${intent.buying_stage}`);
+  }
+  if (intent.authority_level) {
+    bullets.push(`Authority: ${intent.authority_level}`);
+  }
+  if (intent.verdict) {
+    bullets.push(`90-day verdict: ${intent.verdict}`);
+  }
+  if (intent.recommended_action) {
+    bullets.push(`Action: ${intent.recommended_action}`);
+  }
 
-  return bullets.slice(0, 5);
+  return bullets.slice(0, 6);
 };
 
 const shortenText = (value: string, limit = 360) => {
@@ -121,7 +138,13 @@ export const LeadsDiscoveryInsightPanel = ({
   const analyzedInsightBullets = toAnalyzedInsightBullets(selectedIntent);
   const displayInsightBullets =
     insightBullets.length > 0 ? insightBullets : analyzedInsightBullets;
-  const analysisDetails = shortenText(selectedIntent?.details ?? "", 360);
+  const analysisDetails = shortenText(
+    selectedIntent?.details
+    || selectedLead?.recommended_action
+    || selectedLead?.primary_problem
+    || "",
+    360,
+  );
   const leadSignals = selectedLead ? buildLeadSignals(selectedLead) : [];
   const skillsCount = userSkillsInput
     .split(",")
@@ -258,31 +281,64 @@ export const LeadsDiscoveryInsightPanel = ({
             </div>
           ) : null}
 
-          {selectedIntent ? (
+          {(selectedLead?.ai_enriched || selectedIntent) ? (
             <div className="rounded-lg border border-accent-secondary/20 bg-accent-secondary/10 p-2.5">
-              <p className="mb-1 text-[11px] uppercase tracking-[0.08em]  ">
-                Advanced Qualification
+              <p className="mb-1 text-[11px] uppercase tracking-[0.08em]">
+                {selectedLead?.ai_enriched ? "AI Pipeline Enrichment" : "Advanced Qualification"}
               </p>
               <div className="flex flex-wrap gap-1.5">
                 <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
-                  {selectedIntent.status}
+                  {selectedLead?.status || selectedIntent?.status}
                 </span>
                 <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
-                  {selectedIntent.category}
+                  {selectedLead?.category || selectedIntent?.category}
                 </span>
-                <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
-                  Decision: {selectedIntent.decision_maker}
-                </span>
-                <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
-                  Urgency: {selectedIntent.urgency}
-                </span>
+                {selectedLead?.priority ? (
+                  <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                    {selectedLead.priority}
+                  </span>
+                ) : null}
+                {selectedLead?.buying_stage ? (
+                  <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                    {selectedLead.buying_stage}
+                  </span>
+                ) : null}
+                {selectedLead?.authority_level ? (
+                  <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                    Auth: {selectedLead.authority_level}
+                  </span>
+                ) : null}
+                {selectedLead?.verdict ? (
+                  <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                    Verdict: {selectedLead.verdict}
+                  </span>
+                ) : null}
+                {!selectedLead?.ai_enriched && selectedIntent?.decision_maker ? (
+                  <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                    Decision: {selectedIntent.decision_maker}
+                  </span>
+                ) : null}
+                {!selectedLead?.ai_enriched && selectedIntent?.urgency ? (
+                  <span className="rounded-full border border-accent/20 bg-surface/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-content-secondary">
+                    Urgency: {selectedIntent.urgency}
+                  </span>
+                ) : null}
               </div>
               <p className="mt-2 text-xs text-content-secondary">
-                Pain: {selectedIntent.pain_point}
+                Pain: {selectedLead?.primary_problem || selectedIntent?.pain_point || "N/A"}
               </p>
-              {selectedIntent.buying_signals.length > 0 ? (
+              {selectedLead?.evidence && selectedLead.evidence.length > 0 ? (
+                <p className="mt-1 text-xs text-content-secondary">
+                  Evidence: {selectedLead.evidence.join(" • ")}
+                </p>
+              ) : selectedIntent?.buying_signals.length ? (
                 <p className="mt-1 text-xs text-content-secondary">
                   Signals: {selectedIntent.buying_signals.join(" • ")}
+                </p>
+              ) : null}
+              {selectedLead?.recommended_action ? (
+                <p className="mt-1 text-xs text-content-secondary">
+                  Action: {selectedLead.recommended_action}
                 </p>
               ) : null}
             </div>

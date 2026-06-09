@@ -12,6 +12,22 @@ export type DiscoveryLeadAIIntent = {
   details: string;
   category: "hiring" | "problem" | "switching" | "learning" | "discussion";
   status: "qualified" | "unqualified";
+
+  // 3-stage pipeline fields
+  lead_category?: string | null;
+  industry?: string | null;
+  authority_level?: string | null;
+  authority_confidence?: number | null;
+  buying_stage?: string | null;
+  primary_problem?: string | null;
+  secondary_problems?: string[];
+  desired_outcome?: string | null;
+  evidence?: string[];
+  verdict?: string | null;
+  closing_confidence?: number | null;
+  recommended_action?: string | null;
+  lead_score?: number;
+  priority?: "HOT" | "HIGH" | "MEDIUM" | "LOW";
 };
 
 export type LeadStatus = "new" | "contacted" | "proposal" | "won" | "lost";
@@ -53,6 +69,7 @@ export type FirestoreLead = {
   websiteUrl?: string | null;
   googleMapsUrl?: string | null;
   dedupeKey?: string;
+  aiAnalysis?: Partial<DiscoveryLeadAIIntent>;
 };
 
 export type CreateManageLeadInput = {
@@ -72,6 +89,7 @@ export type CreateManageLeadInput = {
   notes?: string | null;
   score?: number;
   urgency?: "low" | "medium" | "high";
+  aiAnalysis?: Partial<DiscoveryLeadAIIntent>;
 };
 
 const STATUS_TO_STAGE: Record<LeadStatus, ManageLeadStage> = {
@@ -185,15 +203,34 @@ export const toManageLead = (id: string, data: DocumentData): ManageLead => {
     is_deleted: lead.isDeleted ?? false,
     deleted_at: lead.deletedAt ? toISO(lead.deletedAt) : null,
     ai_analysis: {
-      intent_score: lead.score ?? 50,
-      pain_points: [],
-      suggested_pitch: "",
+      intent_score: lead.aiAnalysis?.lead_score ?? lead.score ?? 50,
+      pain_points: lead.aiAnalysis?.primary_problem ? [lead.aiAnalysis.primary_problem] : [],
+      buying_signals: lead.aiAnalysis?.buying_signals ?? [],
+      decision_maker: lead.aiAnalysis?.decision_maker,
+      qualification_status: lead.aiAnalysis?.status,
+      suggested_pitch: lead.aiAnalysis?.recommended_action ?? "",
       portfolio_match: "",
-      next_action: "",
-      deal_probability: lead.score ?? 50,
+      next_action: lead.aiAnalysis?.recommended_action ?? "",
+      deal_probability: lead.aiAnalysis?.closing_confidence ?? lead.score ?? 50,
       expected_close_days: 14,
       ghost_probability: 20,
       winning_strategy: "",
+
+      // 3-stage pipeline fields
+      lead_category: lead.aiAnalysis?.lead_category ?? null,
+      industry: lead.aiAnalysis?.industry ?? null,
+      authority_level: lead.aiAnalysis?.authority_level ?? null,
+      authority_confidence: lead.aiAnalysis?.authority_confidence ?? null,
+      buying_stage: lead.aiAnalysis?.buying_stage ?? null,
+      primary_problem: lead.aiAnalysis?.primary_problem ?? null,
+      secondary_problems: lead.aiAnalysis?.secondary_problems ?? [],
+      desired_outcome: lead.aiAnalysis?.desired_outcome ?? null,
+      evidence: lead.aiAnalysis?.evidence ?? [],
+      verdict: lead.aiAnalysis?.verdict ?? null,
+      closing_confidence: lead.aiAnalysis?.closing_confidence ?? null,
+      recommended_action: lead.aiAnalysis?.recommended_action ?? null,
+      lead_score: lead.aiAnalysis?.lead_score ?? lead.score ?? 50,
+      priority: lead.aiAnalysis?.priority ?? "LOW",
     },
   };
 };
@@ -262,6 +299,7 @@ export const createFirestoreLead = (
     websiteUrl: payload.website_url ?? null,
     googleMapsUrl: payload.google_maps_url ?? null,
     dedupeKey: buildLeadDedupeKey(payload.name, payload.company, payload.source ?? "website"),
+    aiAnalysis: payload.aiAnalysis ?? undefined,
   };
 };
 
@@ -315,30 +353,61 @@ export const mapDiscoveryLeadToManageInputWithAI = (
   aiIntent?: DiscoveryLeadAIIntent | null,
 ): CreateManageLeadInput => {
   const base = mapDiscoveryLeadToManageInput(lead);
-  if (!aiIntent) {
-    return base;
-  }
+  const effectiveScore = lead.lead_score ?? aiIntent?.score ?? lead.score ?? 60;
+  const score = Math.max(1, Math.min(Math.round(effectiveScore), 100));
 
-  const score = Math.max(1, Math.min(Math.round(aiIntent.score), 100));
   const aiNotes = [
     base.notes,
-    `AI Qualification: ${aiIntent.status}`,
-    `AI Category: ${aiIntent.category}`,
-    `AI Urgency: ${aiIntent.urgency}`,
-    `AI Pain Point: ${aiIntent.pain_point}`,
-    aiIntent.details ? `AI Details: ${aiIntent.details}` : null,
-    aiIntent.buying_signals.length ? `AI Buying Signals: ${aiIntent.buying_signals.join(", ")}` : null,
-    `AI Decision Maker: ${aiIntent.decision_maker}`,
+    lead.primary_problem ? `Primary Problem: ${lead.primary_problem}` : null,
+    lead.desired_outcome ? `Desired Outcome: ${lead.desired_outcome}` : null,
+    lead.recommended_action ? `Recommended Action: ${lead.recommended_action}` : null,
+    lead.buying_stage ? `Buying Stage: ${lead.buying_stage}` : null,
+    lead.authority_level ? `Authority: ${lead.authority_level}` : null,
+    lead.industry ? `Industry: ${lead.industry}` : null,
+    lead.evidence?.length ? `Evidence: ${lead.evidence.join("; ")}` : null,
+    aiIntent?.status ? `AI Qualification: ${aiIntent.status}` : null,
+    aiIntent?.category ? `AI Category: ${aiIntent.category}` : null,
+    aiIntent?.urgency ? `AI Urgency: ${aiIntent.urgency}` : null,
+    aiIntent?.pain_point ? `AI Pain Point: ${aiIntent.pain_point}` : null,
+    aiIntent?.buying_signals?.length ? `AI Buying Signals: ${aiIntent.buying_signals.join(", ")}` : null,
   ]
     .filter(Boolean)
     .join("\n\n");
 
+  const aiAnalysis: Partial<DiscoveryLeadAIIntent> = {
+    score: effectiveScore,
+    urgency: aiIntent?.urgency ?? (lead.priority === "HOT" || lead.priority === "HIGH" ? "high" : "medium"),
+    buying_signals: aiIntent?.buying_signals ?? lead.evidence ?? [],
+    decision_maker: aiIntent?.decision_maker ?? lead.decision_maker,
+    pain_point: aiIntent?.pain_point ?? lead.primary_problem ?? "",
+    details: aiIntent?.details ?? lead.recommended_action ?? "",
+    category: aiIntent?.category ?? lead.category ?? "discussion",
+    status: aiIntent?.status ?? (lead.priority === "HOT" || lead.priority === "HIGH" ? "qualified" : "unqualified"),
+
+    // 3-stage pipeline fields
+    lead_category: lead.lead_category ?? null,
+    industry: lead.industry ?? null,
+    authority_level: lead.authority_level ?? null,
+    authority_confidence: lead.authority_confidence ?? null,
+    buying_stage: lead.buying_stage ?? null,
+    primary_problem: lead.primary_problem ?? null,
+    secondary_problems: lead.secondary_problems ?? [],
+    desired_outcome: lead.desired_outcome ?? null,
+    evidence: lead.evidence ?? [],
+    verdict: lead.verdict ?? null,
+    closing_confidence: lead.closing_confidence ?? null,
+    recommended_action: lead.recommended_action ?? null,
+    lead_score: lead.lead_score ?? effectiveScore,
+    priority: lead.priority ?? "LOW",
+  };
+
   return {
     ...base,
-    stage: aiIntent.status === "qualified" ? "QUALIFIED" : "NEW",
+    stage: aiAnalysis.status === "qualified" ? "QUALIFIED" : "NEW",
     score,
-    urgency: aiIntent.urgency,
-    category: aiIntent.category,
+    urgency: aiAnalysis.urgency,
+    category: aiAnalysis.category,
     notes: aiNotes || base.notes,
+    aiAnalysis,
   };
 };

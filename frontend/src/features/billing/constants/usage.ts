@@ -1,6 +1,9 @@
 export const UNLIMITED_SOFT_CAP = 999_999;
 export const FAIR_USAGE_THRESHOLD = 0.8;
 
+/** Set to `true` to disable all plan limits for user usage. */
+export const DISABLE_PLAN_LIMITS = false;
+
 export type UsageAction =
   | "storage_limit"
   | "leads_discovery_per_day"

@@ -99,7 +99,7 @@ const CRMAnalysisContent = ({ deals }: { deals: Deal[] }) => {
 };
 
 export const CRMAnalysisPage = ({ deals }: CRMAnalysisPageProps) => {
-  const { analysisRun, runAnalysis, checking } = useAnalysisGate();
+  const { analysisRun, runAnalysis, checking } = useAnalysisGate("crm_analysis_per_day");
 
   if (!analysisRun) {
     return <RunAnalysisPrompt onRun={runAnalysis} checking={checking} />;

@@ -12,6 +12,7 @@ import {
   PRICING_PLANS,
   type PlanLimitValue,
 } from "../../common/constants/pricingPlans";
+import { applyPlanLimitOverrides } from "../config/planLimitOverrides";
 import type { AppSettings } from "../../settings/types/settings";
 import {
   SETTINGS_DEFAULTS,
@@ -60,7 +61,8 @@ const actionToLimitKey: Record<UsageAction, keyof typeof PRICING_PLANS["single_f
   storage_limit: "storage_limit",
   leads_discovery_per_day: "leads_discovery_per_day",
   email_sending_per_day: "email_sending_per_day",
-  crm_ai_analysis_per_day: "crm_ai_analysis_per_day",
+  crm_analysis_per_day: "crm_analysis_per_day",
+  leads_analysis_per_day: "leads_analysis_per_day",
   ask_ai_per_month: "ask_ai_per_month",
   agent_ai_per_month: "agent_ai_per_month",
   other_ai_per_day: "other_ai_per_day",
@@ -69,7 +71,8 @@ const actionToLimitKey: Record<UsageAction, keyof typeof PRICING_PLANS["single_f
 const actionToDailyField: Record<string, string> = {
   leads_discovery_per_day: "leadsDiscovery",
   email_sending_per_day: "emailSending",
-  crm_ai_analysis_per_day: "crmAiAnalysis",
+  crm_analysis_per_day: "crmAnalysis",
+  leads_analysis_per_day: "leadsAnalysis",
   other_ai_per_day: "otherAi",
 };
 
@@ -82,7 +85,8 @@ type DailyUsageDoc = {
   date: string;
   leadsDiscovery: number;
   emailSending: number;
-  crmAiAnalysis: number;
+  crmAnalysis: number;
+  leadsAnalysis: number;
   otherAi: number;
 };
 
@@ -95,7 +99,8 @@ type MonthlyUsageDoc = {
 const getPlanLimits = () => {
   const settings = getLocalSettings();
   const planKey = settings.billing?.currentPlan ?? "single_free";
-  return PRICING_PLANS[planKey].limits;
+  const baseLimits = PRICING_PLANS[planKey].limits;
+  return applyPlanLimitOverrides(planKey, baseLimits);
 };
 
 const getDailyDocRef = (userId: string) =>
@@ -112,7 +117,8 @@ const getDailyUsage = async (): Promise<DailyUsageDoc> => {
       date: today,
       leadsDiscovery: 0,
       emailSending: 0,
-      crmAiAnalysis: 0,
+      crmAnalysis: 0,
+      leadsAnalysis: 0,
       otherAi: 0,
     };
   }
@@ -126,7 +132,8 @@ const getDailyUsage = async (): Promise<DailyUsageDoc> => {
         date: today,
         leadsDiscovery: 0,
         emailSending: 0,
-        crmAiAnalysis: 0,
+        crmAnalysis: 0,
+        leadsAnalysis: 0,
         otherAi: 0,
       };
       await setDoc(ref, empty);
@@ -139,7 +146,8 @@ const getDailyUsage = async (): Promise<DailyUsageDoc> => {
         date: today,
         leadsDiscovery: 0,
         emailSending: 0,
-        crmAiAnalysis: 0,
+        crmAnalysis: 0,
+        leadsAnalysis: 0,
         otherAi: 0,
       };
       await setDoc(ref, reset);
@@ -150,7 +158,8 @@ const getDailyUsage = async (): Promise<DailyUsageDoc> => {
       date: data.date ?? today,
       leadsDiscovery: data.leadsDiscovery ?? 0,
       emailSending: data.emailSending ?? 0,
-      crmAiAnalysis: data.crmAiAnalysis ?? 0,
+      crmAnalysis: data.crmAnalysis ?? 0,
+      leadsAnalysis: data.leadsAnalysis ?? 0,
       otherAi: data.otherAi ?? 0,
     };
   } catch {
@@ -158,7 +167,8 @@ const getDailyUsage = async (): Promise<DailyUsageDoc> => {
       date: today,
       leadsDiscovery: 0,
       emailSending: 0,
-      crmAiAnalysis: 0,
+      crmAnalysis: 0,
+      leadsAnalysis: 0,
       otherAi: 0,
     };
   }

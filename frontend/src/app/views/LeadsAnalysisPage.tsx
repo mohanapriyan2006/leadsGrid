@@ -99,7 +99,7 @@ const LeadsAnalysisContent = ({ leads }: { leads: ManageLead[] }) => {
 };
 
 export const LeadsAnalysisPage = ({ leads }: LeadsAnalysisPageProps) => {
-  const { analysisRun, runAnalysis, checking } = useAnalysisGate();
+  const { analysisRun, runAnalysis, checking } = useAnalysisGate("leads_analysis_per_day");
 
   if (!analysisRun) {
     return <RunAnalysisPrompt onRun={runAnalysis} checking={checking} />;

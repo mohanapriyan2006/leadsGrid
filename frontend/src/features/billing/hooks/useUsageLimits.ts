@@ -8,7 +8,8 @@ type DailyUsage = {
   date: string;
   leadsDiscovery: number;
   emailSending: number;
-  crmAiAnalysis: number;
+  crmAnalysis: number;
+  leadsAnalysis: number;
   otherAi: number;
 };
 

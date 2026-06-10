@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { FirebaseError } from "firebase/app";
-import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
-import { getFirebaseAuth, googleProvider, isFirebaseConfigured } from "../../lib/firebase";
+import {
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+} from "firebase/auth";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { getFirebaseAuth, googleProvider, isFirebaseConfigured, db } from "../../lib/firebase";
 import { useLocation, useNavigate } from "react-router-dom";
 import bgTeamCollab from "../../assets/bg-images/team-collaboration.svg";
 import logo from "../../assets/logo.png";
@@ -58,6 +64,9 @@ const getFirebaseAuthErrorMessage = (error: unknown, isRegistering: boolean) => 
 export const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [name, setName] = useState("");
+  const [userType, setUserType] = useState<"individual" | "organisation">("individual");
   const [isRegistering, setIsRegistering] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -65,19 +74,39 @@ export const LoginPage = () => {
   const location = useLocation();
   const redirectTo = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname || "/dashboard";
 
+  const validatePassword = (pwd: string) => {
+    if (pwd.length <= 6) return "Password must be more than 6 characters.";
+    if (!/\d/.test(pwd)) return "Password must contain at least one number.";
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd))
+      return "Password must contain at least one symbol.";
+    return null;
+  };
+
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     const normalizedEmail = email.trim();
+    const normalizedName = name.trim();
     if (!normalizedEmail) {
       setError("Email is required.");
       return;
     }
 
-    if (isRegistering && password.length < 6) {
-      setError("Password must be at least 6 characters for Firebase sign-up.");
-      return;
+    if (isRegistering) {
+      if (!normalizedName) {
+        setError("Name is required.");
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError("Passwords do not match.");
+        return;
+      }
+      const pwdError = validatePassword(password);
+      if (pwdError) {
+        setError(pwdError);
+        return;
+      }
     }
 
     const auth = getFirebaseAuth();
@@ -89,7 +118,15 @@ export const LoginPage = () => {
     try {
       setIsSubmitting(true);
       if (isRegistering) {
-        await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+        const credential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+        await updateProfile(credential.user, { displayName: normalizedName });
+        await setDoc(doc(db, "users", credential.user.uid), {
+          name: normalizedName,
+          email: normalizedEmail,
+          userType,
+          createdAt: serverTimestamp(),
+          plan: "free",
+        });
       } else {
         await signInWithEmailAndPassword(auth, normalizedEmail, password);
       }
@@ -165,6 +202,20 @@ export const LoginPage = () => {
         )}
 
         <form onSubmit={handleEmailAuth} className="space-y-4">
+          {isRegistering && (
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-content-secondary">Full Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoComplete="name"
+                className="glass-input"
+                placeholder="Enter your full name"
+                required={isRegistering}
+              />
+            </div>
+          )}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-content-secondary">Email</label>
             <input
@@ -184,15 +235,51 @@ export const LoginPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete={isRegistering ? "new-password" : "current-password"}
-              minLength={isRegistering ? 6 : undefined}
               className="glass-input"
               placeholder="Enter your password"
               required
             />
             {isRegistering && (
-              <p className="mt-1 text-xs  ">Use at least 6 characters.</p>
+              <p className="mt-1 text-xs text-content-secondary">
+                Must be more than 6 characters and contain at least one number and one symbol.
+              </p>
             )}
           </div>
+          {isRegistering && (
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-content-secondary">Confirm Password</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
+                className="glass-input"
+                placeholder="Re-enter your password"
+                required={isRegistering}
+              />
+            </div>
+          )}
+          {isRegistering && (
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-content-secondary">Account Type</label>
+              <div className="flex gap-3">
+                {(["individual", "organisation"] as const).map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setUserType(type)}
+                    className={`flex-1 rounded-glass-sm border px-3 py-2 text-sm font-medium transition-all ${
+                      userType === type
+                        ? "border-accent/50 bg-accent/20 text-content"
+                        : "border-accent/10 bg-surface-secondary/50 text-content-secondary hover:border-accent/30"
+                    }`}
+                  >
+                    {type === "individual" ? "Individual" : "Organisation"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <button
             type="submit"
             disabled={!isFirebaseConfigured || isSubmitting}
@@ -227,6 +314,9 @@ export const LoginPage = () => {
           <button
             onClick={() => {
               setError("");
+              setName("");
+              setConfirmPassword("");
+              setUserType("individual");
               setIsRegistering(!isRegistering);
             }}
             className="font-medium text-accent hover:text-accent-secondary transition-colors"

@@ -51,7 +51,7 @@ export const FinalCtaSection = () => {
         </p>
 
         {/* Stats row */}
-        <div className="mb-10 grid grid-cols-3 gap-4">
+        <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <CounterStat target={1248} suffix="+" className="text-2xl font-bold text-content" label="Leads Found" duration={2} />
           <CounterStat target={87} suffix="%" className="text-2xl font-bold text-content" label="Avg Score" duration={2} />
           <CounterStat target={34} suffix="%" className="text-2xl font-bold text-content" label="Conversion" duration={2} />

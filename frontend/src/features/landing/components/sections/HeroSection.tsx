@@ -53,7 +53,7 @@ export const HeroSection = () => {
 
           <motion.h1
             variants={itemVariants}
-            className="mb-6 font-display text-5xl font-bold leading-tight tracking-tight md:text-6xl lg:text-7xl"
+            className="mb-6 font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl lg:text-7xl"
           >
             Find High-Intent Clients{" "}
             <GradientText className="font-display">Automatically</GradientText>

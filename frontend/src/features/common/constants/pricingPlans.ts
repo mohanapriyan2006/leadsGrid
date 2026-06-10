@@ -1,3 +1,6 @@
+// TODO: Enable pricing when ready
+export const PRICING_ENABLED = false;
+
 export type PlanFamily = "single" | "organisation";
 
 export type PricingPlanKey =

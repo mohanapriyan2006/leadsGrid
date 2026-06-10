@@ -9,6 +9,7 @@ import { GradientBorderCard } from "../ui/GradientBorderCard";
 import {
   PLAN_ORDER,
   PRICING_PLANS,
+  PRICING_ENABLED,
   formatInr,
   monthlyEquivalentFromYearly,
   type PlanFamily,
@@ -92,21 +93,23 @@ export const PricingPlansDisplay = ({
           })}
         </div>
 
-        <div className="inline-flex w-full rounded-glass-sm border border-accent/20 bg-surface-secondary/70 p-1 md:w-auto">
-          {(["monthly", "yearly"] as const).map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => setCycle(option)}
-              className={`flex-1 rounded-glass-sm px-4 py-2 text-xs font-semibold uppercase tracking-[0.1em] transition md:flex-initial ${cycle === option
-                  ? "bg-accent-soft text-content shadow-glow"
-                  : "text-content-secondary hover:text-content"
-                }`}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
+        {PRICING_ENABLED && (
+          <div className="inline-flex w-full rounded-glass-sm border border-accent/20 bg-surface-secondary/70 p-1 md:w-auto">
+            {(["monthly", "yearly"] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setCycle(option)}
+                className={`flex-1 rounded-glass-sm px-4 py-2 text-xs font-semibold uppercase tracking-[0.1em] transition md:flex-initial ${cycle === option
+                    ? "bg-accent-soft text-content shadow-glow"
+                    : "text-content-secondary hover:text-content"
+                  }`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className={`mx-auto grid ${compact ? "w-full gap-3 sm:grid-cols-3" : "max-w-5xl gap-6 md:grid-cols-3"}`}>
@@ -191,7 +194,7 @@ function PricingCardInner({
           }`}
       >
         <div
-          className={`absolute inset-0 rounded-2xl border backdrop-blur-xl [backface-visibility:hidden] ${plan.highlighted
+          className={`absolute inset-0 overflow-hidden rounded-2xl border backdrop-blur-xl [backface-visibility:hidden] ${plan.highlighted
               ? "border-accent/50 bg-surface-secondary/85 shadow-[0_0_40px_rgba(167,139,250,0.24)]"
               : "border-accent/20 bg-surface-secondary/70"
             } ${compact ? "p-4" : "p-6"}`}
@@ -208,8 +211,18 @@ function PricingCardInner({
           </div>
 
           <div className={`rounded-glass-sm border border-accent/20 bg-surface/50 px-3 ${compact ? "mb-2 py-1.5" : "mb-5 py-3"}`}>
-            <p className={`font-bold text-content ${compact ? "text-lg" : "text-2xl"}`}>{priceBlock.headline}</p>
-            <p className="text-xs text-content-secondary">{priceBlock.subline}</p>
+            {PRICING_ENABLED ? (
+              <>
+                <p className={`font-bold text-content ${compact ? "text-lg" : "text-2xl"}`}>{priceBlock.headline}</p>
+                <p className="text-xs text-content-secondary">{priceBlock.subline}</p>
+              </>
+            ) : (
+              <div className={`flex items-center justify-center font-bold text-content ${compact ? "text-lg" : "text-2xl"}`}>
+                <span className="rounded-full bg-accent/15 px-3 py-1 text-sm font-bold uppercase tracking-wider text-accent border border-accent/20">
+                  Comming Soon
+                </span>
+              </div>
+            )}
           </div>
 
           <ul className={`${compact ? "space-y-1" : "space-y-2"}`}>
@@ -238,10 +251,19 @@ function PricingCardInner({
           </button>
         </div>
 
-        <div className={`absolute inset-0 rounded-2xl border border-accent/30 bg-surface-secondary/90 shadow-[0_0_36px_rgba(99,102,241,0.25)] [backface-visibility:hidden] [transform:rotateY(180deg)] ${compact ? "p-4" : "p-6"}`}>
+        <div className={`absolute inset-0 overflow-hidden rounded-2xl border border-accent/30 bg-surface-secondary/90 shadow-[0_0_36px_rgba(99,102,241,0.25)] [backface-visibility:hidden] [transform:rotateY(180deg)] ${compact ? "p-4" : "p-6"}`}>
           <p className={`uppercase tracking-[0.12em] text-content-secondary ${compact ? "mb-1 text-[10px]" : "mb-2 text-[11px]"}`}>Full plan details</p>
           <h4 className={`font-display font-bold text-content ${compact ? "text-lg" : "text-2xl"}`}>{plan.name}</h4>
-          <p className={`text-content-secondary ${compact ? "mb-2 text-[11px]" : "mb-4 text-sm"}`}>{priceBlock.headline} · {priceBlock.subline}</p>
+          {PRICING_ENABLED && (
+            <p className={`text-content-secondary ${compact ? "mb-2 text-[11px]" : "mb-4 text-sm"}`}>{priceBlock.headline} · {priceBlock.subline}</p>
+          )}
+          {!PRICING_ENABLED && (
+            <div className={`${compact ? "mb-2" : "mb-4"}`}>
+              <span className="rounded-full bg-accent/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-accent border border-accent/20">
+                Soon
+              </span>
+            </div>
+          )}
 
           <div className={`overflow-auto rounded-glass-sm border border-accent/15 bg-surface/40 px-3 py-3 ${compact ? "mb-2 max-h-[120px]" : "mb-5 max-h-[280px]"}`}>
             <ul className="space-y-1.5">
@@ -264,7 +286,7 @@ function PricingCardInner({
             }}
             className="w-full"
           >
-            {plan.ctaLabel}
+            {PRICING_ENABLED ? plan.ctaLabel : "Try Beta Version"}
           </GlowButton>
 
           {plan.fairUsage ? (

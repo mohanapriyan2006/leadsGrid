@@ -1,3 +1,6 @@
+// TODO: Enable pricing when ready
+export const PRICING_ENABLED = false;
+
 export type PlanFamily = "single" | "organisation";
 
 export type PricingPlanKey =
@@ -14,7 +17,8 @@ export type PlanLimits = {
   storage_limit: PlanLimitValue;
   leads_discovery_per_day: PlanLimitValue;
   email_sending_per_day: PlanLimitValue;
-  crm_ai_analysis_per_day: PlanLimitValue;
+  crm_analysis_per_day: PlanLimitValue;
+  leads_analysis_per_day: PlanLimitValue;
   ask_ai_per_month: PlanLimitValue;
   agent_ai_per_month: PlanLimitValue;
   other_ai_per_day: PlanLimitValue;
@@ -58,7 +62,8 @@ export const PRICING_PLANS: Record<PricingPlanKey, PricingPlanDefinition> = {
     ],
     fullHighlights: [
       "Full Manage Leads + CRM access (without advanced AI analysis)",
-      "Manage Leads + CRM AI Analysis: 2 times/day each",
+      "CRM AI Analysis: 2 times/day",
+      "Manage Leads AI Analysis: 2 times/day",
       "Other AI features: 10 times/day",
       "Limited integrations",
       "Community support",
@@ -67,7 +72,8 @@ export const PRICING_PLANS: Record<PricingPlanKey, PricingPlanDefinition> = {
       storage_limit: 100,
       leads_discovery_per_day: 2,
       email_sending_per_day: 5,
-      crm_ai_analysis_per_day: 2,
+      crm_analysis_per_day: 2,
+      leads_analysis_per_day: 2,
       ask_ai_per_month: 100,
       agent_ai_per_month: 30,
       other_ai_per_day: 10,
@@ -90,7 +96,8 @@ export const PRICING_PLANS: Record<PricingPlanKey, PricingPlanDefinition> = {
       "Agent AI: 800 times/month",
     ],
     fullHighlights: [
-      "Manage Leads + CRM AI Analysis: 150 times/day each",
+      "CRM AI Analysis: 150 times/day",
+      "Manage Leads AI Analysis: 150 times/day",
       "Other AI features: 100 times/day",
       "Smart AI lead scoring",
       "Email personalization + templates",
@@ -104,7 +111,8 @@ export const PRICING_PLANS: Record<PricingPlanKey, PricingPlanDefinition> = {
       storage_limit: 5000,
       leads_discovery_per_day: 75,
       email_sending_per_day: 300,
-      crm_ai_analysis_per_day: 150,
+      crm_analysis_per_day: 150,
+      leads_analysis_per_day: 150,
       ask_ai_per_month: 2500,
       agent_ai_per_month: 800,
       other_ai_per_day: 100,
@@ -126,7 +134,8 @@ export const PRICING_PLANS: Record<PricingPlanKey, PricingPlanDefinition> = {
       "Agent AI: 3,000 times/month",
     ],
     fullHighlights: [
-      "Manage Leads + CRM AI Analysis: Unlimited (fair usage)",
+      "CRM AI Analysis: Unlimited (fair usage)",
+      "Manage Leads AI Analysis: Unlimited (fair usage)",
       "Other AI features: 500 times/day",
       "Advanced AI automation workflows",
       "Advanced analytics dashboard",
@@ -141,7 +150,8 @@ export const PRICING_PLANS: Record<PricingPlanKey, PricingPlanDefinition> = {
       storage_limit: "unlimited",
       leads_discovery_per_day: 250,
       email_sending_per_day: 1500,
-      crm_ai_analysis_per_day: "unlimited",
+      crm_analysis_per_day: "unlimited",
+      leads_analysis_per_day: "unlimited",
       ask_ai_per_month: 10000,
       agent_ai_per_month: 3000,
       other_ai_per_day: 500,
@@ -164,7 +174,8 @@ export const PRICING_PLANS: Record<PricingPlanKey, PricingPlanDefinition> = {
     ],
     fullHighlights: [
       "Shared CRM workspace (AI enabled)",
-      "Manage Leads + CRM AI Analysis: 1,500 times/day",
+      "CRM AI Analysis: 1,500 times/day",
+      "Manage Leads AI Analysis: 1,500 times/day",
       "Agent AI: 7,000 times/month",
       "Other AI features: 1,000 times/day",
       "Team pipelines (Kanban + table)",
@@ -176,7 +187,8 @@ export const PRICING_PLANS: Record<PricingPlanKey, PricingPlanDefinition> = {
       storage_limit: 50000,
       leads_discovery_per_day: 800,
       email_sending_per_day: 3000,
-      crm_ai_analysis_per_day: 1500,
+      crm_analysis_per_day: 1500,
+      leads_analysis_per_day: 1500,
       ask_ai_per_month: 20000,
       agent_ai_per_month: 7000,
       other_ai_per_day: 1000,
@@ -199,7 +211,8 @@ export const PRICING_PLANS: Record<PricingPlanKey, PricingPlanDefinition> = {
       "Ask AI: 100,000 times/month",
     ],
     fullHighlights: [
-      "Manage Leads + CRM AI Analysis: 6,000 times/day",
+      "CRM AI Analysis: 6,000 times/day",
+      "Manage Leads AI Analysis: 6,000 times/day",
       "Agent AI: 35,000 times/month",
       "Other AI features: 5,000 times/day",
       "Advanced team collaboration",
@@ -213,7 +226,8 @@ export const PRICING_PLANS: Record<PricingPlanKey, PricingPlanDefinition> = {
       storage_limit: "unlimited",
       leads_discovery_per_day: 3000,
       email_sending_per_day: 12000,
-      crm_ai_analysis_per_day: 6000,
+      crm_analysis_per_day: 6000,
+      leads_analysis_per_day: 6000,
       ask_ai_per_month: 100000,
       agent_ai_per_month: 35000,
       other_ai_per_day: 5000,
@@ -236,7 +250,8 @@ export const PRICING_PLANS: Record<PricingPlanKey, PricingPlanDefinition> = {
       "Ask AI: 400,000 times/month",
     ],
     fullHighlights: [
-      "Manage Leads + CRM AI Analysis: Unlimited",
+      "CRM AI Analysis: Unlimited",
+      "Manage Leads AI Analysis: Unlimited",
       "Agent AI: 150,000 times/month",
       "Other AI features: 20,000 times/day",
       "Dedicated AI SDR workflows",
@@ -249,7 +264,8 @@ export const PRICING_PLANS: Record<PricingPlanKey, PricingPlanDefinition> = {
       storage_limit: "unlimited",
       leads_discovery_per_day: "unlimited",
       email_sending_per_day: "unlimited",
-      crm_ai_analysis_per_day: "unlimited",
+      crm_analysis_per_day: "unlimited",
+      leads_analysis_per_day: "unlimited",
       ask_ai_per_month: 400000,
       agent_ai_per_month: 150000,
       other_ai_per_day: 20000,

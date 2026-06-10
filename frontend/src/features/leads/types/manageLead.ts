@@ -30,6 +30,22 @@ export type ManageLeadAnalysis = {
   expected_close_days: number;
   ghost_probability: number;
   winning_strategy: string;
+
+  // 3-stage pipeline fields
+  lead_category?: string | null;
+  industry?: string | null;
+  authority_level?: string | null;
+  authority_confidence?: number | null;
+  buying_stage?: string | null;
+  primary_problem?: string | null;
+  secondary_problems?: string[];
+  desired_outcome?: string | null;
+  evidence?: string[];
+  verdict?: string | null;
+  closing_confidence?: number | null;
+  recommended_action?: string | null;
+  lead_score?: number;
+  priority?: "HOT" | "HIGH" | "MEDIUM" | "LOW";
 };
 
 export type ManageLead = {

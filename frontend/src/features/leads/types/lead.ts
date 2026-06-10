@@ -23,6 +23,27 @@ export type Lead = {
   intent_label: string;
   created_at: string;
   ai_analysis?: LeadAnalysis;
+
+  // 3-stage AI pipeline enrichment
+  ai_enriched?: boolean;
+  ai_dropped?: boolean;
+  drop_reason?: string | null;
+  lead_category?: string | null;
+  is_actionable_lead?: boolean | null;
+  industry?: string | null;
+  authority_level?: string | null;
+  authority_confidence?: number | null;
+  buying_stage?: string | null;
+  primary_problem?: string | null;
+  secondary_problems?: string[];
+  desired_outcome?: string | null;
+  evidence?: string[];
+  verdict?: string | null;
+  closing_confidence?: number | null;
+  recommended_action?: string | null;
+  lead_score?: number;
+  priority?: "HOT" | "HIGH" | "MEDIUM" | "LOW";
+  raw_score?: number | null;
 };
 
 export type LeadIntentDetails = {

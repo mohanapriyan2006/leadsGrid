@@ -28,49 +28,57 @@ export const NotificationsSettingsSection = ({
 
   return (
     <SettingsSectionCard title="Notifications" description="Control event alerts and delivery channels.">
-      <div className="space-y-2">
-        {eventItems.map((item) => (
-          <div key={item.key} className="glass-card-sm flex items-center justify-between px-3 py-2">
-            <div>
-              <p className="text-sm text-content">{item.label}</p>
-              <p className="text-xs text-content-secondary">{item.help}</p>
-            </div>
-            <SettingsToggle
-              checked={Boolean(notifications[item.key])}
-              onChange={() =>
-                onChange({
-                  ...notifications,
-                  [item.key]: !notifications[item.key],
-                })
-              }
-            />
-          </div>
-        ))}
-      </div>
-
-      <div>
-        <p className="text-xs font-semibold tracking-[0.08em] text-content-secondary uppercase">Channels</p>
-        <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          {[
-            ["email", "Email"],
-            ["inApp", "In-app"]
-          ].map(([key, label]) => (
-            <div key={key} className="glass-card-sm flex items-center justify-between px-3 py-2">
-              <p className="text-sm text-content">{label}</p>
+      <div className="relative">
+        <div className="space-y-2 blur-sm pointer-events-none opacity-50">
+          {eventItems.map((item) => (
+            <div key={item.key} className="glass-card-sm flex items-center justify-between px-3 py-2">
+              <div>
+                <p className="text-sm text-content">{item.label}</p>
+                <p className="text-xs text-content-secondary">{item.help}</p>
+              </div>
               <SettingsToggle
-                checked={notifications.channels[key as keyof AppSettings["notifications"]["channels"]]}
+                checked={Boolean(notifications[item.key])}
                 onChange={() =>
                   onChange({
                     ...notifications,
-                    channels: {
-                      ...notifications.channels,
-                      [key]: !notifications.channels[key as keyof AppSettings["notifications"]["channels"]],
-                    },
+                    [item.key]: !notifications[item.key],
                   })
                 }
               />
             </div>
           ))}
+        </div>
+
+        <div className="blur-sm pointer-events-none opacity-50">
+          <p className="text-xs font-semibold tracking-[0.08em] text-content-secondary uppercase">Channels</p>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {[
+              ["email", "Email"],
+              ["inApp", "In-app"]
+            ].map(([key, label]) => (
+              <div key={key} className="glass-card-sm flex items-center justify-between px-3 py-2">
+                <p className="text-sm text-content">{label}</p>
+                <SettingsToggle
+                  checked={notifications.channels[key as keyof AppSettings["notifications"]["channels"]]}
+                  onChange={() =>
+                    onChange({
+                      ...notifications,
+                      channels: {
+                        ...notifications.channels,
+                        [key]: !notifications.channels[key as keyof AppSettings["notifications"]["channels"]],
+                      },
+                    })
+                  }
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="absolute inset-0 flex items-center justify-center backdrop-blur-[2px]">
+          <span className="rounded-full bg-accent/20 border border-accent/30 px-4 py-2 text-sm font-semibold text-accent">
+            Coming Soon
+          </span>
         </div>
       </div>
     </SettingsSectionCard>

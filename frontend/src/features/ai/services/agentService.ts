@@ -162,8 +162,8 @@ const executeFollowUpSchedule = async (leads: Lead[]): Promise<AgentActionResult
 
 const actionTypeToLimit: Record<AgentActionType, { action: Parameters<typeof usageTracker.checkLimit>[0]; count: number }> = {
   lead_discovery: { action: "leads_discovery_per_day", count: 1 },
-  lead_scoring: { action: "crm_ai_analysis_per_day", count: 1 },
-  crm_update: { action: "crm_ai_analysis_per_day", count: 1 },
+  lead_scoring: { action: "leads_analysis_per_day", count: 1 },
+  crm_update: { action: "crm_analysis_per_day", count: 1 },
   message_draft: { action: "agent_ai_per_month", count: 1 },
   follow_up_schedule: { action: "other_ai_per_day", count: 1 },
 };

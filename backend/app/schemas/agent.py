@@ -32,6 +32,27 @@ class LeadItem(BaseModel):
     email: str | None = None
     created_at: str | None = None
 
+    # 3-stage AI pipeline enrichment
+    ai_enriched: bool = False
+    ai_dropped: bool = False
+    drop_reason: str | None = None
+    lead_category: str | None = None
+    is_actionable_lead: bool | None = None
+    industry: str | None = None
+    authority_level: str | None = None
+    authority_confidence: int | None = None
+    buying_stage: str | None = None
+    primary_problem: str | None = None
+    secondary_problems: list[str] = Field(default_factory=list)
+    desired_outcome: str | None = None
+    evidence: list[str] = Field(default_factory=list)
+    verdict: str | None = None
+    closing_confidence: int | None = None
+    recommended_action: str | None = None
+    lead_score: int = 0
+    priority: str = "LOW"
+    raw_score: float | None = None
+
 
 class AgentStepEvaluation(BaseModel):
     score: int = Field(ge=0, le=100)

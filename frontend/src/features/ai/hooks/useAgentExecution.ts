@@ -5,6 +5,8 @@ import type { AgentPlan, AgentStep, AgentExecutionState, AIStatus } from "../typ
 import { agentApiService } from "../services/agentApiService";
 import type { AgentActionResult, AgentRunState } from "../services/agentApiService";
 import { agentRunRealtimeService } from "../services/agentRunRealtimeService";
+import { usageTracker } from "../../billing/services/usageTracker";
+import { showLimitModal } from "../../billing/hooks/useLimitModal";
 
 type ExecutionCallbacks = {
   onStepStart: (step: AgentStep, index: number) => void;
@@ -160,9 +162,18 @@ export const useAgentExecution = (callbacks: ExecutionCallbacks) => {
       autoApproveLowRisk: boolean,
     ) => {
       if (!currentPlan.approved) return;
+
+      const limitCheck = await usageTracker.checkLimit("agent_ai_per_month", 1);
+      if (!limitCheck.allowed) {
+        showLimitModal({ action: "agent_ai_per_month", current: limitCheck.current, limit: limitCheck.limit });
+        callbacks.onStatusChange("idle");
+        return;
+      }
+
       callbacks.onStatusChange("executing");
 
       try {
+        await usageTracker.incrementUsage("agent_ai_per_month", 1);
         const run = await agentApiService.startRun({
           prompt,
           leads,

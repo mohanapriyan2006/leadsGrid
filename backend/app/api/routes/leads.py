@@ -1,10 +1,14 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from pydantic import BaseModel, ValidationError
 
 from app.schemas.lead_analysis import AdvancedLeadIntentScore
 from app.schemas.lead_analysis import HyperPersonalizedOutreachRequest
 from app.schemas.lead_analysis import HyperPersonalizedOutreachResponse
+from app.schemas.lead_discovery import DiscoverAsyncResponse, RawSignalInput
 from app.services.ai_prompts_service import ai_prompts_service
+from app.services.discovery_engine.models import RawSignal
+from app.services.discovery_engine.opportunity_scorer import score_opportunity
+from app.services.discovery_engine.signal_classifier import classify_signal
 
 router = APIRouter(prefix="/leads", tags=["leads"])
 
@@ -81,7 +85,29 @@ async def analyze_intent_only(body: AnalyzeLeadRequest) -> dict:
 async def analyze_advanced_intent(body: AnalyzeLeadRequest) -> AdvancedLeadIntentScore:
     lead_text = f"{body.lead_title} {body.lead_text}".strip()
     try:
-        return await ai_prompts_service.analyze_advanced_intent(lead_text)
+        signal = RawSignal(
+            source="manual",
+            source_type="manual",
+            title=body.lead_title,
+            content=lead_text,
+            author=body.lead_author or "Unknown",
+        )
+        classification = classify_signal(signal)
+        scores = score_opportunity(signal, classification)
+        return AdvancedLeadIntentScore(
+            score=scores["opportunity_score"],
+            urgency="high" if scores["priority"] in {"CRITICAL", "HOT", "HIGH"} else ("medium" if scores["priority"] == "MEDIUM" else "low"),
+            buying_signals=classification.get("has_budget_signal", False) and ["Budget signal detected"] or [],
+            decision_maker="yes" if classification.get("authority_level") in {"Founder", "CEO", "CTO"} else "unknown",
+            pain_point=signal.content[:200] if signal.content else "",
+            details=classification.get("lead_category", "UNKNOWN"),
+            category="hiring" if classification.get("lead_category") in {"HIRING_NOW", "SERVICE_NEEDED"} else (
+                "switching" if classification.get("lead_category") == "TOOL_SWITCHING" else (
+                    "problem" if classification.get("lead_category") == "OPERATIONAL_PAIN" else "discussion"
+                )
+            ),
+            status="qualified" if scores["opportunity_score"] >= 60 and classification.get("is_actionable") else "unqualified",
+        )
     except (ValueError, ValidationError) as e:
         raise HTTPException(status_code=422, detail=f"Advanced intent analysis failed validation: {str(e)}")
     except Exception as e:
@@ -142,3 +168,21 @@ async def suggest_action(body: AnalyzeLeadRequest) -> dict:
         return action.model_dump()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Action suggestion failed: {str(e)}")
+
+
+@router.post("/discover-async", response_model=DiscoverAsyncResponse)
+async def discover_new_lead_signal(
+    payload: RawSignalInput,
+    background_tasks: BackgroundTasks,
+) -> DiscoverAsyncResponse:
+    """
+    Accepts raw scraped data from cron scripts/scrapers instantly,
+    offloads processing to background tasks to maintain rapid responses.
+    """
+    async def _process_signal():
+        signal = RawSignal(**payload.model_dump())
+        classify_signal(signal)
+        score_opportunity(signal, classify_signal(signal))
+
+    background_tasks.add_task(_process_signal)
+    return DiscoverAsyncResponse(status="queued", message="Signal pipeline processing started concurrently.")

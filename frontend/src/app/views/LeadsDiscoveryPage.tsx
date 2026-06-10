@@ -145,6 +145,7 @@ export const LeadsDiscoveryPage = () => {
 
     const prefilledPainPoint =
       selectedIntent?.pain_point
+      || selectedLead.primary_problem
       || selectedLead.pain_point
       || selectedLead.summary
       || "";
@@ -196,23 +197,32 @@ export const LeadsDiscoveryPage = () => {
 
     return sortedLeads.filter((lead) => {
       const advancedIntent = advancedIntentByLeadId[lead.id];
-      if (!advancedIntent) {
-        return false;
-      }
+      const priority = lead.priority;
+      const buyingStage = lead.buying_stage;
+      const verdict = lead.verdict;
+      const leadScore = lead.lead_score ?? lead.score;
+      const category = lead.lead_category ?? lead.category;
+      const urgency = advancedIntent?.urgency ?? (priority === "HOT" || priority === "HIGH" ? "high" : "medium");
 
       if (triageQueue === "hot_qualified") {
-        return advancedIntent.status === "qualified" && advancedIntent.score >= 80;
+        // Pre-enriched hot leads OR manually analyzed qualified high-scorers
+        return (priority === "HOT" || priority === "HIGH")
+          || (advancedIntent?.status === "qualified" && (advancedIntent?.score ?? 0) >= 80);
       }
 
       if (triageQueue === "high_urgency") {
-        return advancedIntent.urgency === "high";
+        return urgency === "high"
+          || priority === "HOT"
+          || buyingStage === "READY_TO_BUY";
       }
 
+      // needs_nurture
       return (
-        advancedIntent.status === "unqualified"
-        || advancedIntent.category === "learning"
-        || advancedIntent.category === "discussion"
-        || advancedIntent.score < 70
+        (category && ["LEARNING_ONLY", "JOB_SEEKER", "SPAM", "IRRELEVANT", "learning", "discussion"].includes(category))
+        || verdict === "UNLIKELY"
+        || verdict === "NO"
+        || leadScore < 70
+        || (advancedIntent && (advancedIntent.status === "unqualified" || advancedIntent.score < 70))
       );
     });
   }, [advancedIntentByLeadId, sortedLeads, triageQueue]);
@@ -221,19 +231,25 @@ export const LeadsDiscoveryPage = () => {
     const all = sortedLeads.length;
     const hotQualified = sortedLeads.filter((lead) => {
       const intent = advancedIntentByLeadId[lead.id];
-      return intent?.status === "qualified" && intent.score >= 80;
+      return (lead.priority === "HOT" || lead.priority === "HIGH")
+        || (intent?.status === "qualified" && (intent?.score ?? 0) >= 80);
     }).length;
-    const highUrgency = sortedLeads.filter((lead) => advancedIntentByLeadId[lead.id]?.urgency === "high").length;
+    const highUrgency = sortedLeads.filter((lead) => {
+      const intent = advancedIntentByLeadId[lead.id];
+      return (lead.priority === "HOT" || lead.priority === "HIGH")
+        || intent?.urgency === "high"
+        || lead.buying_stage === "READY_TO_BUY";
+    }).length;
     const needsNurture = sortedLeads.filter((lead) => {
       const intent = advancedIntentByLeadId[lead.id];
+      const category = lead.lead_category ?? lead.category;
+      const score = lead.lead_score ?? lead.score;
       return Boolean(
-        intent
-        && (
-          intent.status === "unqualified"
-          || intent.category === "learning"
-          || intent.category === "discussion"
-          || intent.score < 70
-        )
+        ["LEARNING_ONLY", "JOB_SEEKER", "SPAM", "IRRELEVANT", "learning", "discussion"].includes(category || "")
+        || lead.verdict === "UNLIKELY"
+        || lead.verdict === "NO"
+        || score < 70
+        || (intent && (intent.status === "unqualified" || intent.score < 70))
       );
     }).length;
 
@@ -250,6 +266,43 @@ export const LeadsDiscoveryPage = () => {
     const cached = advancedIntentByLeadId[lead.id];
     if (cached && !force) {
       return cached;
+    }
+
+    // Fast path: use pre-enriched 3-stage pipeline data without API call
+    if (lead.ai_enriched && !force) {
+      const fastIntent: AdvancedLeadIntent = {
+        score: lead.lead_score ?? lead.score,
+        urgency: lead.priority === "HOT" || lead.priority === "HIGH" ? "high" : (lead.priority === "MEDIUM" ? "medium" : "low"),
+        buying_signals: lead.evidence ?? [],
+        decision_maker: lead.authority_level && ["Founder", "CEO", "CTO"].includes(lead.authority_level) ? "yes" : "unknown",
+        pain_point: lead.primary_problem ?? "",
+        details: lead.recommended_action ?? "",
+        category: lead.category ?? "discussion",
+        status: lead.priority === "HOT" || lead.priority === "HIGH" ? "qualified" : "unqualified",
+
+        // 3-stage pipeline fields
+        lead_category: lead.lead_category,
+        industry: lead.industry,
+        authority_level: lead.authority_level,
+        authority_confidence: lead.authority_confidence,
+        buying_stage: lead.buying_stage,
+        primary_problem: lead.primary_problem,
+        secondary_problems: lead.secondary_problems,
+        desired_outcome: lead.desired_outcome,
+        evidence: lead.evidence,
+        verdict: lead.verdict,
+        closing_confidence: lead.closing_confidence,
+        recommended_action: lead.recommended_action,
+        lead_score: lead.lead_score,
+        priority: lead.priority,
+      };
+
+      setAdvancedIntentByLeadId((prev) => ({
+        ...prev,
+        [lead.id]: fastIntent,
+      }));
+
+      return fastIntent;
     }
 
     setAnalyzingLeadId(lead.id);

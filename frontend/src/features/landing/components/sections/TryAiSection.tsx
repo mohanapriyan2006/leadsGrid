@@ -144,7 +144,7 @@ export const TryAiSection = () => {
         className="relative mx-auto max-w-2xl"
       >
         {/* Search input */}
-        <div className="mb-8 flex gap-3">
+        <div className="mb-8 flex flex-col gap-3 sm:flex-row">
           <input
             type="text"
             value={query}

@@ -151,6 +151,13 @@ export const Sidebar = ({ className = "" }: SidebarProps) => {
               {/* Label */}
               <span className="relative z-10 font-medium tracking-wide">{item.label}</span>
 
+              {/* Beta tag */}
+              {item.beta && (
+                <span className="ml-2 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-accent/20 text-accent border border-accent/30">
+                  Beta
+                </span>
+              )}
+
               {/* Active indicator dot */}
               {isActive && (
                 <span className={`ml-auto relative z-10 w-1.5 h-1.5 rounded-full animate-pulse ${isAI ? "bg-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.8)]" :

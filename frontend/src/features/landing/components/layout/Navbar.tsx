@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 import { GradientText } from "../ui/GradientText";
 import { GlowButton } from "../ui/GlowButton";
 import { ThemeToggle } from "../../../../components/ui/ThemeToggle";
@@ -25,6 +26,7 @@ export const Navbar = ({ links = DEFAULT_LINKS, showProgress = true }: Props) =>
   const [scrolled, setScrolled] = useState(false);
   const [progress, setProgress] = useState(0);
   const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -68,6 +70,7 @@ export const Navbar = ({ links = DEFAULT_LINKS, showProgress = true }: Props) =>
   }, [hasScrollLinks, links, showProgress]);
 
   const handleNavClick = (href: string) => {
+    setMobileOpen(false);
     if (href.startsWith("#")) {
       const element = document.querySelector(href);
       if (element) {
@@ -156,12 +159,68 @@ export const Navbar = ({ links = DEFAULT_LINKS, showProgress = true }: Props) =>
                 Log in
               </button>
             </div>
-            <GlowButton onClick={() => navigate("/login")} className="text-xs !px-5 !py-2.5">
+            <GlowButton onClick={() => navigate("/login")} className="hidden text-xs !px-5 !py-2.5 sm:inline-flex">
               Start Free
             </GlowButton>
+
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setMobileOpen((v) => !v)}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-content/10 bg-surface-secondary/50 text-content md:hidden"
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="absolute left-0 right-0 top-full mt-2 mx-4 rounded-2xl border border-content/10 bg-surface/95 p-5 shadow-2xl backdrop-blur-xl md:hidden"
+          >
+            <div className="flex flex-col gap-2">
+              {links.map((link) => {
+                const isActive = activeSection === link.href;
+                return (
+                  <button
+                    key={link.label}
+                    onClick={() => handleNavClick(link.href)}
+                    className={`w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors ${
+                      isActive
+                        ? "bg-accent/15 text-accent"
+                        : "text-content-secondary hover:bg-surface-secondary/70 hover:text-content"
+                    }`}
+                  >
+                    {link.label}
+                  </button>
+                );
+              })}
+              <div className="mt-2 flex flex-col gap-2 border-t border-content/10 pt-3">
+                <div className="flex items-center justify-between px-2">
+                  <span className="text-xs text-content-secondary">Theme</span>
+                  <ThemeToggle />
+                </div>
+                <button
+                  onClick={() => handleNavClick("/login")}
+                  className="w-full rounded-lg px-4 py-3 text-left text-sm font-medium text-content-secondary hover:bg-surface-secondary/70 hover:text-content"
+                >
+                  Log in
+                </button>
+                <GlowButton onClick={() => handleNavClick("/login")} className="w-full !py-2.5">
+                  Start Free
+                </GlowButton>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.nav>
   );
 };

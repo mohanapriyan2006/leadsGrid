@@ -1,4 +1,5 @@
 import { MetricWidget } from "../../components/ui/MetricWidget";
+import { RunAnalysisPrompt } from "../../components/ui/RunAnalysisPrompt";
 import type { Deal } from "../../features/crm/types/crm";
 import { AIInsightsPanel } from "../../features/crm/analysis/components/AIInsightsPanel";
 import { ConversionFunnel } from "../../features/crm/analysis/components/ConversionFunnel";
@@ -9,6 +10,7 @@ import { PredictionCards } from "../../features/crm/analysis/components/Predicti
 import { RevenueForecastChart } from "../../features/crm/analysis/components/RevenueForecastChart";
 import { useCRMAnalytics } from "../../features/crm/analysis/hooks/useCRMAnalytics";
 import { usePrediction } from "../../features/crm/analysis/hooks/usePrediction";
+import { useAnalysisGate } from "../../features/billing/hooks/useAnalysisGate";
 
 type CRMAnalysisPageProps = {
   deals: Deal[];
@@ -17,7 +19,7 @@ type CRMAnalysisPageProps = {
 const toCurrency = (value: number) =>
   `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
-export const CRMAnalysisPage = ({ deals }: CRMAnalysisPageProps) => {
+const CRMAnalysisContent = ({ deals }: { deals: Deal[] }) => {
   const {
     filteredDeals,
     analytics,
@@ -33,7 +35,7 @@ export const CRMAnalysisPage = ({ deals }: CRMAnalysisPageProps) => {
     return (
       <section className="glass-card space-y-3 p-6 text-center">
         <h3 className="text-xl font-semibold text-content">No deals match current filters</h3>
-        <p className="text-sm  ">
+        <p className="text-sm text-content-secondary">
           Adjust the time window or pipeline filter to surface analytics insights.
         </p>
       </section>
@@ -69,8 +71,8 @@ export const CRMAnalysisPage = ({ deals }: CRMAnalysisPageProps) => {
 
       <section className="grid gap-3 lg:grid-cols-2">
         <article className="glass-card-sm p-4">
-          <p className="text-xs uppercase tracking-[0.16em]  ">Top Close Candidates</p>
-          <ul className="mt-3 space-y-2 text-sm  ">
+          <p className="text-xs uppercase tracking-[0.16em] text-content-secondary">Top Close Candidates</p>
+          <ul className="mt-3 space-y-2 text-sm text-content">
             {prediction.closingDeals.slice(0, 5).map((deal) => (
               <li key={deal.id} className="flex items-center justify-between gap-2 rounded-glass-sm border border-success/20 bg-success-soft px-3 py-2 text-success">
                 <span>{deal.name}</span>
@@ -81,8 +83,8 @@ export const CRMAnalysisPage = ({ deals }: CRMAnalysisPageProps) => {
         </article>
 
         <article className="glass-card-sm p-4">
-          <p className="text-xs uppercase tracking-[0.16em]  ">Needs Intervention</p>
-          <ul className="mt-3 space-y-2 text-sm  ">
+          <p className="text-xs uppercase tracking-[0.16em] text-content-secondary">Needs Intervention</p>
+          <ul className="mt-3 space-y-2 text-sm text-content">
             {prediction.atRiskDeals.slice(0, 5).map((deal) => (
               <li key={deal.id} className="flex items-center justify-between gap-2 rounded-glass-sm border border-danger/20 bg-danger-soft px-3 py-2 text-danger">
                 <span>{deal.name}</span>
@@ -94,4 +96,14 @@ export const CRMAnalysisPage = ({ deals }: CRMAnalysisPageProps) => {
       </section>
     </section>
   );
+};
+
+export const CRMAnalysisPage = ({ deals }: CRMAnalysisPageProps) => {
+  const { analysisRun, runAnalysis, checking } = useAnalysisGate("crm_analysis_per_day");
+
+  if (!analysisRun) {
+    return <RunAnalysisPrompt onRun={runAnalysis} checking={checking} />;
+  }
+
+  return <CRMAnalysisContent deals={deals} />;
 };

@@ -21,7 +21,7 @@ export const LiveDemoSection = () => {
   const { leads, totalDiscovered } = useLeadSimulation(2500, 5);
 
   return (
-    <SectionWrapper id="live-demo">
+    <SectionWrapper id="live-demo" className="overflow-hidden">
       {/* Floating accent particles */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         {FLOATING_DOTS.map((dot, i) => (

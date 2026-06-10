@@ -5,8 +5,14 @@ import { PageBackground } from "../../components/ui/PageBackground";
 import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import bgDataAtWork from "../../assets/bg-images/data-at-work.svg";
 import { useAuth } from "../../features/auth/AuthContext";
-import { getFirebaseAuth } from "../../lib/firebase";
-import { signInWithEmailAndPassword, deleteUser, type User } from "firebase/auth";
+import { getFirebaseAuth, googleProvider } from "../../lib/firebase";
+import {
+  deleteUser,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  reauthenticateWithPopup,
+  type User,
+} from "firebase/auth";
 import { LogOut } from "lucide-react";
 import { leadService } from "../../features/leads/services/leadService";
 import { SETTINGS_TABS } from "../../features/settings/constants/settingsOptions";
@@ -54,69 +60,88 @@ export const SettingsPage = () => {
 
   // Delete account triple confirmation states
   const [deleteStep, setDeleteStep] = useState<0 | 1 | 2 | 3>(0);
-  const [reauthPassword, setReauthPassword] = useState("");
-  const [confirmText, setConfirmText] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [confirmEmail, setConfirmEmail] = useState("");
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const isGoogleUser = Boolean(user?.providerData?.some((provider) => provider.providerId === "google.com"));
 
   const handleLogout = async () => {
     await signOut();
     navigate("/login");
   };
 
-  // Step 1: Re-authenticate
-  const handleReauth = async () => {
-    setDeleteError(null);
-    if (!user?.email || !reauthPassword) {
-      setDeleteError("Please enter your password");
+  const handleDeleteStepOneDecision = (confirmed: boolean) => {
+    if (!confirmed) {
+      resetDeleteFlow();
       return;
     }
-
-    setDeleting(true);
-    try {
-      const auth = getFirebaseAuth();
-      if (!auth) throw new Error("Auth not available");
-      await signInWithEmailAndPassword(auth, user.email, reauthPassword);
-      setDeleteStep(2);
-    } catch {
-      setDeleteError("Incorrect password. Please try again.");
-    } finally {
-      setDeleting(false);
-    }
+    setDeleteError(null);
+    setDeleteStep(2);
   };
 
-  // Step 2: Type confirmation
-  const handleConfirmText = () => {
-    if (confirmText !== "DELETE") {
-      setDeleteError('Please type "DELETE" to confirm');
+  // Step 2: Confirm email
+  const handleStepTwoConfirm = () => {
+    setDeleteError(null);
+    if (!user?.email) {
+      setDeleteError("Account email not found. Please sign in again.");
       return;
     }
-    setDeleteError(null);
+    if (!confirmEmail.trim()) {
+      setDeleteError("Please enter your email to continue.");
+      return;
+    }
+    if (confirmEmail.trim().toLowerCase() !== user.email.toLowerCase()) {
+      setDeleteError("Entered email does not match your account email.");
+      return;
+    }
     setDeleteStep(3);
   };
 
-  // Step 3: Final confirmation - delete account
+  // Step 3: Firebase re-auth and delete
   const handleFinalDelete = async () => {
     if (!user) return;
+    setDeleteError(null);
     setDeleting(true);
+
     try {
-      await deleteUser(user as User);
+      const auth = getFirebaseAuth();
+      const currentUser = auth?.currentUser;
+      if (!auth || !currentUser || !user.email) {
+        throw new Error("Unable to verify your authentication session.");
+      }
+
+      if (isGoogleUser) {
+        await reauthenticateWithPopup(currentUser, googleProvider);
+      } else {
+        if (!authPassword.trim()) {
+          setDeleteError("Please enter your password to re-login and continue.");
+          setDeleting(false);
+          return;
+        }
+
+        const credential = EmailAuthProvider.credential(user.email, authPassword);
+        await reauthenticateWithCredential(currentUser, credential);
+      }
+
+      await deleteUser(currentUser as User);
       navigate("/");
-    } catch (err) {
-      setDeleteError("Failed to delete account. Please try again.");
+    } catch {
+      setDeleteError("Re-authentication failed or deletion was cancelled. Please try again.");
       setDeleting(false);
     }
   };
 
   const resetDeleteFlow = () => {
     setDeleteStep(0);
-    setReauthPassword("");
-    setConfirmText("");
+    setAuthPassword("");
+    setConfirmEmail("");
     setDeleteError(null);
     setDeleting(false);
   };
 
   const openDeleteFlow = () => {
+    resetDeleteFlow();
     setDeleteStep(1);
   };
 
@@ -170,13 +195,13 @@ export const SettingsPage = () => {
             onChange={(workspace) => updateSettings((current) => ({ ...current, workspace }))}
           />
         );
-      case "leads-scoring":
-        return (
-          <LeadsScoringSettingsSection
-            leadsScoring={settings.leadsScoring}
-            onChange={(leadsScoring) => updateSettings((current) => ({ ...current, leadsScoring }))}
-          />
-        );
+      // case "leads-scoring":
+      //   return (
+      //     <LeadsScoringSettingsSection
+      //       leadsScoring={settings.leadsScoring}
+      //       onChange={(leadsScoring) => updateSettings((current) => ({ ...current, leadsScoring }))}
+      //     />
+      //   );
       case "messaging":
         return (
           <MessagingSettingsSection
@@ -192,13 +217,13 @@ export const SettingsPage = () => {
             onChange={(integrations) => updateSettings((current) => ({ ...current, integrations }))}
           />
         );
-      case "ai-settings":
-        return (
-          <AISettingsSection
-            ai={settings.ai}
-            onChange={(ai) => updateSettings((current) => ({ ...current, ai }))}
-          />
-        );
+      // case "ai-settings":
+      //   return (
+      //     <AISettingsSection
+      //       ai={settings.ai}
+      //       onChange={(ai) => updateSettings((current) => ({ ...current, ai }))}
+      //     />
+      //   );
       case "notifications":
         return (
           <NotificationsSettingsSection
@@ -216,8 +241,6 @@ export const SettingsPage = () => {
       case "privacy-data":
         return (
           <PrivacyDataSettingsSection
-            privacy={settings.privacy}
-            onChange={(privacy) => updateSettings((current) => ({ ...current, privacy }))}
             onOpenDeleteFlow={openDeleteFlow}
             onOpenLogoutConfirm={() => setLogoutConfirmOpen(true)}
             onExportLeads={() => {
@@ -344,18 +367,17 @@ export const SettingsPage = () => {
         <SettingsDeleteAccountModal
           open={deleteStep > 0}
           step={(deleteStep || 1) as 1 | 2 | 3}
-          reauthPassword={reauthPassword}
-          confirmText={confirmText}
+          confirmEmail={confirmEmail}
+          authPassword={authPassword}
+          isGoogleUser={isGoogleUser}
           deleteError={deleteError}
           deleting={deleting}
           userEmail={user?.email ?? ""}
-          onPasswordChange={setReauthPassword}
-          onConfirmTextChange={setConfirmText}
+          onConfirmEmailChange={setConfirmEmail}
+          onAuthPasswordChange={setAuthPassword}
           onCancel={resetDeleteFlow}
-          onReauth={() => {
-            void handleReauth();
-          }}
-          onStepTwoConfirm={handleConfirmText}
+          onStepOneDecision={handleDeleteStepOneDecision}
+          onStepTwoConfirm={handleStepTwoConfirm}
           onFinalDelete={() => {
             void handleFinalDelete();
           }}

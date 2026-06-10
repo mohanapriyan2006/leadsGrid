@@ -1,11 +1,15 @@
 export const UNLIMITED_SOFT_CAP = 999_999;
 export const FAIR_USAGE_THRESHOLD = 0.8;
 
+/** Set to `true` to disable all plan limits for user usage. */
+export const DISABLE_PLAN_LIMITS = false;
+
 export type UsageAction =
   | "storage_limit"
   | "leads_discovery_per_day"
   | "email_sending_per_day"
-  | "crm_ai_analysis_per_day"
+  | "crm_analysis_per_day"
+  | "leads_analysis_per_day"
   | "ask_ai_per_month"
   | "agent_ai_per_month"
   | "other_ai_per_day";
@@ -13,7 +17,8 @@ export type UsageAction =
 export const DAILY_ACTIONS: UsageAction[] = [
   "leads_discovery_per_day",
   "email_sending_per_day",
-  "crm_ai_analysis_per_day",
+  "crm_analysis_per_day",
+  "leads_analysis_per_day",
   "other_ai_per_day",
 ];
 

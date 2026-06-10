@@ -39,6 +39,10 @@ class SourceRateLimiter:
             "stackexchange": {"rate": 1 / 0.033, "capacity": 10},  # ~30 req/sec
             "search": {"rate": 1.0, "capacity": 2},             # 1 req/sec
             "serper": {"rate": 1 / 3456.0, "capacity": 1},      # 25 req/day
+            "reddit": {"rate": 1.0, "capacity": 3},             # 1 req/sec
+            "devto": {"rate": 1 / 3.0, "capacity": 3},        # 20 req/min
+            "producthunt": {"rate": 1 / 6.0, "capacity": 3},   # 10 req/min
+            "gdelt": {"rate": 1 / 3.0, "capacity": 3},         # 20 req/min
         }
         self.config = config or default_config
         self._buckets: dict[str, TokenBucket] = {}

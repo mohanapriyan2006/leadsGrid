@@ -15,8 +15,12 @@ from app.services.discovery_engine.opportunity_scorer import score_opportunity
 from app.services.discovery_engine.query_expander import expand_query
 from app.services.discovery_engine.rate_limiter import SourceRateLimiter
 from app.services.discovery_engine.signal_classifier import classify_signal
+from app.services.discovery_engine.sources.devto_source import DevtoSource
+from app.services.discovery_engine.sources.gdelt_source import GdeltSource
 from app.services.discovery_engine.sources.github_source import GitHubSource
 from app.services.discovery_engine.sources.hackernews_source import HackerNewsSource
+from app.services.discovery_engine.sources.producthunt_source import ProductHuntSource
+from app.services.discovery_engine.sources.reddit_source import RedditSource
 from app.services.discovery_engine.sources.search_source import SearchSource
 from app.services.discovery_engine.sources.stackexchange_source import StackExchangeSource
 
@@ -57,6 +61,10 @@ class LeadDiscoveryEngine:
             HackerNewsSource(self.rate_limiter),
             StackExchangeSource(self.rate_limiter),
             SearchSource(self.rate_limiter),
+            RedditSource(self.rate_limiter),
+            DevtoSource(self.rate_limiter),
+            ProductHuntSource(self.rate_limiter),
+            GdeltSource(self.rate_limiter),
         ]
 
     async def aclose(self) -> None:
@@ -83,6 +91,14 @@ class LeadDiscoveryEngine:
                 elif source.name == "stackexchange":
                     return await source.discover(query_plan.stackexchange_queries, self.source_limit, self._http_client)
                 elif source.name == "search":
+                    return await source.discover(query_plan.search_queries, self.source_limit, self._http_client)
+                elif source.name == "reddit":
+                    return await source.discover(query_plan.search_queries, self.source_limit, self._http_client)
+                elif source.name == "devto":
+                    return await source.discover(query_plan.search_queries, self.source_limit, self._http_client)
+                elif source.name == "producthunt":
+                    return await source.discover([], self.source_limit, self._http_client)
+                elif source.name == "gdelt":
                     return await source.discover(query_plan.search_queries, self.source_limit, self._http_client)
                 return []
 

@@ -170,13 +170,13 @@ export const SettingsPage = () => {
             onChange={(workspace) => updateSettings((current) => ({ ...current, workspace }))}
           />
         );
-      case "leads-scoring":
-        return (
-          <LeadsScoringSettingsSection
-            leadsScoring={settings.leadsScoring}
-            onChange={(leadsScoring) => updateSettings((current) => ({ ...current, leadsScoring }))}
-          />
-        );
+      // case "leads-scoring":
+      //   return (
+      //     <LeadsScoringSettingsSection
+      //       leadsScoring={settings.leadsScoring}
+      //       onChange={(leadsScoring) => updateSettings((current) => ({ ...current, leadsScoring }))}
+      //     />
+      //   );
       case "messaging":
         return (
           <MessagingSettingsSection
@@ -192,13 +192,13 @@ export const SettingsPage = () => {
             onChange={(integrations) => updateSettings((current) => ({ ...current, integrations }))}
           />
         );
-      case "ai-settings":
-        return (
-          <AISettingsSection
-            ai={settings.ai}
-            onChange={(ai) => updateSettings((current) => ({ ...current, ai }))}
-          />
-        );
+      // case "ai-settings":
+      //   return (
+      //     <AISettingsSection
+      //       ai={settings.ai}
+      //       onChange={(ai) => updateSettings((current) => ({ ...current, ai }))}
+      //     />
+      //   );
       case "notifications":
         return (
           <NotificationsSettingsSection

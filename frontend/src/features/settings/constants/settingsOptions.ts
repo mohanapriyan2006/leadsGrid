@@ -50,10 +50,10 @@ export const SETTINGS_TABS: Array<{
 }> = [
   { key: "profile", label: "Profile", description: "Identity and personalization" },
   { key: "workspace", label: "Workspace", description: "Team and pipeline controls" },
-  { key: "leads-scoring", label: "Leads & Scoring", description: "BANT and scoring behavior" },
+  // { key: "leads-scoring", label: "Leads & Scoring", description: "BANT and scoring behavior" },
   { key: "messaging", label: "Messaging", description: "Outreach defaults and follow-up" },
   { key: "integrations", label: "Integrations", description: "Connected channels and data sources" },
-  { key: "ai-settings", label: "AI Settings", description: "Agent mode and generation depth" },
+  // { key: "ai-settings", label: "AI Settings", description: "Agent mode and generation depth" },
   { key: "notifications", label: "Notifications", description: "Events and channels" },
   { key: "billing", label: "Billing", description: "Plan and credit usage" },
   { key: "privacy-data", label: "Privacy & Data", description: "Retention, export, and deletion" },

@@ -36,49 +36,59 @@ export const IntegrationsSettingsSection = ({
       description="Manage providers and source connectors."
       badge="Core Scaffold"
     >
-      <div className="grid gap-2 sm:grid-cols-2">
-        {providers.map((provider) => {
-          const status = integrations[provider.key] as IntegrationStatus;
-          return (
-            <div key={provider.key} className="glass-card-sm flex items-center justify-between px-3 py-3">
-              <div>
-                <p className="text-sm font-medium text-content ">{provider.label}</p>
-                <span className={statusClassName[status]}>{status.replace("_", " ")}</span>
-              </div>
-              <button
-                type="button"
-                className="glass-btn px-3 py-1 text-xs"
-                onClick={() =>
-                  onChange({
-                    ...integrations,
-                    [provider.key]: nextStatus[status],
-                  })
-                }
-              >
-                {status === "connected" ? "Disconnect" : "Connect"}
-              </button>
-            </div>
-          );
-        })}
-      </div>
+      <div className="relative">
+        <div className="blur-sm pointer-events-none opacity-50">
+          <div className="grid gap-2 sm:grid-cols-2">
+            {providers.map((provider) => {
+              const status = integrations[provider.key] as IntegrationStatus;
+              return (
+                <div key={provider.key} className="glass-card-sm flex items-center justify-between px-3 py-3">
+                  <div>
+                    <p className="text-sm font-medium text-content ">{provider.label}</p>
+                    <span className={statusClassName[status]}>{status.replace("_", " ")}</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="glass-btn px-3 py-1 text-xs"
+                    onClick={() =>
+                      onChange({
+                        ...integrations,
+                        [provider.key]: nextStatus[status],
+                      })
+                    }
+                  >
+                    {status === "connected" ? "Disconnect" : "Connect"}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
 
-      <SettingsField label="Webhook API Key" hint="Stored for secure server-side delivery.">
-        <input
-          className="glass-input"
-          value={integrations.webhook.apiKey}
-          onChange={(event) =>
-            onChange({
-              ...integrations,
-              webhook: {
-                ...integrations.webhook,
-                apiKey: event.target.value,
-                status: event.target.value.trim() ? "connected" : "disconnected",
-              },
-            })
-          }
-          placeholder="lg_sk_live_..."
-        />
-      </SettingsField>
+          <SettingsField label="Webhook API Key" hint="Stored for secure server-side delivery.">
+            <input
+              className="glass-input"
+              value={integrations.webhook.apiKey}
+              onChange={(event) =>
+                onChange({
+                  ...integrations,
+                  webhook: {
+                    ...integrations.webhook,
+                    apiKey: event.target.value,
+                    status: event.target.value.trim() ? "connected" : "disconnected",
+                  },
+                })
+              }
+              placeholder="lg_sk_live_..."
+            />
+          </SettingsField>
+        </div>
+
+        <div className="absolute inset-0 flex items-center justify-center backdrop-blur-[2px]">
+          <span className="rounded-full bg-accent/20 border border-accent/30 px-4 py-2 text-sm font-semibold text-accent">
+            Coming Soon
+          </span>
+        </div>
+      </div>
     </SettingsSectionCard>
   );
 };

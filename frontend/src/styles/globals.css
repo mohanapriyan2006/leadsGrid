@@ -26,16 +26,16 @@
   --content-inverse-rgb: 10 12 20;
 
   /* === ACCENT COLORS === */
-  --accent: #9371f8;
-  --accent-rgb: 167 139 250;
-  --accent-secondary: #8b5cf6;
-  --accent-secondary-rgb: 139 92 246;
+  --accent: #a077ff;
+  --accent-rgb: 160 119 255;
+  --accent-secondary: #a37dfd;
+  --accent-secondary-rgb: 163 127 253;
   --accent-tertiary: #6366f1;
   --accent-tertiary-rgb: 99 102 241;
-  --accent-soft: rgba(153, 119, 252, 0.35);
-  --accent-soft-rgb: 139 92 246;;
+  --accent-soft: rgba(162, 131, 254, 0.35);
+  --accent-soft-rgb: 162 131 254;;
   --accent-glow: rgba(64, 62, 69, 0.25);
-  --accent-glow-rgb: 153 119 252;
+  --accent-glow-rgb: 162 131 254;
 
   /* === SEMANTIC COLORS === */
   --success: #10b981;

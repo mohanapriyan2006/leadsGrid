@@ -32,6 +32,11 @@ class Settings(BaseSettings):
     groq_model: str = "llama-3.1-8b-instant"
     openrouter_api_key: str | None = None
     serper_api_key: str | None = None
+    github_api_token: str | None = None
+    stackexchange_api_key: str | None = None
+    devto_api_key: str | None = None
+    producthunt_api_token: str | None = None
+    gdelt_api_key: str | None = None
 
     firebase_project_id: str | None = None
     firebase_service_account_path: str | None = None

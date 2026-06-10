@@ -10,13 +10,12 @@ from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging
 from app.firebase.firebase_client import FirebaseClient
 from app.services.agent_executor import AgentExecutor
-from app.services.aggregator import LeadAggregator
 from app.services.ai_router import AIRouter
 from app.services.context_enhancer import ContextEnhancer
+from app.services.discovery_engine import LeadDiscoveryEngine
 from app.services.email_service import EmailService
 from app.services.agent_run_service import AgentRunService
 from app.services.ai_prompts_service import ai_prompts_service
-from app.services.lead_discovery_pipeline import lead_discovery_pipeline
 from app.services.step_evaluator import StepEvaluator
 
 
@@ -29,9 +28,8 @@ def create_app() -> FastAPI:
         try:
             yield
         finally:
-            await lead_aggregator.aclose()
+            await discovery_engine.aclose()
             await ai_prompts_service.aclose()
-            await lead_discovery_pipeline.aclose()
 
     app = FastAPI(
         title=settings.app_name,
@@ -44,7 +42,7 @@ def create_app() -> FastAPI:
     firebase_client = FirebaseClient(settings)
     firebase_client.initialize()
 
-    lead_aggregator = LeadAggregator(
+    discovery_engine = LeadDiscoveryEngine(
         source_limit=settings.source_limit_default,
         timeout_seconds=settings.request_timeout_seconds,
     )
@@ -53,7 +51,7 @@ def create_app() -> FastAPI:
     step_evaluator = StepEvaluator()
     email_service = EmailService(settings)
     agent_executor = AgentExecutor(
-        aggregator=lead_aggregator,
+        aggregator=discovery_engine,
         ai_router=ai_router,
         email_service=email_service,
         firebase_client=firebase_client,
@@ -62,7 +60,8 @@ def create_app() -> FastAPI:
 
     app.state.settings = settings
     app.state.firebase_client = firebase_client
-    app.state.lead_aggregator = lead_aggregator
+    app.state.discovery_engine = discovery_engine
+    app.state.lead_aggregator = discovery_engine  # backwards compat for any legacy code
     app.state.email_service = email_service
     app.state.agent_executor = agent_executor
     app.state.agent_run_service = agent_run_service

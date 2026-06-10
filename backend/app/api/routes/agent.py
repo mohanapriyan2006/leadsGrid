@@ -22,7 +22,7 @@ def _executor_from_request(request: Request):
 
 
 def _aggregator_from_request(request: Request):
-    return request.app.state.lead_aggregator
+    return request.app.state.discovery_engine
 
 
 def _run_service_from_request(request: Request):
@@ -169,6 +169,7 @@ async def discover(
     _ = user  # Reserved for per-user rate limiting and quota handling.
     aggregator = _aggregator_from_request(request)
     leads = await aggregator.discover(query)
-    # Drop non-actionable leads at the API boundary
-    actionable = [lead for lead in leads if not lead.get("ai_dropped")]
-    return [LeadItem(**lead) for lead in actionable[:limit]]
+    # Sort so non-dropped (actionable) leads appear first, but still return the rest
+    # so the UI triage queues can show all results.
+    sorted_leads = sorted(leads, key=lambda lead: (lead.get("ai_dropped") or False), reverse=False)
+    return [LeadItem(**lead) for lead in sorted_leads[:limit]]

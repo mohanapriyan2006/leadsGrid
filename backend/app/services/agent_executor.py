@@ -2,10 +2,8 @@ from datetime import datetime, timedelta, timezone
 from typing import cast
 
 from app.firebase.firebase_client import FirebaseClient
-from app.modules.processors.cleaner import clean_records
-from app.modules.processors.scorer import score_records
 from app.schemas.agent import AgentActionResult, AgentPlan, AgentRunResponse, AgentStep, LeadItem
-from app.services.aggregator import LeadAggregator
+from app.services.discovery_engine import LeadDiscoveryEngine
 from app.services.ai_router import AIRouter
 from app.services.email_service import EmailService
 
@@ -13,7 +11,7 @@ from app.services.email_service import EmailService
 class AgentExecutor:
     def __init__(
         self,
-        aggregator: LeadAggregator,
+        aggregator: LeadDiscoveryEngine,
         ai_router: AIRouter,
         email_service: EmailService,
         firebase_client: FirebaseClient,
@@ -57,8 +55,7 @@ class AgentExecutor:
 
         if step.actionType == "lead_scoring":
             source_records = await ensure_source_records()
-            scored = score_records(clean_records(source_records), prompt)
-            ranked = sorted(scored, key=lambda item: float(item.get("score") or 0), reverse=True)
+            ranked = sorted(source_records, key=lambda item: float(item.get("score") or 0), reverse=True)
             top = ranked[:10]
             top_lead = top[0] if top else None
             return AgentActionResult(

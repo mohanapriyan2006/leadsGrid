@@ -30,6 +30,10 @@ AI-powered lead discovery, CRM, and autonomous outreach platform built for moder
 
 ## What is LeadsGrid?
 
+<div align="center">
+<img src="screenshots/image.png" width="100%" />
+</div>
+
 LeadsGrid is an AI-powered revenue platform that helps businesses discover high-intent prospects, qualify opportunities, manage pipelines, and execute personalized outreach workflows from a single workspace.
 
 Traditional sales stacks require multiple disconnected tools:
@@ -45,6 +49,10 @@ LeadsGrid combines them into one intelligent operating system.
 ---
 
 ## Why LeadsGrid?
+
+<div align="center">
+<img src="screenshots/image1.png" width="100%" />
+</div>
 
 Most tools stop at information.
 
@@ -90,11 +98,20 @@ The result:
 * Reduced manual work
 * More conversations booked
 
+<div align="center">
+<img src="screenshots/image2.png" width="100%" />
+<img src="screenshots/image3.png" width="100%" />
+</div>
+
 ---
 
 ## Features
 
 ### Lead Discovery Engine
+
+<div align="center">
+<img src="screenshots/image4.png" width="100%" />
+</div>
 
 Identify potential customers from multiple data sources.
 
@@ -110,6 +127,10 @@ Capabilities:
 ---
 
 ### Intelligent CRM
+
+<div align="center">
+<img src="screenshots/image7.png" width="100%" />
+</div>
 
 Manage opportunities without CRM complexity.
 
@@ -128,6 +149,10 @@ Built using scalable Firestore-friendly patterns.
 ---
 
 ### Agent Mode
+
+<div align="center">
+<img src="screenshots/image8.png" width="100%" />
+</div>
 
 The heart of LeadsGrid.
 
@@ -165,6 +190,10 @@ Monitor:
 
 ### Email Orchestration
 
+<div align="center">
+<img src="screenshots/image6.png" width="100%" />
+</div>
+
 Launch personalized outreach campaigns directly from LeadsGrid.
 
 Features:
@@ -190,6 +219,10 @@ john@company.com
 
 ### AI-Powered Qualification
 
+<div align="center">
+<img src="screenshots/image5.png" width="100%" />
+</div>
+
 Automatically evaluate leads using customizable qualification logic.
 
 Analyze:
@@ -203,6 +236,11 @@ Analyze:
 Focus your team on opportunities that matter.
 
 ---
+
+<div align="center">
+<img src="screenshots/image9.png" width="100%" />
+<img src="screenshots/image10.png" width="100%" />
+</div>
 
 ## Product Architecture
 

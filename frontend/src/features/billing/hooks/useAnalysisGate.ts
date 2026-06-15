@@ -1,10 +1,11 @@
 import { useState, useCallback } from "react";
 import { usageTracker } from "../services/usageTracker";
 import { showLimitModal } from "./useLimitModal";
+import { DISABLE_PLAN_LIMITS } from "../constants/usage";
 import type { UsageAction } from "../constants/usage";
 
 export const useAnalysisGate = (action: UsageAction = "crm_analysis_per_day") => {
-  const [analysisRun, setAnalysisRun] = useState(false);
+  const [analysisRun, setAnalysisRun] = useState(DISABLE_PLAN_LIMITS);
   const [checking, setChecking] = useState(false);
 
   const runAnalysis = useCallback(async () => {

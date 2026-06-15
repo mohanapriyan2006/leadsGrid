@@ -69,6 +69,32 @@ export type SmartSuggestion = {
   category: "discovery" | "outreach" | "pipeline" | "analysis";
 };
 
+export type AgentCardType =
+  | "discovery_overview"
+  | "crm_form"
+  | "message_draft"
+  | "recycle_bin_action"
+  | "confirmation"
+  | "lead_select"
+  | "agent_form"
+  | "lead_picker";
+
+export type AgentActionButton = {
+  label: string;
+  action: string;
+  payload?: Record<string, unknown>;
+  style?: "primary" | "secondary" | "danger";
+};
+
+export type AgentCardData = {
+  type: AgentCardType;
+  title: string;
+  description: string;
+  data: Record<string, unknown>;
+  actions: AgentActionButton[];
+  requires_confirmation?: boolean;
+};
+
 export type AgentMessage = {
   id: string;
   role: "user" | "assistant" | "agent";
@@ -77,6 +103,7 @@ export type AgentMessage = {
   plan?: AgentPlan;
   executionState?: AgentExecutionState;
   card?: import("./chat").InsightCard;
+  agentCard?: AgentCardData;
   hidden?: boolean;
   timestamp: string;
 };

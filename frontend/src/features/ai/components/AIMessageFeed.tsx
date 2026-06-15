@@ -1,11 +1,18 @@
 import type { RefObject } from "react";
 
 import type { ChatMessage } from "../types/chat";
-import type { AIMode, AgentPlan, AgentExecutionState, SmartSuggestion } from "../types/agent";
+import type { AIMode, AgentPlan, AgentExecutionState, SmartSuggestion, AgentCardData } from "../types/agent";
 import { AgentPlanCard } from "./AgentPlanCard";
 import { AgentExecutionTimeline } from "./AgentExecutionTimeline";
 import { EmptyState } from "./EmptyState";
 import { PermissionModal } from "./PermissionModal";
+import { DiscoveryOverviewCard } from "./agent-cards/DiscoveryOverviewCard";
+import { CRMOperationCard } from "./agent-cards/CRMOperationCard";
+import { MessageDraftCard } from "./agent-cards/MessageDraftCard";
+import { RecycleBinActionCard } from "./agent-cards/RecycleBinActionCard";
+import { ConfirmationCard } from "./agent-cards/ConfirmationCard";
+import { AgentFormCard } from "./agent-cards/AgentFormCard";
+import { LeadPickerCard } from "./agent-cards/LeadPickerCard";
 
 type AIMessageFeedProps = {
   messages: ChatMessage[];
@@ -31,6 +38,7 @@ type AIMessageFeedProps = {
   onAbortExecution: () => void;
   autoApproveLowRisk: boolean;
   onToggleAutoApprove: () => void;
+  onAgentCardAction?: (action: string, payload?: Record<string, unknown>) => void;
 };
 
 export const AIMessageFeed = ({
@@ -57,6 +65,7 @@ export const AIMessageFeed = ({
   onAbortExecution,
   autoApproveLowRisk,
   onToggleAutoApprove,
+  onAgentCardAction,
 }: AIMessageFeedProps) => {
   const pausedStep =
     agentPlan && executionState?.isPaused
@@ -114,6 +123,10 @@ export const AIMessageFeed = ({
                   ) : null
                 ) : null}
               </div>
+            ) : null}
+
+            {message.agentCard && onAgentCardAction ? (
+              <AgentCardRenderer card={message.agentCard} onAction={onAgentCardAction} />
             ) : null}
 
             {message.card && messageMode !== "ask" ? (
@@ -214,4 +227,30 @@ export const AIMessageFeed = ({
       <div ref={endRef} />
     </div>
   );
+};
+
+type AgentCardRendererProps = {
+  card: AgentCardData;
+  onAction: (action: string, payload?: Record<string, unknown>) => void;
+};
+
+const AgentCardRenderer = ({ card, onAction }: AgentCardRendererProps) => {
+  switch (card.type) {
+    case "discovery_overview":
+      return <DiscoveryOverviewCard card={card} onAction={onAction} />;
+    case "crm_form":
+      return <CRMOperationCard card={card} onAction={onAction} />;
+    case "message_draft":
+      return <MessageDraftCard card={card} onAction={onAction} />;
+    case "recycle_bin_action":
+      return <RecycleBinActionCard card={card} onAction={onAction} />;
+    case "confirmation":
+      return <ConfirmationCard card={card} onAction={onAction} />;
+    case "agent_form":
+      return <AgentFormCard card={card} onAction={onAction} />;
+    case "lead_picker":
+      return <LeadPickerCard card={card} onAction={onAction} />;
+    default:
+      return null;
+  }
 };

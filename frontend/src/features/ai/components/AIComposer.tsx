@@ -1,9 +1,16 @@
 import type { KeyboardEvent } from "react";
-import { Crosshair, CornerDownLeft } from "lucide-react";
+import { Crosshair, CornerDownLeft, Search, Users, BarChart3, Mail } from "lucide-react";
 
 import type { ToneType } from "../../common/types/ui";
 import type { AIMode } from "../types/agent";
 import { SuggestionDropdown } from "./SuggestionDropdown";
+
+const AGENT_CHIPS = [
+  { label: "Discover leads", prompt: "Find new leads", icon: Search },
+  { label: "Manage Leads", prompt: "Show my leads", icon: Users },
+  { label: "Manage CRM", prompt: "Update my CRM", icon: BarChart3 },
+  { label: "Draft message", prompt: "Draft a message", icon: Mail },
+];
 
 type AIComposerProps = {
   input: string;
@@ -19,6 +26,7 @@ type AIComposerProps = {
   onToneChange: (tone: ToneType) => void;
   onSend: () => void;
   onSuggestionSelect: (suggestion: string) => void;
+  onAgentChipClick?: (prompt: string) => void;
 };
 
 export const AIComposer = ({
@@ -35,6 +43,7 @@ export const AIComposer = ({
   onToneChange,
   onSend,
   onSuggestionSelect,
+  onAgentChipClick,
 }: AIComposerProps) => {
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -115,6 +124,25 @@ export const AIComposer = ({
           <CornerDownLeft className="w-3.5 h-3.5 opacity-70" />
         </button>
       </div>
+
+      {mode === "agent" && !input.trim() && onAgentChipClick ? (
+        <div className="flex flex-wrap gap-1.5 border-t border-accent/[0.08] bg-surface/20 px-3 py-1.5">
+          {AGENT_CHIPS.map((chip) => {
+            const Icon = chip.icon;
+            return (
+              <button
+                key={chip.label}
+                type="button"
+                onClick={() => onAgentChipClick(chip.prompt)}
+                className="flex items-center gap-1 rounded-lg border border-info/[0.15] bg-info/[0.06] px-2.5 py-1 text-[11px] font-medium text-info/80 transition hover:bg-info/[0.12] hover:text-info"
+              >
+                <Icon className="h-3 w-3" />
+                {chip.label}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
 
       <div className="flex items-center gap-2 border-t border-accent/[0.08] bg-surface/20 px-3.5 py-1.5">
         <span

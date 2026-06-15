@@ -15,6 +15,7 @@ import { MOCK_LEADS } from "../../features/leads/constants/mockLeads";
 import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLeads";
 import { useMessageGenerator } from "../../features/leads/hooks/useMessageGenerator";
 import { messageService } from "../../features/leads/services/messageService";
+import { leadService } from "../../features/leads/services/leadService";
 import type { Lead } from "../../features/leads/types/lead";
 import { useLeadStore } from "../../store/useLeadStore";
 import type { ToneType } from "../../features/common/types/ui";
@@ -25,6 +26,7 @@ import bgChatBot from "../../assets/bg-images/chat-bot.svg";
 import { useMode } from "../../features/ai/hooks/useMode";
 import { useSuggestions } from "../../features/ai/hooks/useSuggestions";
 import { useAgentExecution } from "../../features/ai/hooks/useAgentExecution";
+import { useAgentConversation } from "../../features/ai/hooks/useAgentConversation";
 import type { AgentStep } from "../../features/ai/types/agent";
 import type { AgentActionResult } from "../../features/ai/services/agentApiService";
 import { buildContextSummary, buildStructuredAIContext } from "../../features/ai/services/contextBuilder";
@@ -46,6 +48,7 @@ export const AIPage = () => {
   const [lastAgentPrompt, setLastAgentPrompt] = useState("");
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [sessionToDelete, setSessionToDelete] = useState<ChatSession | null>(null);
+  const [useConversationalAgent, setUseConversationalAgent] = useState(true);
   const { user } = useAuth();
   const { settings } = useSettingsState(user?.email);
 
@@ -213,9 +216,17 @@ export const AIPage = () => {
     resetPlan,
   } = useAgentExecution(agentCallbacks);
 
+  const {
+    messages: agentConversationMessages,
+    loading: agentConversationLoading,
+    sendMessage: sendAgentConversationMessage,
+    confirmAction: confirmAgentAction,
+    reset: resetAgentConversation,
+  } = useAgentConversation(attachedLeadIds);
+
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, loading, agentPlan, executionState]);
+  }, [messages, loading, agentPlan, executionState, agentConversationMessages, agentConversationLoading]);
 
   useEffect(() => {
     if (!user) return;
@@ -317,10 +328,18 @@ export const AIPage = () => {
     }
   };
 
-  const sendAgentMessage = (overridePrompt?: string) => {
+  const sendAgentMessage = async (overridePrompt?: string) => {
     const prompt = (overridePrompt ?? input).trim();
-    if (!prompt || loading) return;
+    if (!prompt || loading || agentConversationLoading) return;
 
+    if (useConversationalAgent) {
+      // Conversational agent flow
+      await sendAgentConversationMessage(prompt);
+      setInput("");
+      return;
+    }
+
+    // Legacy plan-based flow
     addMessage({ id: createId(), role: "user", content: prompt });
     setInput("");
     setLastAgentPrompt(prompt);
@@ -508,6 +527,317 @@ export const AIPage = () => {
     void conversationMemoryService.saveSession(session, { immediate: true });
   };
 
+  const handleAgentCardAction = useCallback(
+    async (action: string, payload?: Record<string, unknown>) => {
+      if (action === "cancel") {
+        await confirmAgentAction("cancel");
+        return;
+      }
+
+      if (action === "navigate_discovery") {
+        window.location.href = "/leads-discovery";
+        return;
+      }
+
+      if (action === "navigate_lead") {
+        const leadId = payload?.lead_id as string;
+        if (leadId) window.location.href = `/leads/manage?lead=${leadId}`;
+        return;
+      }
+
+      if (action === "save_lead") {
+        const lead = payload?.lead as Record<string, unknown>;
+        if (lead) {
+          try {
+            const mapped: Lead = {
+              id: (lead.id as string) || createId(),
+              source: (lead.source as Lead["source"]) || "search",
+              author: (lead.name as string) || "",
+              company: (lead.company as string) || "",
+              title: (lead.company as string) || "",
+              content: (lead.notes as string) || "",
+              summary: (lead.notes as string) || "",
+              score: (lead.score as number) || 60,
+              tags: [],
+              intent_label: "prospect",
+              created_at: (lead.created_at as string) || new Date().toISOString(),
+            };
+            await leadService.saveDiscoveryLeadAsManageLead(mapped);
+            addMessage({
+              id: createId(),
+              role: "agent",
+              content: `✅ Saved "${String(lead.name || "Lead")}" to Manage Leads.`,
+            });
+          } catch (err) {
+            addMessage({
+              id: createId(),
+              role: "agent",
+              content: `❌ Failed to save lead: ${err instanceof Error ? err.message : "Unknown error"}`,
+            });
+          }
+        }
+        return;
+      }
+
+      if (action === "save_all_leads") {
+        const leads = payload?.leads as Array<Record<string, unknown>>;
+        if (leads) {
+          let saved = 0;
+          for (const lead of leads) {
+            try {
+              const mapped: Lead = {
+                id: (lead.id as string) || createId(),
+                source: (lead.source as Lead["source"]) || "search",
+                author: (lead.name as string) || "",
+                company: (lead.company as string) || "",
+                title: (lead.company as string) || "",
+                content: (lead.notes as string) || "",
+                summary: (lead.notes as string) || "",
+                score: (lead.score as number) || 60,
+                tags: [],
+                intent_label: "prospect",
+                created_at: (lead.created_at as string) || new Date().toISOString(),
+              };
+              await leadService.saveDiscoveryLeadAsManageLead(mapped);
+              saved++;
+            } catch {
+              // skip failed saves
+            }
+          }
+          addMessage({
+            id: createId(),
+            role: "agent",
+            content: `✅ Saved ${saved}/${leads.length} lead(s) to Manage Leads.`,
+          });
+        }
+        return;
+      }
+
+      if (action === "edit_lead") {
+        const leadId = payload?.lead_id as string;
+        window.location.href = `/leads/manage?lead=${leadId}`;
+        return;
+      }
+
+      if (action === "delete_lead") {
+        const leadId = payload?.lead_id as string;
+        const leadName = payload?.lead_name as string;
+        addMessage({
+          id: createId(),
+          role: "agent",
+          content: "",
+          agentCard: {
+            type: "confirmation",
+            title: leadName ? `Delete ${leadName}?` : "Delete Lead?",
+            description: "This lead will be moved to the Recycle Bin.",
+            data: { lead_id: leadId, operation: "delete", lead_name: leadName },
+            actions: [
+              { label: "Delete", action: "confirm_delete_lead", payload: { lead_id: leadId }, style: "danger" },
+              { label: "Cancel", action: "cancel", style: "secondary" },
+            ],
+            requires_confirmation: true,
+          },
+        });
+        return;
+      }
+
+      if (action === "confirm_delete_lead") {
+        const leadId = payload?.lead_id as string;
+        try {
+          await leadService.softDeleteManageLead(leadId);
+          addMessage({ id: createId(), role: "agent", content: "✅ Lead moved to Recycle Bin." });
+        } catch (err) {
+          addMessage({ id: createId(), role: "agent", content: `❌ Delete failed: ${err instanceof Error ? err.message : "Unknown error"}` });
+        }
+        return;
+      }
+
+      if (action === "confirm_create_lead") {
+        const fields = payload?.fields as Record<string, string> || {};
+        const values = payload?.values as Record<string, string> || {};
+        const merged = { ...fields, ...values };
+        try {
+          await leadService.createManageLead({
+            name: merged.name || "New Lead",
+            company: merged.company || "",
+            email: merged.email || undefined,
+            phone: merged.phone || undefined,
+            stage: "NEW",
+            notes: merged.industry ? `Industry: ${merged.industry}` : null,
+          });
+          addMessage({ id: createId(), role: "agent", content: `✅ Created lead "${merged.name || "New Lead"}".` });
+        } catch (err) {
+          addMessage({ id: createId(), role: "agent", content: `❌ Create failed: ${err instanceof Error ? err.message : "Unknown error"}` });
+        }
+        return;
+      }
+
+      if (action === "confirm_update_lead") {
+        const leadId = payload?.lead_id as string;
+        const fields = payload?.fields as Record<string, unknown>;
+        try {
+          await leadService.updateManageLead(leadId, fields || {});
+          addMessage({ id: createId(), role: "agent", content: "✅ Lead updated successfully." });
+        } catch (err) {
+          addMessage({ id: createId(), role: "agent", content: `❌ Update failed: ${err instanceof Error ? err.message : "Unknown error"}` });
+        }
+        return;
+      }
+
+      if (action === "confirm_send_message") {
+        const leadIds = payload?.lead_ids as string[];
+        const content = payload?.content as string;
+        if (leadIds && content) {
+          try {
+            for (const leadId of leadIds) {
+              const lead = manageLeads.find((l) => l.id === leadId);
+              if (lead?.email) {
+                await messageService.sendEmail({
+                  to: lead.email,
+                  subject: `Regarding your ${lead.company || "business"}`,
+                  message: content,
+                  lead_id: leadId,
+                });
+              }
+            }
+            addMessage({ id: createId(), role: "agent", content: `✅ Message sent to ${leadIds.length} lead(s).` });
+          } catch (err) {
+            addMessage({ id: createId(), role: "agent", content: `❌ Send failed: ${err instanceof Error ? err.message : "Unknown error"}` });
+          }
+        }
+        return;
+      }
+
+      if (action === "confirm_restore_lead") {
+        const leadId = payload?.lead_id as string;
+        try {
+          await leadService.restoreManageLead(leadId);
+          addMessage({ id: createId(), role: "agent", content: "✅ Lead restored successfully." });
+        } catch (err) {
+          addMessage({ id: createId(), role: "agent", content: `❌ Restore failed: ${err instanceof Error ? err.message : "Unknown error"}` });
+        }
+        return;
+      }
+
+      if (action === "confirm_permanent_delete") {
+        const leadId = payload?.lead_id as string;
+        try {
+          await leadService.deleteManageLeadForever(leadId);
+          addMessage({ id: createId(), role: "agent", content: "🗑️ Lead permanently deleted." });
+        } catch (err) {
+          addMessage({ id: createId(), role: "agent", content: `❌ Delete failed: ${err instanceof Error ? err.message : "Unknown error"}` });
+        }
+        return;
+      }
+
+      if (action === "send_message") {
+        const draft = payload?.draft as string;
+        const leadIds = payload?.lead_ids as string[];
+        if (draft && leadIds) {
+          addMessage({
+            id: createId(),
+            role: "agent",
+            content: "",
+            agentCard: {
+              type: "confirmation",
+              title: "Send Message?",
+              description: `This message will be sent to ${leadIds.length} lead(s).`,
+              data: { lead_ids: leadIds, content: draft, operation: "send" },
+              actions: [
+                { label: "Send", action: "confirm_send_message", payload: { lead_ids: leadIds, content: draft }, style: "primary" },
+                { label: "Cancel", action: "cancel", style: "secondary" },
+              ],
+              requires_confirmation: true,
+            },
+          });
+        }
+        return;
+      }
+
+      if (action === "regenerate_message") {
+        const leadIds = payload?.lead_ids as string[];
+        const tone = payload?.tone as string;
+        if (leadIds) {
+          try {
+            const lead = manageLeads.find((l) => l.id === leadIds[0]);
+            const result = await messageService.generateEmailDraft({
+              lead_name: lead?.name || "",
+              lead_company: lead?.company || "",
+              lead_notes: lead?.notes || "",
+              lead_stage: lead?.stage || "NEW",
+              lead_score: lead?.score || 60,
+              lead_source: lead?.source || "search",
+              pain_point: lead?.notes || "",
+              suggested_pitch: "",
+              buying_signals: [],
+              custom_context: "",
+              tone: (tone as "professional" | "friendly" | "direct") || "professional",
+              max_words: aiWordLimit,
+            });
+            addMessage({
+              id: createId(),
+              role: "agent",
+              content: "",
+              agentCard: {
+                type: "message_draft",
+                title: "Message Draft",
+                description: `Draft for ${leadIds.length} lead(s)`,
+                data: { lead_ids: leadIds, draft: result.body, tone: tone || "professional" },
+                actions: [
+                  { label: "Regenerate", action: "regenerate_message", payload: { lead_ids: leadIds, tone: tone || "professional" }, style: "secondary" },
+                  { label: "Send", action: "send_message", payload: { lead_ids: leadIds }, style: "primary" },
+                  { label: "Cancel", action: "cancel", style: "secondary" },
+                ],
+                requires_confirmation: true,
+              },
+            });
+          } catch {
+            addMessage({ id: createId(), role: "agent", content: "❌ Failed to regenerate message." });
+          }
+        }
+        return;
+      }
+
+      if (action === "discover_with_filters") {
+        const values = payload?.values as Record<string, string>;
+        const query = values?.industry || values?.location || "leads";
+        try {
+          const results = await leadService.discoverLeads({ query, limit: 12 });
+          addMessage({
+            id: createId(),
+            role: "agent",
+            content: `Found ${results.length} leads for "${query}":`,
+            agentCard: {
+              type: "discovery_overview",
+              title: `Discovered ${results.length} leads`,
+              description: `Results for "${query}"`,
+              data: { leads: results.map((l) => ({ id: l.id, name: l.author, company: l.company, score: l.score })), query },
+              actions: [
+                { label: "Go to Discovery Page", action: "navigate_discovery", style: "secondary" },
+                { label: "Save All", action: "save_all_leads", payload: { leads: results }, style: "primary" },
+              ],
+            },
+          });
+        } catch {
+          addMessage({ id: createId(), role: "agent", content: "❌ Discovery failed. Please try again." });
+        }
+        return;
+      }
+
+      if (action === "select_leads_for_message") {
+        const leadIds = payload?.lead_ids as string[];
+        if (leadIds && leadIds.length > 0) {
+          await confirmAgentAction("select_leads_for_message", { lead_ids: leadIds });
+        }
+        return;
+      }
+
+      // Fallback: forward to backend
+      await confirmAgentAction(action, payload);
+    },
+    [confirmAgentAction, manageLeads, tone, aiWordLimit],
+  );
+
   const startNewChat = () => {
     if (messages.length > 0) {
       const session = createSessionFromMessages(messages, activeSessionId ?? undefined);
@@ -523,6 +853,7 @@ export const AIPage = () => {
     setHistoryOpen(false);
     setActiveSessionId(null);
     resetPlan();
+    resetAgentConversation();
   };
 
   const restoreChat = (session: ChatSession) => {
@@ -565,7 +896,20 @@ export const AIPage = () => {
     setSessionToDelete(null);
   }, [sessionToDelete, activeSessionId]);
 
-  const visibleMessages = messages.filter((message) => !message.hidden);
+  const visibleMessages = useMemo(() => {
+    const base = messages.filter((message) => !message.hidden);
+    if (!useConversationalAgent || mode !== "agent") return base;
+
+    const converted: ChatMessage[] = agentConversationMessages.map((msg) => ({
+      id: msg.id,
+      role: msg.role === "user" ? "user" : "agent",
+      content: msg.content,
+      agentCard: msg.card,
+      mode: "agent" as const,
+    }));
+
+    return [...base, ...converted];
+  }, [messages, agentConversationMessages, useConversationalAgent, mode]);
 
   return (
     <>
@@ -595,12 +939,12 @@ export const AIPage = () => {
             <div className="mx-1 flex h-full w-full flex-col">
               <AIMessageFeed
                 messages={visibleMessages}
-                loading={loading}
+                loading={loading || agentConversationLoading}
                 mode={mode}
                 endRef={endRef}
                 suggestions={smartChips}
-                agentPlan={agentPlan}
-                executionState={executionState}
+                agentPlan={useConversationalAgent ? null : agentPlan}
+                executionState={useConversationalAgent ? null : executionState}
                 onUseMessage={useMessage}
                 onEditMessage={setInput}
                 onHideMessage={hideMessage}
@@ -625,6 +969,7 @@ export const AIPage = () => {
                 onAbortExecution={handleAbortExecution}
                 autoApproveLowRisk={autoApproveLowRisk}
                 onToggleAutoApprove={() => setAutoApproveLowRisk((value) => !value)}
+                onAgentCardAction={handleAgentCardAction}
               />
               <AIComposer
                 input={input}
@@ -642,6 +987,7 @@ export const AIPage = () => {
                   void sendMessage();
                 }}
                 onSuggestionSelect={handleSuggestionSelect}
+                onAgentChipClick={mode === "agent" ? (prompt) => void sendMessage(prompt) : undefined}
               />
             </div>
           </div>

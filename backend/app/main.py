@@ -10,6 +10,8 @@ from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging
 from app.firebase.firebase_client import FirebaseClient
 from app.services.agent_executor import AgentExecutor
+from app.services.agent_action_service import AgentActionService
+from app.services.agent_conversation_service import AgentConversationService
 from app.services.ai_router import AIRouter
 from app.services.context_enhancer import ContextEnhancer
 from app.services.discovery_engine import LeadDiscoveryEngine
@@ -57,6 +59,13 @@ def create_app() -> FastAPI:
         firebase_client=firebase_client,
     )
     agent_run_service = AgentRunService(agent_executor, step_evaluator)
+    agent_action_service = AgentActionService(
+        discovery_engine=discovery_engine,
+        lead_service=None,
+        message_service=email_service,
+        firebase_client=firebase_client,
+    )
+    agent_conversation_service = AgentConversationService(agent_action_service)
 
     app.state.settings = settings
     app.state.firebase_client = firebase_client
@@ -65,6 +74,8 @@ def create_app() -> FastAPI:
     app.state.email_service = email_service
     app.state.agent_executor = agent_executor
     app.state.agent_run_service = agent_run_service
+    app.state.agent_action_service = agent_action_service
+    app.state.agent_conversation_service = agent_conversation_service
     app.state.context_enhancer = context_enhancer
     app.state.step_evaluator = step_evaluator
 

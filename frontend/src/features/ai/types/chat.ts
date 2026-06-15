@@ -13,6 +13,7 @@ export type ChatMessage = {
   role: ChatRole;
   content: string;
   card?: InsightCard;
+  agentCard?: import("./agent").AgentCardData;
   mode?: "ask" | "agent";
   offerAgent?: boolean;
   hidden?: boolean;

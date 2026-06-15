@@ -4,6 +4,7 @@ import { AIComposer } from "../../features/ai/components/AIComposer";
 import { AttachLeadsModal } from "../../features/ai/components/AttachLeadsModal";
 import { AIHeader } from "../../features/ai/components/AIHeader";
 import { AIMessageFeed } from "../../features/ai/components/AIMessageFeed";
+import { DeleteConfirmModal } from "../../features/ai/components/DeleteConfirmModal";
 import {
   CHAT_HISTORY_LIMIT,
   TONES,
@@ -44,6 +45,7 @@ export const AIPage = () => {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [lastAgentPrompt, setLastAgentPrompt] = useState("");
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [sessionToDelete, setSessionToDelete] = useState<ChatSession | null>(null);
   const { user } = useAuth();
   const { settings } = useSettingsState(user?.email);
 
@@ -87,10 +89,10 @@ export const AIPage = () => {
         pain_point: lead.ai_analysis?.pain_points?.[0],
         category:
           lead.category === "hiring" ||
-          lead.category === "problem" ||
-          lead.category === "switching" ||
-          lead.category === "learning" ||
-          lead.category === "discussion"
+            lead.category === "problem" ||
+            lead.category === "switching" ||
+            lead.category === "learning" ||
+            lead.category === "discussion"
             ? lead.category
             : undefined,
         urgency: lead.urgency === "high",
@@ -176,8 +178,8 @@ export const AIPage = () => {
 
   const agentCallbacks = useMemo(
     () => ({
-      onStepStart: (_step: AgentStep, _index: number) => {},
-      onStepComplete: (_step: AgentStep, _index: number, _result: AgentActionResult) => {},
+      onStepStart: (_step: AgentStep, _index: number) => { },
+      onStepComplete: (_step: AgentStep, _index: number, _result: AgentActionResult) => { },
       onStepFail: (step: AgentStep, _index: number, error: string) => {
         addMessage({
           id: createId(),
@@ -216,6 +218,8 @@ export const AIPage = () => {
   }, [messages, loading, agentPlan, executionState]);
 
   useEffect(() => {
+    if (!user) return;
+
     let active = true;
 
     const loadHistory = async () => {
@@ -229,7 +233,7 @@ export const AIPage = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     setInputValue(input);
@@ -468,23 +472,29 @@ export const AIPage = () => {
   };
 
   useEffect(() => {
-    if (messages.length === 0) return;
+    if (messages.length === 0 || !user) return;
 
     const sessionId = activeSessionId ?? createId();
     if (!activeSessionId) {
       setActiveSessionId(sessionId);
     }
 
-    const session = createSessionFromMessages(messages, sessionId);
-    if (!session) return;
-
     setChatHistory((prev) => {
-      const remaining = prev.filter((entry) => entry.id !== session.id);
-      return [session, ...remaining].slice(0, CHAT_HISTORY_LIMIT);
-    });
+      const existingSession = prev.find((s) => s.id === sessionId);
 
-    void conversationMemoryService.saveSession(session);
-  }, [messages, activeSessionId]);
+      let session = createSessionFromMessages(messages, sessionId);
+      if (!session) return prev;
+
+      if (existingSession) {
+        session = { ...session, title: existingSession.title };
+      }
+
+      const remaining = prev.filter((entry) => entry.id !== session!.id);
+      void conversationMemoryService.saveSession(session);
+
+      return [session!, ...remaining].slice(0, CHAT_HISTORY_LIMIT);
+    });
+  }, [messages, activeSessionId, user]);
 
   const saveCurrentChat = () => {
     const session = createSessionFromMessages(messages, activeSessionId ?? undefined);
@@ -523,14 +533,46 @@ export const AIPage = () => {
     setActiveSessionId(session.id);
   };
 
+  const handleRenameChat = useCallback(async (id: string, newTitle: string) => {
+    let updatedSession: ChatSession | null = null;
+
+    setChatHistory((prev) => {
+      const session = prev.find((s) => s.id === id);
+      if (session) {
+        updatedSession = { ...session, title: newTitle };
+      }
+      return prev.map((s) => (s.id === id ? { ...s, title: newTitle } : s));
+    });
+
+    if (updatedSession && user) {
+      await conversationMemoryService.saveSession(updatedSession, { immediate: true });
+    }
+  }, [user]);
+
+  const handleDeleteChat = useCallback((id: string) => {
+    const session = chatHistory.find((s) => s.id === id);
+    if (session) setSessionToDelete(session);
+  }, [chatHistory]);
+
+  const confirmDeleteChat = useCallback(async () => {
+    if (!sessionToDelete) return;
+    setChatHistory((prev) => prev.filter((s) => s.id !== sessionToDelete.id));
+    await conversationMemoryService.deleteSession(sessionToDelete.id);
+    if (activeSessionId === sessionToDelete.id) {
+      setActiveSessionId(null);
+      setMessages([]);
+    }
+    setSessionToDelete(null);
+  }, [sessionToDelete, activeSessionId]);
+
   const visibleMessages = messages.filter((message) => !message.hidden);
 
   return (
     <>
-		<PageBackground image={bgChatBot} tint={mode == "agent" ? "rgba(6, 182, 212, 0.28)" : "rgba(99, 102, 241, 0.25)"} opacity={0.40} />
-    <ResponsivePageLayout      
-      contentClassName="flex flex-col overflow-hidden !p-4 md:!p-6"
-    >
+      <PageBackground image={bgChatBot} tint={mode == "agent" ? "rgba(6, 182, 212, 0.28)" : "rgba(99, 102, 241, 0.25)"} opacity={0.40} />
+      <ResponsivePageLayout
+        contentClassName="flex flex-col overflow-hidden !p-4 md:!p-6"
+      >
         <AIHeader
           historyOpen={historyOpen}
           chatHistory={chatHistory}
@@ -543,12 +585,14 @@ export const AIPage = () => {
           onStartNewChat={startNewChat}
           onToggleHistory={() => setHistoryOpen((open) => !open)}
           onRestoreChat={restoreChat}
+          onRenameChat={handleRenameChat}
+          onDeleteChat={handleDeleteChat}
           onToggleMode={toggleMode}
         />
 
-        <section className="mx-auto mt-4 flex w-full max-w-5xl flex-1 min-h-0 flex-col gap-3">
-          <div className="ai-chat-panel flex min-h-0 flex-1 flex-col rounded-2xl border border-accent/[0.12] p-4 md:p-5">
-            <div className="mx-auto flex h-full w-full max-w-3xl flex-col">
+        <section className="mx-auto mt-4 flex w-full flex-1 min-h-0 flex-col gap-3">
+          <div className="ai-chat-panel flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-accent/[0.12] bg-surface/[0.2] p-4 pb-0 md:p-5 md:pb-0">
+            <div className="mx-1 flex h-full w-full flex-col">
               <AIMessageFeed
                 messages={visibleMessages}
                 loading={loading}
@@ -582,27 +626,34 @@ export const AIPage = () => {
                 autoApproveLowRisk={autoApproveLowRisk}
                 onToggleAutoApprove={() => setAutoApproveLowRisk((value) => !value)}
               />
+              <AIComposer
+                input={input}
+                loading={loading}
+                attachedLeads={attachedLeadChips}
+                tones={TONES}
+                tone={tone}
+                mode={mode}
+                typingSuggestions={typingSuggestions}
+                onOpenAttachLeads={() => setAttachLeadsOpen(true)}
+                onRemoveAttachedLead={handleRemoveAttachedLead}
+                onInputChange={setInput}
+                onToneChange={setTone}
+                onSend={() => {
+                  void sendMessage();
+                }}
+                onSuggestionSelect={handleSuggestionSelect}
+              />
             </div>
           </div>
 
-          <AIComposer
-            input={input}
-            loading={loading}
-            attachedLeads={attachedLeadChips}
-            tones={TONES}
-            tone={tone}
-            mode={mode}
-            typingSuggestions={typingSuggestions}
-            onOpenAttachLeads={() => setAttachLeadsOpen(true)}
-            onRemoveAttachedLead={handleRemoveAttachedLead}
-            onInputChange={setInput}
-            onToneChange={setTone}
-            onSend={() => {
-              void sendMessage();
-            }}
-            onSuggestionSelect={handleSuggestionSelect}
-          />
         </section>
+
+        <DeleteConfirmModal
+          open={sessionToDelete !== null}
+          title={sessionToDelete?.title ?? ""}
+          onCancel={() => setSessionToDelete(null)}
+          onConfirm={confirmDeleteChat}
+        />
 
         <AttachLeadsModal
           open={attachLeadsOpen}
@@ -627,7 +678,7 @@ export const AIPage = () => {
           onClose={() => setAttachLeadsOpen(false)}
           onApply={handleAttachLeads}
         />
-    </ResponsivePageLayout>
+      </ResponsivePageLayout>
     </>
   );
 };

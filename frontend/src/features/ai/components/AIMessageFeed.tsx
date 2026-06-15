@@ -64,7 +64,7 @@ export const AIMessageFeed = ({
       : null;
 
   return (
-    <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1 scrollbar-thin">
+    <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-1 pb-6 scrollbar-thin">
       {messages.length === 0 && !agentPlan ? (
         <EmptyState
           mode={mode}
@@ -83,10 +83,10 @@ export const AIMessageFeed = ({
           <div
             className={`max-w-[82%] text-[14px] leading-relaxed ${
               message.role === "user"
-                ? "rounded-2xl rounded-br-md border border-accent/15 bg-accent/[0.08] px-4 py-2.5 text-content"
+                ? "rounded-2xl rounded-br-md border border-accent/15 bg-accent/[0.08] px-4 py-3 text-content shadow-sm"
                 : message.role === "agent"
-                  ? "rounded-2xl rounded-bl-md border-l-2 border-l-info/70 bg-surface-tertiary/50 px-4 py-2.5 text-content"
-                  : "rounded-2xl rounded-bl-md border-l-2 border-l-accent/60 bg-surface-tertiary/50 px-4 py-2.5 text-content"
+                  ? "rounded-2xl rounded-bl-md border border-info/10 bg-surface-tertiary/60 px-4 py-3 text-content shadow-sm"
+                  : "rounded-2xl rounded-bl-md border border-accent/10 bg-surface-tertiary/60 px-4 py-3 text-content shadow-sm"
             }`}
           >
             {message.role === "agent" ? (
@@ -203,7 +203,7 @@ export const AIMessageFeed = ({
 
       {loading ? (
         <div className="flex items-start justify-start">
-          <div className="inline-flex items-center gap-1.5 rounded-2xl rounded-bl-md border-l-2 border-l-accent/60 bg-surface-tertiary/50 px-4 py-3">
+          <div className="inline-flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-accent/10 bg-surface-tertiary/60 px-4 py-3 shadow-sm">
             <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent/60" />
             <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent/60 [animation-delay:150ms]" />
             <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent/60 [animation-delay:300ms]" />

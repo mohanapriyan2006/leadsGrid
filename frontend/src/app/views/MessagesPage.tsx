@@ -4,7 +4,6 @@ import { useLocation } from "react-router-dom";
 import { PageBackground } from "../../components/ui/PageBackground";
 import { ResponsivePageLayout } from "../../components/ui/ResponsivePageLayout";
 import bgRemotely from "../../assets/bg-images/remotely.svg";
-import { useMessageGenerator } from "../../features/leads/hooks/useMessageGenerator";
 import { messageService } from "../../features/leads/services/messageService";
 import { leadService } from "../../features/leads/services/leadService";
 import { useCentralizedLeads } from "../../features/leads/hooks/useCentralizedLeads";
@@ -187,8 +186,8 @@ export const MessagesPage = () => {
   const [contextExpanded, setContextExpanded] = useState(false);
   const [prefillApplied, setPrefillApplied] = useState(false);
 
-  const { generateMessage, generatedMessage, isGenerating } =
-    useMessageGenerator();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [draftConfidence, setDraftConfidence] = useState<number | null>(null);
 
   // Auto-select first lead if none selected
   useEffect(() => {
@@ -398,36 +397,39 @@ export const MessagesPage = () => {
     }
     setSendError(null);
     setSent(false);
+    setIsGenerating(true);
     try {
-      const promptSections = [
-        "You are generating a high-converting outreach email.",
-        `Lead company: ${selectedLead.company}`,
-        `Contact name: ${selectedLead.name}`,
-        `Lead stage: ${selectedLead.stage}`,
-        `Lead score: ${selectedLead.score}`,
-        `Lead notes: ${selectedLead.notes || "N/A"}`,
-        `User context: ${customContext.trim() || "No extra context provided"}`,
-        "Output: one professional outreach email draft with a clear CTA.",
-      ];
-
-      const result = await generateMessage({
-        lead_context: promptSections.join("\n"),
+      const result = await messageService.generateEmailDraft({
+        lead_name: selectedLead.name,
+        lead_company: selectedLead.company,
+        lead_notes: selectedLead.notes || "",
+        lead_stage: selectedLead.stage,
+        lead_score: selectedLead.score,
+        lead_source: selectedLead.source,
+        pain_point: selectedLead.ai_analysis?.pain_points?.[0] || "",
+        suggested_pitch: selectedLead.ai_analysis?.suggested_pitch || "",
+        buying_signals: selectedLead.ai_analysis?.buying_signals || [],
+        custom_context: customContext.trim(),
         tone,
         max_words: 130,
       });
       setLocalDraft(
         appendSignatureToPlain(
-          result.message,
+          result.body,
           signature,
           resolvedReplyToEmail,
           resolvedSecondaryEmail,
         ),
       );
-      setSubject(generateSubject());
+      setSubject(result.subject);
+      setDraftConfidence(result.confidence);
     } catch (error) {
       const reason =
         error instanceof Error ? error.message : "Unknown AI error";
       setSendError(`AI draft generation failed: ${reason}`);
+      setDraftConfidence(null);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -584,7 +586,7 @@ export const MessagesPage = () => {
 
           <MessageComposerPanel
             tone={tone}
-            confidence={generatedMessage?.confidence ?? null}
+            confidence={draftConfidence}
             activeTab={activeTab}
             customContext={customContext}
             senderName={senderName}

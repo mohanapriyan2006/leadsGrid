@@ -36,3 +36,25 @@ class EmailSendResponse(BaseModel):
     subject: str
     provider: str
     sent_at: datetime
+
+
+class EmailGenerateRequest(BaseModel):
+    lead_name: str = Field(default="", max_length=120)
+    lead_company: str = Field(default="", max_length=120)
+    lead_notes: str = Field(default="", max_length=2000)
+    lead_stage: str = Field(default="", max_length=30)
+    lead_score: int = Field(default=0, ge=0, le=100)
+    lead_source: str = Field(default="", max_length=30)
+    pain_point: str = Field(default="", max_length=500)
+    suggested_pitch: str = Field(default="", max_length=500)
+    buying_signals: list[str] = Field(default_factory=list)
+    custom_context: str = Field(default="", max_length=2000)
+    tone: str = Field(default="professional", pattern="^(professional|friendly|direct)$")
+    max_words: int = Field(default=130, ge=30, le=300)
+
+
+class EmailGenerateResponse(BaseModel):
+    subject: str
+    body: str
+    confidence: int = Field(default=85, ge=0, le=100)
+    provider: str = Field(default="gemini")

@@ -18,14 +18,14 @@ export const EmptyState = ({ mode, suggestions, onSuggestionClick }: EmptyStateP
         {mode === "ask" ? "AI Sales Engine" : "Agent Mode"}
       </h3>
 
-      <p className="mt-1 max-w-md text-center text-sm text-content-secondary">
+      <p className="mt-1 max-w-md text-center text-sm text-content-secondary/80">
         {mode === "ask"
           ? "Ask anything about leads, pipeline, or outreach."
           : "Describe the task. The agent will plan, ask approval, and execute."}
       </p>
 
       <div className="mt-5 w-full max-w-md">
-        <p className="mb-2 text-center text-[10px] font-semibold uppercase tracking-widest  /70">
+        <p className="mb-2 text-center text-[10px] font-semibold uppercase tracking-widest text-content-secondary/70">
           Suggested Prompts
         </p>
         <SmartChipGroup suggestions={suggestions.slice(0, 3)} onChipClick={onSuggestionClick} />

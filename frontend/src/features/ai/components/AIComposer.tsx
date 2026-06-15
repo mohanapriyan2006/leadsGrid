@@ -1,5 +1,5 @@
 import type { KeyboardEvent } from "react";
-import { Users, CornerDownLeft } from "lucide-react";
+import { Crosshair, CornerDownLeft } from "lucide-react";
 
 import type { ToneType } from "../../common/types/ui";
 import type { AIMode } from "../types/agent";
@@ -44,10 +44,10 @@ export const AIComposer = ({
   };
 
   return (
-    <div className="sticky bottom-0 z-10 overflow-hidden rounded-2xl border border-accent/[0.1] bg-surface-secondary/60">
+    <div className="sticky bottom-0 z-10 flex-shrink-0 mb-4 rounded-2xl border-accent/[0.08] bg-surface-secondary/70 backdrop-blur-md">
       {attachedLeads.length > 0 ? (
         <div className="flex flex-wrap items-center gap-2 border-b border-accent/[0.08] bg-surface/35 px-3 py-2">
-          <span className="text-[10px] font-semibold uppercase tracking-widest  ">
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-content-secondary">
             Attached Leads
           </span>
           {attachedLeads.map((lead) => (
@@ -80,10 +80,10 @@ export const AIComposer = ({
         <button
           type="button"
           onClick={onOpenAttachLeads}
-          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-accent/[0.1] bg-surface/50 text-sm text-content-secondary transition-all hover:bg-surface-secondary hover:text-content"
+          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-accent/[0.1] bg-surface/40 text-sm text-content-secondary transition-all hover:bg-surface/60 hover:text-content"
           aria-label="Attach leads"
         >
-          <Users className="w-4 h-4" />
+          <Crosshair className="w-4 h-4" />
         </button>
 
         <textarea
@@ -96,7 +96,7 @@ export const AIComposer = ({
               ? "Ask about your leads, pipeline, or outreach..."
               : "Tell the agent what to do..."
           }
-          className="min-h-[44px] max-h-[140px] flex-1 resize-none rounded-xl border border-accent/[0.1] bg-surface/50 px-4 py-2.5 text-[14px] text-content outline-none transition-all placeholder:text-content-tertiary/70 focus:border-accent/40"
+          className="min-h-[44px] max-h-[140px] flex-1 resize-none rounded-xl border border-accent/[0.1] bg-surface/40 px-4 py-2.5 text-[14px] text-content outline-none transition-all placeholder:text-content-tertiary/60 focus:border-accent/40 focus:bg-surface/50"
           aria-label="Chat input"
         />
 
@@ -133,12 +133,12 @@ export const AIComposer = ({
             {attachedLeads.length} leads attached
           </span>
         ) : (
-          <span className="text-[11px]  /50">
+          <span className="text-[11px] text-content-secondary/50">
             Attach leads to focus AI context
           </span>
         )}
 
-        <label className="ml-auto flex items-center gap-2 text-[11px]  ">
+        <label className="ml-auto flex items-center gap-2 text-[11px] text-content-secondary">
           Tone
           <select
             value={tone}

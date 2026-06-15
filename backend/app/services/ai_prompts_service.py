@@ -1,7 +1,10 @@
 import asyncio
 import json
+import logging
 import re
 from typing import Iterable
+
+logger = logging.getLogger(__name__)
 
 import aiohttp
 
@@ -573,6 +576,40 @@ Return STRICT JSON ONLY:
                     await asyncio.sleep(self.retry_backoff_base * (2 ** attempt))
         raise RuntimeError(f"Groq API request failed: {last_exc}")
 
+    async def _call_openrouter(self, prompt: str) -> str:
+        api_key = getattr(self.settings, "openrouter_api_key", None)
+        if not api_key:
+            raise ValueError("OpenRouter API key not configured")
+
+        session = await self._ensure_session()
+        last_exc: Exception | None = None
+        for attempt in range(self.retry_attempts):
+            try:
+                async with session.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": "https://leadsgrid.app",
+                        "X-Title": "LeadsGrid",
+                    },
+                    json={
+                        "model": "mistralai/mistral-7b-instruct:free",
+                        "temperature": 0.3,
+                        "messages": [{"role": "user", "content": prompt}],
+                    },
+                    timeout=aiohttp.ClientTimeout(total=self.timeout_seconds),
+                ) as response:
+                    if response.status != 200:
+                        raise RuntimeError(f"OpenRouter API error: {response.status}")
+                    data = await response.json()
+                    return data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            except Exception as exc:
+                last_exc = exc
+                if attempt < self.retry_attempts - 1:
+                    await asyncio.sleep(self.retry_backoff_base * (2 ** attempt))
+        raise RuntimeError(f"OpenRouter API request failed: {last_exc}")
+
     def _extract_json(self, text: str) -> dict:
         text = text.strip()
 
@@ -912,6 +949,181 @@ Return STRICT JSON ONLY:
         )
 
         return HyperPersonalizedOutreachResponse(message=message, metadata=metadata)
+
+    def _build_prompt_email_draft(
+        self,
+        lead_name: str,
+        lead_company: str,
+        lead_notes: str,
+        lead_stage: str,
+        lead_score: int,
+        lead_source: str,
+        pain_point: str,
+        suggested_pitch: str,
+        buying_signals: list[str],
+        custom_context: str,
+        tone: str,
+        max_words: int,
+    ) -> str:
+        signals_text = ", ".join(buying_signals) if buying_signals else "None detected"
+        context_block = custom_context.strip() if custom_context.strip() else "Keep the email concise, personalized, and focused on a clear business outcome."
+
+        tone_instruction = {
+            "professional": "Use a polished, respectful, and business-appropriate tone.",
+            "friendly": "Use a warm, conversational, and approachable tone.",
+            "direct": "Use a concise, bold, and straight-to-the-point tone.",
+        }.get(tone, "Use a professional tone.")
+
+        return f"""You are an expert B2B sales copywriter. Write a personalized outreach email for this lead.
+
+LEAD CONTEXT:
+- Name: {lead_name or "Unknown"}
+- Company: {lead_company or "Unknown"}
+- Stage: {lead_stage or "NEW"}
+- Score: {lead_score}/100
+- Source: {lead_source or "unknown"}
+- Notes: {lead_notes or "N/A"}
+- Pain Point: {pain_point or "N/A"}
+- Suggested Pitch: {suggested_pitch or "N/A"}
+- Buying Signals: {signals_text}
+
+USER INSTRUCTIONS:
+{context_block}
+
+TONE: {tone}
+TONE INSTRUCTION: {tone_instruction}
+MAX WORDS: {max_words}
+
+RULES:
+1. Return ONLY a JSON object. No markdown, no explanation, no code fences.
+2. The JSON must have exactly two keys: "subject" and "body".
+3. Subject: compelling, personalized, under 12 words.
+4. Body: proper email with greeting, 1-2 short paragraphs, soft CTA, professional closing.
+5. Do NOT include "Subject:" inside the body.
+6. Do NOT use markdown, bullet points, or HTML in the body.
+7. Address the recipient by name if available.
+8. Reference their company or pain point naturally.
+9. Keep the total body under {max_words} words.
+
+JSON FORMAT:
+{{"subject":"...","body":"..."}}"""
+
+    async def generate_email_draft(
+        self,
+        lead_name: str,
+        lead_company: str,
+        lead_notes: str,
+        lead_stage: str,
+        lead_score: int,
+        lead_source: str,
+        pain_point: str,
+        suggested_pitch: str,
+        buying_signals: list[str],
+        custom_context: str,
+        tone: str,
+        max_words: int,
+    ) -> dict:
+        prompt = self._build_prompt_email_draft(
+            lead_name=lead_name,
+            lead_company=lead_company,
+            lead_notes=lead_notes,
+            lead_stage=lead_stage,
+            lead_score=lead_score,
+            lead_source=lead_source,
+            pain_point=pain_point,
+            suggested_pitch=suggested_pitch,
+            buying_signals=buying_signals,
+            custom_context=custom_context,
+            tone=tone,
+            max_words=max_words,
+        )
+
+        provider = "gemini"
+        response_text = ""
+        last_error = ""
+        try:
+            response_text = await self._call_gemini(prompt)
+        except Exception as exc:
+            last_error = f"gemini: {exc}"
+            provider = "groq"
+            try:
+                response_text = await self._call_groq(prompt)
+            except Exception as exc2:
+                last_error += f" | groq: {exc2}"
+                provider = "openrouter"
+                try:
+                    response_text = await self._call_openrouter(prompt)
+                except Exception as exc3:
+                    last_error += f" | openrouter: {exc3}"
+                    provider = "fallback"
+                    logger.warning("All AI providers failed for email draft: %s", last_error)
+
+        data = self._extract_json(response_text)
+
+        subject = ""
+        body = ""
+        if isinstance(data, dict):
+            subject = str(data.get("subject", "")).strip()
+            body = str(data.get("body", "")).strip()
+
+        if not subject or not body:
+            # Fallback to template-based generation
+            provider = "fallback"
+            name = lead_name or "there"
+            company = lead_company or "your team"
+            pain = pain_point or "business challenge"
+            pitch = suggested_pitch or "a tailored solution"
+
+            if tone == "friendly":
+                subject = f"Quick idea for {company}"
+                body = (
+                    f"Hi {name},\n\n"
+                    f"I noticed {company} might be dealing with {pain}. "
+                    f"I help teams like yours with {pitch}.\n\n"
+                    f"Open to a quick chat this week?"
+                )
+            elif tone == "direct":
+                subject = f"{company} — partnership opportunity"
+                body = (
+                    f"{name},\n\n"
+                    f"Saw that {company} faces {pain}. We solve this quickly with {pitch}.\n\n"
+                    f"Can we schedule 10 minutes this week?"
+                )
+            else:
+                subject = f"Regarding {company} — Partnership Opportunity"
+                body = (
+                    f"Dear {name},\n\n"
+                    f"I came across {company} and noticed the challenge around {pain}. "
+                    f"Our team helps streamline this with {pitch}.\n\n"
+                    f"Would you be open to a short discussion this week?\n\n"
+                    f"Best regards"
+                )
+
+        # Clean body
+        body = body.replace("```", "").strip()
+        if body.startswith("json"):
+            body = body[4:].strip()
+        if body.startswith("{"):
+            # Sometimes the AI returns the full JSON in the body field
+            try:
+                parsed = json.loads(body)
+                if isinstance(parsed, dict) and "body" in parsed:
+                    body = str(parsed["body"]).strip()
+            except Exception:
+                pass
+
+        # Limit words
+        words = [w for w in body.split() if w]
+        if len(words) > max_words:
+            body = " ".join(words[:max_words]).rstrip(" ,.") + "."
+
+        confidence = 92 if provider == "gemini" else 86 if provider in ("groq", "openrouter") else 70
+        return {
+            "subject": subject,
+            "body": body,
+            "confidence": confidence,
+            "provider": provider,
+        }
 
     async def full_analysis(
         self,

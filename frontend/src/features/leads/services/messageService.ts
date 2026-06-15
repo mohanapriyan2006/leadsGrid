@@ -25,6 +25,28 @@ export type MessageGenerationResult = {
   requires_agent?: boolean;
 };
 
+export type EmailDraftGenerationPayload = {
+  lead_name: string;
+  lead_company: string;
+  lead_notes: string;
+  lead_stage: string;
+  lead_score: number;
+  lead_source: string;
+  pain_point: string;
+  suggested_pitch: string;
+  buying_signals: string[];
+  custom_context: string;
+  tone: "professional" | "friendly" | "direct";
+  max_words: number;
+};
+
+export type EmailDraftGenerationResult = {
+  subject: string;
+  body: string;
+  confidence: number;
+  provider: string;
+};
+
 export type SendEmailPayload = {
   to: string;
   subject: string;
@@ -94,6 +116,16 @@ export const messageService = {
       draft: result.text,
       requires_agent: result.requiresAgent,
     };
+  },
+
+  generateEmailDraft: async (payload: EmailDraftGenerationPayload): Promise<EmailDraftGenerationResult> => {
+    const headers = await buildAuthHeaders();
+    const response = await apiClient.post<EmailDraftGenerationResult>(
+      "/email/generate",
+      payload,
+      { headers },
+    );
+    return response.data;
   },
 
   sendEmail: async (payload: SendEmailPayload): Promise<SendEmailResult> => {

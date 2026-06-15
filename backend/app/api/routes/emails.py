@@ -1,9 +1,13 @@
+import logging
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
+logger = logging.getLogger(__name__)
+
 from app.core.security import UserContext, get_current_user
-from app.schemas.email import EmailSendRequest, EmailSendResponse
+from app.schemas.email import EmailGenerateRequest, EmailGenerateResponse, EmailSendRequest, EmailSendResponse
+from app.services.ai_prompts_service import ai_prompts_service
 
 router = APIRouter(prefix="/email", tags=["email"])
 
@@ -94,4 +98,36 @@ async def send_email(
         subject=body.subject,
         provider=str(result.get("provider", "unknown")),
         sent_at=sent_at,
+    )
+
+
+@router.post("/generate", response_model=EmailGenerateResponse)
+async def generate_email(
+    body: EmailGenerateRequest,
+    user: UserContext = Depends(get_current_user),
+) -> EmailGenerateResponse:
+    try:
+        result = await ai_prompts_service.generate_email_draft(
+            lead_name=body.lead_name,
+            lead_company=body.lead_company,
+            lead_notes=body.lead_notes,
+            lead_stage=body.lead_stage,
+            lead_score=body.lead_score,
+            lead_source=body.lead_source,
+            pain_point=body.pain_point,
+            suggested_pitch=body.suggested_pitch,
+            buying_signals=body.buying_signals,
+            custom_context=body.custom_context,
+            tone=body.tone,
+            max_words=body.max_words,
+        )
+    except Exception as exc:
+        logger.error("Email draft generation failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Email draft generation failed: {exc}")
+
+    return EmailGenerateResponse(
+        subject=result["subject"],
+        body=result["body"],
+        confidence=result.get("confidence", 85),
+        provider=result.get("provider", "unknown"),
     )

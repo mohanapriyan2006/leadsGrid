@@ -1,4 +1,4 @@
-import { collection, doc, getDocs, limit, orderBy, query, setDoc, Timestamp } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDocs, limit, orderBy, query, setDoc, Timestamp } from "firebase/firestore";
 
 import { db, getFirebaseAuth } from "../../../lib/firebase";
 import type { ChatSession } from "../types/chat";
@@ -81,6 +81,14 @@ export const conversationMemoryService = {
     }, SESSION_SAVE_DEBOUNCE_MS);
 
     pendingTimers.set(session.id, timer);
+  },
+
+  deleteSession: async (sessionId: string): Promise<void> => {
+    const auth = getFirebaseAuth();
+    const uid = auth?.currentUser?.uid;
+    if (!uid) return;
+    const sessionRef = doc(db, "users", uid, COLLECTION_NAME, sessionId);
+    await deleteDoc(sessionRef);
   },
 
   listSessions: async (take = 20): Promise<ChatSession[]> => {

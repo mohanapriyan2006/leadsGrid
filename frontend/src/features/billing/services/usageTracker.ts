@@ -342,6 +342,9 @@ export const usageTracker = {
   },
 
   async incrementUsage(action: UsageAction, count = 1): Promise<void> {
+    if (DISABLE_PLAN_LIMITS) {
+      return;
+    }
     try {
       const userId = getUserId();
       if (!userId || !isFirebaseConfigured) {
